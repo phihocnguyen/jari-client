@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { updateProjectSchema, type UpdateProjectFormData } from '@/lib/validations/project';
 import { Settings, Users } from 'lucide-react';
 import { projectApi } from '@/lib/api/project';
 import { Button } from '@/components/ui/Button';
@@ -107,22 +107,15 @@ function ProjectSettingsContent({ projectId, tab, setTab }: { projectId: string;
   );
 }
 
-const updateSchema = z.object({
-  name: z.string().min(2),
-  key: z.string().min(1).max(10).regex(/^[A-Z0-9]+$/),
-  description: z.string().optional(),
-});
-type UpdateForm = z.infer<typeof updateSchema>;
-
 function GeneralTab({ projectId, project }: { projectId: string; project: { name: string; key: string; description?: string } }) {
   const qc = useQueryClient();
-  const { register, handleSubmit, formState: { errors } } = useForm<UpdateForm>({
-    resolver: zodResolver(updateSchema),
+  const { register, handleSubmit, formState: { errors } } = useForm<UpdateProjectFormData>({
+    resolver: zodResolver(updateProjectSchema),
     defaultValues: { name: project.name, key: project.key, description: project.description ?? '' },
   });
 
   const mutation = useMutation({
-    mutationFn: (data: UpdateForm) => projectApi.update(projectId, data),
+    mutationFn: (data: UpdateProjectFormData) => projectApi.update(projectId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['project', projectId] });
       toast.success('Project updated');

@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock } from 'lucide-react';
@@ -12,13 +11,7 @@ import { Input } from '@/components/ui/Input';
 import { authApi } from '@/lib/api/auth';
 import { useAuthStore } from '@/store/auth.store';
 import { toast } from '@/components/ui/Toast';
-
-// ─── Schema ───────────────────────────────────────────────────────
-const schema = z.object({
-  email:    z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
-type FormData = z.infer<typeof schema>;
+import { loginSchema, type LoginFormData } from '@/lib/validations/auth';
 
 // ─── Login Page ───────────────────────────────────────────────────
 export default function LoginPage() {
@@ -26,11 +19,11 @@ export default function LoginPage() {
   const login  = useAuthStore(s => s.login);
   const [loading, setLoading] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(schema),
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: LoginFormData) => {
     setLoading(true);
     try {
       const res = await authApi.login(data);

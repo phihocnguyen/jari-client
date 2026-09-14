@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock, User } from 'lucide-react';
@@ -12,18 +11,7 @@ import { Input } from '@/components/ui/Input';
 import { authApi } from '@/lib/api/auth';
 import { useAuthStore } from '@/store/auth.store';
 import { toast } from '@/components/ui/Toast';
-
-// ─── Schema ───────────────────────────────────────────────────────
-const schema = z.object({
-  fullName:        z.string().min(2, 'Name must be at least 2 characters'),
-  email:           z.string().email('Invalid email address'),
-  password:        z.string().min(8, 'Password must be at least 8 characters'),
-  confirmPassword: z.string(),
-}).refine(d => d.password === d.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
-});
-type FormData = z.infer<typeof schema>;
+import { registerSchema, type RegisterFormData } from '@/lib/validations/auth';
 
 // ─── Register Page ────────────────────────────────────────────────
 export default function RegisterPage() {
@@ -31,11 +19,11 @@ export default function RegisterPage() {
   const login  = useAuthStore(s => s.login);
   const [loading, setLoading] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(schema),
+  const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: RegisterFormData) => {
     setLoading(true);
     try {
       const res = await authApi.register({

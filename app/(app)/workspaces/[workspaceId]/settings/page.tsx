@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { UserPlus, Trash2, Settings, Users } from 'lucide-react';
 import { workspaceApi } from '@/lib/api/workspace';
 import { Button } from '@/components/ui/Button';
@@ -13,6 +12,12 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Modal } from '@/components/ui/Modal';
 import { toast } from '@/components/ui/Toast';
 import type { WorkspaceRole } from '@/types/workspace';
+import {
+  updateWorkspaceSchema,
+  inviteMemberSchema,
+  type UpdateWorkspaceFormData,
+  type InviteMemberFormData,
+} from '@/lib/validations/workspace';
 
 // ─── Workspace Settings Page ──────────────────────────────────────
 export default function WorkspaceSettingsPage({ params }: PageProps<'/workspaces/[workspaceId]/settings'>) {
@@ -173,18 +178,15 @@ function WorkspaceSettingsContent({
 }
 
 // ─── General Tab ──────────────────────────────────────────────────
-const updateSchema = z.object({ name: z.string().min(2), slug: z.string().min(2) });
-type UpdateForm = z.infer<typeof updateSchema>;
-
 function GeneralTab({ workspaceId, workspace }: { workspaceId: string; workspace: { name: string; slug: string } }) {
   const qc = useQueryClient();
-  const { register, handleSubmit, formState: { errors } } = useForm<UpdateForm>({
-    resolver: zodResolver(updateSchema),
+  const { register, handleSubmit, formState: { errors } } = useForm<UpdateWorkspaceFormData>({
+    resolver: zodResolver(updateWorkspaceSchema),
     defaultValues: { name: workspace.name, slug: workspace.slug },
   });
 
   const mutation = useMutation({
-    mutationFn: (data: UpdateForm) => workspaceApi.update(workspaceId, data),
+    mutationFn: (data: UpdateWorkspaceFormData) => workspaceApi.update(workspaceId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['workspace', workspaceId] });
       qc.invalidateQueries({ queryKey: ['workspaces'] });
@@ -208,21 +210,15 @@ function GeneralTab({ workspaceId, workspace }: { workspaceId: string; workspace
 }
 
 // ─── InviteMemberModal ────────────────────────────────────────────
-const inviteSchema = z.object({
-  email: z.string().email('Invalid email'),
-  role:  z.enum(['WORKSPACE_ADMIN', 'WORKSPACE_MEMBER', 'WORKSPACE_VIEWER']),
-});
-type InviteForm = z.infer<typeof inviteSchema>;
-
 function InviteMemberModal({ open, onClose, workspaceId }: { open: boolean; onClose: () => void; workspaceId: string }) {
   const qc = useQueryClient();
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<InviteForm>({
-    resolver: zodResolver(inviteSchema),
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<InviteMemberFormData>({
+    resolver: zodResolver(inviteMemberSchema),
     defaultValues: { role: 'WORKSPACE_MEMBER' },
   });
 
   const mutation = useMutation({
-    mutationFn: (data: InviteForm) => workspaceApi.inviteMember(workspaceId, data),
+    mutationFn: (data: InviteMemberFormData) => workspaceApi.inviteMember(workspaceId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['workspace-members', workspaceId] });
       toast.success('Member invited!');

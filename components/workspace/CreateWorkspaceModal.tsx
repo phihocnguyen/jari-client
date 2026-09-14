@@ -2,22 +2,13 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { workspaceApi } from '@/lib/api/workspace';
 import { toast } from '@/components/ui/Toast';
-
-const schema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters').max(64),
-  slug: z.string()
-    .min(2, 'Slug must be at least 2 characters')
-    .max(32)
-    .regex(/^[a-z0-9-]+$/, 'Slug: lowercase letters, numbers, hyphens only'),
-});
-type FormData = z.infer<typeof schema>;
+import { createWorkspaceSchema, type CreateWorkspaceFormData } from '@/lib/validations/workspace';
 
 interface Props {
   open:    boolean;
@@ -27,12 +18,12 @@ interface Props {
 export function CreateWorkspaceModal({ open, onClose }: Props) {
   const qc = useQueryClient();
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(schema),
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<CreateWorkspaceFormData>({
+    resolver: zodResolver(createWorkspaceSchema),
   });
 
   const mutation = useMutation({
-    mutationFn: (data: FormData) => workspaceApi.create(data),
+    mutationFn: (data: CreateWorkspaceFormData) => workspaceApi.create(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['workspaces'] });
       toast.success('Workspace created!');

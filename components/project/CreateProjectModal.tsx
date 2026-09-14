@@ -2,20 +2,13 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { projectApi } from '@/lib/api/project';
 import { toast } from '@/components/ui/Toast';
-
-const schema = z.object({
-  name:        z.string().min(2, 'Name must be at least 2 characters').max(128),
-  key:         z.string().min(1).max(10).regex(/^[A-Z0-9]+$/, 'Key: uppercase letters and numbers only').optional(),
-  description: z.string().max(500).optional(),
-});
-type FormData = z.infer<typeof schema>;
+import { createProjectSchema, type CreateProjectFormData } from '@/lib/validations/project';
 
 interface Props {
   open:        boolean;
@@ -26,12 +19,12 @@ interface Props {
 export function CreateProjectModal({ open, onClose, workspaceId }: Props) {
   const qc = useQueryClient();
 
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(schema),
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<CreateProjectFormData>({
+    resolver: zodResolver(createProjectSchema),
   });
 
   const mutation = useMutation({
-    mutationFn: (data: FormData) => projectApi.create(workspaceId, data),
+    mutationFn: (data: CreateProjectFormData) => projectApi.create(workspaceId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['projects', workspaceId] });
       toast.success('Project created!');
