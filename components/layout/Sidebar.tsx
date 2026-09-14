@@ -1,14 +1,10 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import {
-  LayoutDashboard, Settings, ChevronLeft, ChevronRight,
-  FolderKanban, BarChart3, Tag, Layers, AlertCircle,
-  Plus, Grid, Rocket, PieChart, PlayCircle, Folder, Briefcase,
-  ChevronDown, ChevronRight as ChevronRightIcon,
+  ChevronLeft, ChevronRight, Briefcase, ChevronRight as ChevronRightIcon,
 } from 'lucide-react';
 import { projectApi } from '@/lib/api/project';
 import { Avatar } from '@/components/ui/Avatar';
@@ -32,7 +28,7 @@ export function Sidebar({ collapsed, onToggle, projectId, workspaceId }: Sidebar
     queryFn: () => projectApi.list(workspaceId || 'ws-demo-1').then(r => r.data),
   });
 
-  // Extract active project ID from URL if not passed explicitly
+  // Extract active project ID from URL
   const urlMatch = pathname.match(/\/projects\/([^\/]+)/);
   const activeProjectId = projectId || (urlMatch ? urlMatch[1] : projects[0]?.id || 'proj-demo-1');
 
@@ -125,9 +121,8 @@ export function Sidebar({ collapsed, onToggle, projectId, workspaceId }: Sidebar
             fontSize: '0.6875rem', fontWeight: 700,
             color: 'rgba(255,255,255,0.4)',
             letterSpacing: '0.08em', textTransform: 'uppercase',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
-            <span>PROJECTS ({projects.length})</span>
+            PROJECTS ({projects.length})
           </div>
         )}
 
@@ -137,34 +132,27 @@ export function Sidebar({ collapsed, onToggle, projectId, workspaceId }: Sidebar
             const isProjectActive = activeProjectId === proj.id;
             const projectKey = proj.projectKey || proj.key || 'PROJ';
 
-            const subNavItems = [
-              { href: `/projects/${proj.id}/summary`,    label: 'Summary',    icon: PieChart },
-              { href: `/projects/${proj.id}/board`,      label: 'Board',      icon: LayoutDashboard },
-              { href: `/projects/${proj.id}/backlog`,    label: 'Backlog',    icon: FolderKanban },
-              { href: `/projects/${proj.id}/issues`,     label: 'Issues',     icon: AlertCircle },
-              { href: `/projects/${proj.id}/sprints`,    label: 'Sprints',    icon: PlayCircle },
-              { href: `/projects/${proj.id}/reports`,    label: 'Reports',    icon: BarChart3 },
-              { href: `/projects/${proj.id}/releases`,   label: 'Releases',   icon: Tag },
-              { href: `/projects/${proj.id}/components`, label: 'Components', icon: Layers },
-              { href: `/projects/${proj.id}/settings`,   label: 'Settings',   icon: Settings },
-            ];
-
             return (
-              <div key={proj.id} style={{ marginBottom: 6 }}>
-                {/* Project Title Row */}
+              <div key={proj.id} style={{ marginBottom: 4 }}>
                 <Link
-                  href={`/projects/${proj.id}/board`}
+                  href={`/projects/${proj.id}/summary`}
                   title={collapsed ? proj.name : undefined}
                   style={{
                     display: 'flex', alignItems: 'center',
-                    justifyContent: collapsed ? 'center' : 'space-between',
+                    justifyContent: collapsed ? 'center' : 'flex-start',
                     padding: collapsed ? '10px 0' : '10px 14px',
                     marginInline: collapsed ? 0 : 8,
-                    borderRadius: '10px',
+                    borderRadius: 'var(--radius-pill)',
                     color: isProjectActive ? '#fff' : 'rgba(255,255,255,0.85)',
-                    backgroundColor: isProjectActive ? 'rgba(255,255,255,0.1)' : 'transparent',
+                    backgroundColor: isProjectActive ? 'var(--color-green-accent)' : 'transparent',
                     textDecoration: 'none',
                     transition: 'var(--transition-fast)',
+                  }}
+                  onMouseEnter={e => {
+                    if (!isProjectActive) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)';
+                  }}
+                  onMouseLeave={e => {
+                    if (!isProjectActive) e.currentTarget.style.backgroundColor = 'transparent';
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
@@ -180,7 +168,7 @@ export function Sidebar({ collapsed, onToggle, projectId, workspaceId }: Sidebar
 
                     {!collapsed && (
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: '0.875rem', fontWeight: isProjectActive ? 700 : 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <div style={{ fontSize: '0.875rem', fontWeight: isProjectActive ? 700 : 500, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {proj.name}
                         </div>
                         <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace' }}>
@@ -189,48 +177,7 @@ export function Sidebar({ collapsed, onToggle, projectId, workspaceId }: Sidebar
                       </div>
                     )}
                   </div>
-
-                  {!collapsed && (
-                    <ChevronDown
-                      size={14}
-                      color="rgba(255,255,255,0.5)"
-                      style={{
-                        transform: isProjectActive ? 'rotate(0deg)' : 'rotate(-90deg)',
-                        transition: 'transform 0.2s',
-                      }}
-                    />
-                  )}
                 </Link>
-
-                {/* Sub-Navigation Items for Active Project */}
-                {isProjectActive && !collapsed && (
-                  <div style={{ paddingLeft: 22, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    {subNavItems.map(subItem => {
-                      const isSubActive = pathname === subItem.href || (subItem.label === 'Board' && pathname === `/projects/${proj.id}`);
-
-                      return (
-                        <Link
-                          key={subItem.label}
-                          href={subItem.href}
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: 10,
-                            padding: '7px 12px',
-                            borderRadius: 'var(--radius-pill)',
-                            color: isSubActive ? '#fff' : 'rgba(255,255,255,0.68)',
-                            backgroundColor: isSubActive ? 'var(--color-green-accent)' : 'transparent',
-                            fontWeight: isSubActive ? 600 : 400,
-                            fontSize: '0.8125rem',
-                            textDecoration: 'none',
-                            transition: 'var(--transition-fast)',
-                          }}
-                        >
-                          <subItem.icon size={16} style={{ flexShrink: 0 }} />
-                          <span>{subItem.label}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
               </div>
             );
           })}
