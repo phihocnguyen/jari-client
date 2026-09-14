@@ -1,26 +1,27 @@
 import { z } from 'zod';
 
 export const createWorkspaceSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters').max(64),
-  slug: z
+  name: z.string().min(1, 'Name is required').max(100, 'Name must be at most 100 characters'),
+  workspaceKey: z
     .string()
-    .min(2, 'Slug must be at least 2 characters')
-    .max(32)
-    .regex(/^[a-z0-9-]+$/, 'Slug: lowercase letters, numbers, hyphens only'),
+    .min(1, 'Workspace key is required')
+    .max(20, 'Workspace key must be at most 20 characters')
+    .regex(/^[A-Z0-9_]+$/, 'Must be uppercase letters, numbers, and underscore only'),
+  description: z.string().optional(),
 });
 
 export type CreateWorkspaceFormData = z.infer<typeof createWorkspaceSchema>;
 
 export const updateWorkspaceSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  slug: z.string().min(2, 'Slug must be at least 2 characters'),
+  name: z.string().min(1, 'Workspace name is required').max(100, 'Name must be at most 100 characters'),
+  description: z.string().optional(),
 });
 
 export type UpdateWorkspaceFormData = z.infer<typeof updateWorkspaceSchema>;
 
 export const inviteMemberSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  role: z.enum(['WORKSPACE_ADMIN', 'WORKSPACE_MEMBER', 'WORKSPACE_VIEWER']),
+  userId: z.string().min(1, 'User is required'),
+  roleName: z.string().min(1, 'Role is required'),
 });
 
 export type InviteMemberFormData = z.infer<typeof inviteMemberSchema>;

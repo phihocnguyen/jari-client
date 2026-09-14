@@ -2,7 +2,9 @@
 export interface Workspace {
   id: string;
   name: string;
-  slug: string;
+  workspaceKey: string;
+  slug?: string;
+  description?: string;
   logoUrl?: string;
   createdAt: string;
   updatedAt: string;
@@ -23,17 +25,18 @@ export interface WorkspaceMember {
 
 export interface CreateWorkspaceRequest {
   name: string;
-  slug: string;
+  workspaceKey: string;
+  description?: string;
 }
 
 export interface UpdateWorkspaceRequest {
   name?: string;
-  slug?: string;
+  description?: string;
 }
 
 export interface InviteMemberRequest {
-  email: string;
-  role: WorkspaceRole;
+  userId: string;
+  roleName: string;
 }
 
 export interface UpdateMemberRoleRequest {

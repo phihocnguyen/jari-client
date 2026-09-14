@@ -1,9 +1,14 @@
 // ─── Project Types ────────────────────────────────────────────────
+export type ProjectType = 'SOFTWARE' | 'BUSINESS' | 'SERVICE_DESK';
+export type ProjectStatus = 'ACTIVE' | 'ARCHIVED' | 'DELETED';
+export type ProjectRole = 'PROJECT_ADMIN' | 'PROJECT_MEMBER' | 'PROJECT_VIEWER';
+
 export interface Project {
   id: string;
   workspaceId: string;
   name: string;
-  key: string;
+  projectKey: string;
+  key?: string;
   description?: string;
   avatarUrl?: string;
   avatarColor?: string;
@@ -12,8 +17,6 @@ export interface Project {
   memberCount?: number;
   role?: ProjectRole;
 }
-
-export type ProjectRole = 'PROJECT_ADMIN' | 'PROJECT_MEMBER' | 'PROJECT_VIEWER';
 
 export interface ProjectMember {
   userId: string;
@@ -25,13 +28,15 @@ export interface ProjectMember {
 
 export interface CreateProjectRequest {
   name: string;
-  key?: string;
+  projectKey: string;
   description?: string;
-  avatarColor?: string;
+  leadId?: string;
+  projectType?: ProjectType;
 }
 
 export interface UpdateProjectRequest {
   name?: string;
   description?: string;
-  avatarColor?: string;
+  leadId?: string;
+  status?: ProjectStatus;
 }
