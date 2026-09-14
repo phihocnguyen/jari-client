@@ -5,11 +5,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import {
-  ChevronLeft, ChevronRight, Briefcase, Plus, ChevronDown, Rocket, Folder,
+  ChevronLeft, ChevronRight, Plus, ChevronDown, Folder,
 } from 'lucide-react';
 import { workspaceApi } from '@/lib/api/workspace';
 import { projectApi } from '@/lib/api/project';
 import { CreateProjectModal } from '@/components/project/CreateProjectModal';
+import { CreateWorkspaceModal } from '@/components/workspace/CreateWorkspaceModal';
 import type { Workspace } from '@/types/workspace';
 import type { Project } from '@/types/project';
 
@@ -23,6 +24,7 @@ interface SidebarProps {
 export function Sidebar({ collapsed, onToggle, projectId }: SidebarProps) {
   const pathname = usePathname();
   const [createProjectWorkspaceId, setCreateProjectWorkspaceId] = useState<string | null>(null);
+  const [createWorkspaceOpen, setCreateWorkspaceOpen] = useState(false);
   const [expandedWorkspaces, setExpandedWorkspaces] = useState<Record<string, boolean>>({ 'ws-demo-1': true });
 
   // Fetch all workspaces
@@ -117,9 +119,28 @@ export function Sidebar({ collapsed, onToggle, projectId }: SidebarProps) {
               flexShrink: 0,
             }}>
               <span>WORKSPACES ({workspaces.length})</span>
-              <Link href="/workspaces" style={{ color: 'var(--color-green-accent)', fontSize: '0.75rem', textDecoration: 'none' }}>
-                View all
-              </Link>
+              {/* Discord-style + Create Workspace Button */}
+              <button
+                onClick={() => setCreateWorkspaceOpen(true)}
+                title="Create Workspace"
+                style={{
+                  background: 'rgba(255,255,255,0.12)',
+                  border: 'none',
+                  borderRadius: 4,
+                  width: 22,
+                  height: 22,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  transition: 'background 0.2s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--color-green-accent)')}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)')}
+              >
+                <Plus size={14} />
+              </button>
             </div>
           )}
 
@@ -136,9 +157,80 @@ export function Sidebar({ collapsed, onToggle, projectId }: SidebarProps) {
                 onCreateProject={() => setCreateProjectWorkspaceId(ws.id)}
               />
             ))}
+
+            {/* Discord style "+" Add Workspace item for collapsed or expanded list */}
+            {collapsed ? (
+              <button
+                onClick={() => setCreateWorkspaceOpen(true)}
+                title="Create Workspace"
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(255,255,255,0.1)',
+                  border: '1px dashed rgba(255,255,255,0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#fff',
+                  margin: '8px auto',
+                  cursor: 'pointer',
+                  transition: 'var(--transition-fast)',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor = 'var(--color-green-accent)';
+                  e.currentTarget.style.borderStyle = 'solid';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                  e.currentTarget.style.borderStyle = 'dashed';
+                }}
+              >
+                <Plus size={16} />
+              </button>
+            ) : (
+              <button
+                onClick={() => setCreateWorkspaceOpen(true)}
+                style={{
+                  width: 'calc(100% - 16px)',
+                  margin: '8px 8px 0',
+                  padding: '8px 12px',
+                  borderRadius: 8,
+                  background: 'transparent',
+                  border: '1px dashed rgba(255,255,255,0.25)',
+                  color: 'rgba(255,255,255,0.7)',
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  cursor: 'pointer',
+                  transition: 'var(--transition-fast)',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.06)';
+                  e.currentTarget.style.borderColor = 'var(--color-green-accent)';
+                  e.currentTarget.style.color = '#fff';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)';
+                  e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
+                }}
+              >
+                <Plus size={14} />
+                <span>Create Workspace</span>
+              </button>
+            )}
           </nav>
         </div>
       </aside>
+
+      {/* Create Workspace Modal */}
+      <CreateWorkspaceModal
+        open={createWorkspaceOpen}
+        onClose={() => setCreateWorkspaceOpen(false)}
+      />
 
       {/* Create Project Modal */}
       {createProjectWorkspaceId && (

@@ -5,29 +5,29 @@ import { Loader2 } from 'lucide-react';
 
 // ─── Button Component ─────────────────────────────────────────────
 type ButtonVariant = 'primary' | 'outlined' | 'ghost' | 'danger' | 'gold';
-type ButtonSize    = 'sm' | 'md' | 'lg' | 'icon';
+type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?:   ButtonVariant;
-  size?:      ButtonSize;
-  loading?:   boolean;
-  leftIcon?:  React.ReactNode;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  loading?: boolean;
+  leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   fullWidth?: boolean;
 }
 
 const variantClass: Record<ButtonVariant, string> = {
-  primary:  'btn btn-primary',
+  primary: 'btn btn-primary',
   outlined: 'btn btn-outlined',
-  ghost:    'btn btn-ghost',
-  danger:   'btn btn-danger',
-  gold:     'btn',
+  ghost: 'btn btn-ghost',
+  danger: 'btn btn-danger',
+  gold: 'btn',
 };
 
 const sizeClass: Record<ButtonSize, string> = {
-  sm:   'btn-sm',
-  md:   '',
-  lg:   'btn-lg',
+  sm: 'btn-sm',
+  md: '',
+  lg: 'btn-lg',
   icon: 'btn-icon',
 };
 

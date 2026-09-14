@@ -352,3 +352,36 @@ a:hover { text-decoration: underline; }
   padding: var(--space-4);
   background-color: var(--color-canvas-warm);
 }
+
+/* ─── Loading Component Animations ───────────────────────────── */
+@keyframes orbitSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes orbitSpinReverse {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes diamondGlow {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(0, 117, 74, 0.4), 0 0 24px rgba(0, 98, 65, 0.2);
+    transform: rotate(45deg) scale(1);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(0, 117, 74, 0.8), 0 0 40px rgba(0, 117, 74, 0.4);
+    transform: rotate(45deg) scale(1.12);
+  }
+}
+
+@keyframes shimmerBar {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes pulseSubtle {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+

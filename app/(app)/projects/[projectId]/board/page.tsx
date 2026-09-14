@@ -22,10 +22,10 @@ interface PageProps {
 }
 
 const BOARD_COLUMNS: { id: IssueStatus; title: string; color: string }[] = [
-  { id: 'TODO',        title: 'To Do',       color: '#6366F1' },
+  { id: 'TODO', title: 'To Do', color: '#6366F1' },
   { id: 'IN_PROGRESS', title: 'In Progress', color: '#F97316' },
-  { id: 'IN_REVIEW',   title: 'Review',      color: '#EC4899' },
-  { id: 'DONE',        title: 'Done',        color: '#22C55E' },
+  { id: 'IN_REVIEW', title: 'Review', color: '#EC4899' },
+  { id: 'DONE', title: 'Done', color: '#22C55E' },
 ];
 
 export default function BoardPage({ params }: PageProps) {

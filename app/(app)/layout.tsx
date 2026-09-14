@@ -39,19 +39,7 @@ export default function AppShellLayout({ children }: LayoutProps<'/'>) {
 
   // Loading state while hydrating
   if (!hydrated || !isAuthenticated) {
-    return (
-      <div style={{
-        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'var(--color-canvas-warm)',
-      }}>
-        <div style={{
-          width: 36, height: 36,
-          border: '3px solid var(--color-green-light)',
-          borderTop: '3px solid var(--color-green-accent)',
-          borderRadius: '50%',
-        }} className="animate-spin" />
-      </div>
-    );
+    return null;
   }
 
   return (
