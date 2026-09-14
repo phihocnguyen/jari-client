@@ -1,0 +1,337 @@
+@import "tailwindcss";
+
+/* ─── Google Fonts ─────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ─── Design Tokens (Starbucks-inspired for Jari) ─────────────── */
+:root {
+  /* === Colors: Four-tier green system === */
+  --color-green-brand:   #006241; /* Starbucks Green — headings */
+  --color-green-accent:  #00754A; /* Green Accent — CTAs, active states */
+  --color-house-green:   #1E3932; /* House Green — sidebar, dark bands, footer */
+  --color-green-uplift:  #2b5148; /* Decorative mid-dark green */
+  --color-green-light:   #d4e9e2; /* Pale mint — form valid tint */
+
+  /* === Colors: Warm neutral canvas === */
+  --color-canvas-warm:   #f2f0eb; /* Primary page canvas — warm cream */
+  --color-canvas-cool:   #edebe9; /* Ceramic — section dividers */
+  --color-surface-white: #ffffff; /* Card and modal surface */
+  --color-surface-cool:  #f9f9f9; /* Dropdown / utility containers */
+
+  /* === Colors: Text === */
+  --color-text-primary:  rgba(0, 0, 0, 0.87);   /* Warm near-black */
+  --color-text-secondary:rgba(0, 0, 0, 0.58);   /* Secondary/metadata */
+  --color-text-white:    rgba(255, 255, 255, 1); /* On dark surfaces */
+  --color-text-white-soft: rgba(255, 255, 255, 0.70); /* Secondary on dark */
+
+  /* === Colors: Semantic === */
+  --color-gold:          #cba258; /* Rewards / premium moments only */
+  --color-gold-light:    #dfc49d;
+  --color-gold-lightest: #faf6ee;
+  --color-red:           #c82014; /* Destructive / error */
+  --color-yellow:        #fbbc05; /* Warning */
+
+  /* === Spacing scale (1rem = 16px base) === */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 1rem;      /* 16px */
+  --space-4: 1.5rem;    /* 24px */
+  --space-5: 2rem;      /* 32px */
+  --space-6: 2.5rem;    /* 40px */
+  --space-7: 3rem;      /* 48px */
+  --space-8: 3.5rem;    /* 56px */
+  --space-9: 4rem;      /* 64px */
+
+  /* === Border radius === */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-card: 12px;
+  --radius-pill: 9999px; /* Full pill — all buttons */
+  --radius-full: 50%;    /* Circular avatars, icons */
+
+  /* === Shadows === */
+  --shadow-card: 0 0 0.5px rgba(0,0,0,0.14), 0 1px 1px rgba(0,0,0,0.24);
+  --shadow-nav:  0 1px 3px rgba(0,0,0,0.1), 0 2px 2px rgba(0,0,0,0.06), 0 0 2px rgba(0,0,0,0.07);
+  --shadow-modal: 0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.12);
+  --shadow-dropdown: 0 4px 16px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.08);
+
+  /* === Typography === */
+  --font-sans: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --tracking-tight:  -0.01em;
+  --tracking-normal: 0em;
+  --leading-compact: 1.2;
+  --leading-normal:  1.5;
+
+  /* === Transitions === */
+  --transition-fast:   all 0.15s ease;
+  --transition-base:   all 0.2s ease;
+  --transition-slow:   all 0.3s ease;
+  --transition-expander: 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  /* === Sidebar === */
+  --sidebar-width: 240px;
+  --sidebar-collapsed: 64px;
+  --topbar-height: 64px;
+}
+
+/* ─── Tailwind v4 Theme Extension ──────────────────────────────── */
+@theme {
+  --color-green-brand:    var(--color-green-brand);
+  --color-green-accent:   var(--color-green-accent);
+  --color-house-green:    var(--color-house-green);
+  --color-green-uplift:   var(--color-green-uplift);
+  --color-green-light:    var(--color-green-light);
+  --color-canvas-warm:    var(--color-canvas-warm);
+  --color-canvas-cool:    var(--color-canvas-cool);
+  --color-gold:           var(--color-gold);
+  --color-red-semantic:   var(--color-red);
+  --font-sans:            var(--font-sans);
+  --radius-card:          var(--radius-card);
+  --radius-pill:          var(--radius-pill);
+}
+
+/* ─── Base Reset & Body ─────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: var(--leading-normal);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-text-primary);
+  background-color: var(--color-canvas-warm);
+}
+
+/* ─── Typography Utilities ──────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-sans);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-compact);
+  color: var(--color-text-primary);
+}
+
+h1 { font-size: 1.5rem; font-weight: 600; color: var(--color-green-brand); }
+h2 { font-size: 1.5rem; font-weight: 400; }
+h3 { font-size: 1.25rem; font-weight: 600; }
+h4 { font-size: 1.125rem; font-weight: 500; }
+
+p  { line-height: var(--leading-normal); }
+a  { color: var(--color-green-accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ─── Button Base Styles ────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 7px 16px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-compact);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: var(--transition-base);
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+}
+.btn:active { transform: scale(0.95); }
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary {
+  background-color: var(--color-green-accent);
+  color: #ffffff;
+  border-color: var(--color-green-accent);
+}
+.btn-primary:hover { background-color: #005c38; border-color: #005c38; }
+
+.btn-outlined {
+  background-color: transparent;
+  color: var(--color-green-accent);
+  border-color: var(--color-green-accent);
+}
+.btn-outlined:hover { background-color: rgba(0, 117, 74, 0.06); }
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--color-text-primary);
+  border-color: transparent;
+}
+.btn-ghost:hover { background-color: rgba(0,0,0,0.06); }
+
+.btn-danger {
+  background-color: var(--color-red);
+  color: #ffffff;
+  border-color: var(--color-red);
+}
+.btn-danger:hover { background-color: #a51a10; }
+
+.btn-sm { padding: 4px 12px; font-size: 0.8125rem; }
+.btn-lg { padding: 12px 28px; font-size: 1rem; }
+.btn-icon { padding: 6px; border-radius: var(--radius-full); }
+
+/* ─── Card Base ─────────────────────────────────────────────────── */
+.card {
+  background-color: var(--color-surface-white);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+/* ─── Input Base ────────────────────────────────────────────────── */
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(0,0,0,0.2);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-white);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  outline: none;
+}
+.input:focus {
+  border-color: var(--color-green-accent);
+  box-shadow: 0 0 0 3px rgba(0, 117, 74, 0.12);
+}
+.input::placeholder { color: var(--color-text-secondary); }
+.input.error { border-color: var(--color-red); }
+.input.error:focus { box-shadow: 0 0 0 3px rgba(200, 32, 20, 0.12); }
+
+/* ─── Badge / Pill ──────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.badge-green  { background-color: var(--color-green-light); color: var(--color-green-brand); }
+.badge-gold   { background-color: var(--color-gold-lightest); color: var(--color-gold); border: 1px solid var(--color-gold); }
+.badge-red    { background-color: rgba(200,32,20,0.1); color: var(--color-red); }
+.badge-blue   { background-color: rgba(59,130,246,0.1); color: #2563eb; }
+.badge-gray   { background-color: rgba(0,0,0,0.06); color: var(--color-text-secondary); }
+.badge-orange { background-color: rgba(234,88,12,0.1); color: #c2410c; }
+.badge-purple { background-color: rgba(147,51,234,0.1); color: #7e22ce; }
+
+/* ─── Scrollbar Styling ─────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.35); }
+
+/* ─── Animations ────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.animate-fade-in    { animation: fadeIn 0.2s ease forwards; }
+.animate-slide-in   { animation: slideInRight 0.2s ease forwards; }
+.animate-scale-in   { animation: scaleIn 0.15s ease forwards; }
+.animate-pulse      { animation: pulse 1.5s ease infinite; }
+.animate-spin       { animation: spin 0.8s linear infinite; }
+
+/* ─── Skeleton Loading ──────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, rgba(0,0,0,0.06) 25%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.06) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── Focus Visible ─────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-green-accent);
+  outline-offset: 2px;
+}
+
+/* ─── Utility: App Shell ────────────────────────────────────────── */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+.app-sidebar {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 40;
+  background-color: var(--color-house-green);
+  transition: width 0.25s ease;
+  overflow: hidden;
+}
+.app-sidebar.collapsed { width: var(--sidebar-collapsed); }
+.app-content {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.25s ease;
+}
+.app-content.sidebar-collapsed { margin-left: var(--sidebar-collapsed); }
+.app-topbar {
+  height: var(--topbar-height);
+  background-color: var(--color-surface-white);
+  box-shadow: var(--shadow-nav);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-4);
+  gap: var(--space-3);
+}
+.app-main {
+  flex: 1;
+  padding: var(--space-4);
+  background-color: var(--color-canvas-warm);
+}
