@@ -40,6 +40,18 @@ export default function LoginPage() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
   const googleOAuthUrl = `${API_URL.replace('/api/v1', '')}/oauth2/authorize/google?redirect_uri=${encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '')}`;
 
+  const handleBypassLogin = () => {
+    login({
+      id: '11111111-1111-1111-1111-111111111111',
+      fullName: 'Admin User',
+      email: 'admin@jari.com',
+      avatarUrl: undefined,
+      createdAt: new Date().toISOString(),
+    }, 'demo-access-token', 'demo-refresh-token');
+    toast.success('Bypassed login', 'Welcome to Jari Demo Mode!');
+    router.push('/');
+  };
+
   return (
     <div style={{ width: '100%', maxWidth: 440 }}>
       {/* Logo */}
@@ -102,6 +114,15 @@ export default function LoginPage() {
             Sign in
           </Button>
         </form>
+
+        <Button
+          variant="outlined"
+          fullWidth
+          onClick={handleBypassLogin}
+          style={{ marginTop: '0.75rem', borderColor: 'var(--color-green-accent)', color: 'var(--color-green-brand)' }}
+        >
+          ⚡ Bypass Login (Enter Demo Mode)
+        </Button>
 
         {/* Divider */}
         <div style={{
