@@ -4,14 +4,13 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard, Briefcase, Settings, ChevronLeft, ChevronRight,
-  FolderKanban, BarChart3, Tag, Layers, AlertCircle, Code2, PlusCircle,
-  Plus, Grid, Rocket, ChevronRight as ChevronRightIcon,
+  LayoutDashboard, Settings, ChevronLeft, ChevronRight,
+  FolderKanban, BarChart3, Tag, Layers, AlertCircle,
+  Plus, Grid, Rocket, PieChart, PlayCircle, ChevronRight as ChevronRightIcon,
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { useAuthStore } from '@/store/auth.store';
 
-// ─── Sidebar Component ─────────────────────────────────────────────
 interface SidebarProps {
   collapsed:   boolean;
   onToggle:    () => void;
@@ -23,17 +22,19 @@ export function Sidebar({ collapsed, onToggle, projectId }: SidebarProps) {
   const pathname = usePathname();
   const user     = useAuthStore(s => s.user);
 
-  // Dynamic project nav items matching Teams in Space sidebar
+  const pId = projectId ?? 'proj-demo-1';
+
+  // Dynamic project nav items with all 9 core Agile sections
   const navItems = [
-    { href: projectId ? `/projects/${projectId}/backlog` : '/backlog',    label: 'Backlog',    icon: FolderKanban },
-    { href: projectId ? `/projects/${projectId}/board` : '/',            label: 'Board',      icon: LayoutDashboard },
-    { href: '/reports',                                                   label: 'Reports',    icon: BarChart3 },
-    { href: '/releases',                                                  label: 'Releases',   icon: Tag },
-    { href: '/components',                                                label: 'Components', icon: Layers },
-    { href: '/issues',                                                    label: 'Issues',     icon: AlertCircle },
-    { href: '/repository',                                                label: 'Repository', icon: Code2 },
-    { href: '/add-item',                                                  label: 'Add item',   icon: PlusCircle },
-    { href: projectId ? `/projects/${projectId}/settings` : '/settings', label: 'Settings',   icon: Settings },
+    { href: `/projects/${pId}/summary`,    label: 'Summary',    icon: PieChart },
+    { href: `/projects/${pId}/board`,      label: 'Board',      icon: LayoutDashboard },
+    { href: `/projects/${pId}/backlog`,    label: 'Backlog',    icon: FolderKanban },
+    { href: `/projects/${pId}/issues`,     label: 'Issues',     icon: AlertCircle },
+    { href: `/projects/${pId}/sprints`,    label: 'Sprints',    icon: PlayCircle },
+    { href: `/projects/${pId}/reports`,    label: 'Reports',    icon: BarChart3 },
+    { href: `/projects/${pId}/releases`,   label: 'Releases',   icon: Tag },
+    { href: `/projects/${pId}/components`, label: 'Components', icon: Layers },
+    { href: `/projects/${pId}/settings`,   label: 'Settings',   icon: Settings },
   ];
 
   const w = collapsed ? 'var(--sidebar-collapsed)' : 'var(--sidebar-width)';
@@ -153,7 +154,7 @@ export function Sidebar({ collapsed, onToggle, projectId }: SidebarProps) {
         {/* Navigation List */}
         <nav style={{ padding: '12px 0', flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
           {navItems.map(item => {
-            const isActive = pathname === item.href || (item.label === 'Board' && (pathname === '/' || pathname.endsWith('/board')));
+            const isActive = pathname === item.href || (item.label === 'Board' && pathname === '/');
 
             return (
               <Link
@@ -166,7 +167,7 @@ export function Sidebar({ collapsed, onToggle, projectId }: SidebarProps) {
                   padding: collapsed ? '10px 0' : '10px 16px',
                   justifyContent: collapsed ? 'center' : 'flex-start',
                   marginInline: collapsed ? 0 : 8,
-                  marginBottom: 4,
+                  marginBottom: 2,
                   borderRadius: 'var(--radius-pill)',
                   color: isActive ? '#fff' : 'rgba(255,255,255,0.72)',
                   backgroundColor: isActive ? 'var(--color-green-accent)' : 'transparent',
