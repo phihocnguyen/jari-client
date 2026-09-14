@@ -136,13 +136,13 @@ export default function BoardPage({ params }: PageProps) {
   };
 
   return (
-    <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       {/* Top Header */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        marginBottom: '1.25rem',
+        marginBottom: '0.25rem',
       }}>
-        <h1 style={{ fontSize: '1.625rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+        <h1 style={{ fontSize: '1.625rem', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.02em' }}>
           Board
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>

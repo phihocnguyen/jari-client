@@ -16,7 +16,17 @@ export default async function ProjectSummaryPage({ params }: PageProps) {
   const projectId = resolvedParams?.projectId ?? 'proj-demo-1';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      {/* Subpage Header (matching Board) */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        marginBottom: '0.25rem',
+      }}>
+        <h1 style={{ fontSize: '1.625rem', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.02em' }}>
+          Summary
+        </h1>
+      </div>
+
       {/* 1. Metric Badges (SSR) */}
       <MetricCardsRow />
 

@@ -60,17 +60,12 @@ export default function ProjectComponentsPage({ params }: PageProps) {
   ];
 
   return (
-    <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>
-            <span>{project?.name || 'Teams in Space'}</span>
-            <span>/</span>
-            <span>Components</span>
-          </div>
-          <h1 style={{ fontSize: '1.625rem', fontWeight: 700 }}>Project Components & Modules</h1>
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <h1 style={{ fontSize: '1.625rem', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.02em' }}>
+          Components
+        </h1>
 
         <Button onClick={() => alert('Create component feature')}>
           <Plus size={16} /> Create component

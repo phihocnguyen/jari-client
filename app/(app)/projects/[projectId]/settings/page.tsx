@@ -46,14 +46,11 @@ function ProjectSettingsContent({ projectId, tab, setTab }: { projectId: string;
   ] as const;
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto' }}>
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h1 style={{ fontSize: '1.375rem', fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: 4 }}>
-          {project?.name ?? 'Project'} — Settings
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <div style={{ marginBottom: '0.25rem' }}>
+        <h1 style={{ fontSize: '1.625rem', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.02em' }}>
+          Settings
         </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
-          Manage your project configuration
-        </p>
       </div>
 
       <div style={{ display: 'flex', gap: 2, borderBottom: '2px solid rgba(0,0,0,0.08)', marginBottom: '1.5rem' }}>

@@ -259,7 +259,7 @@ function WorkspaceAccordionItem({
         onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.06)')}
         onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1, overflow: 'hidden' }}>
           {/* Workspace Avatar */}
           <div style={{
             width: 28, height: 28, borderRadius: 6, flexShrink: 0,
@@ -271,14 +271,21 @@ function WorkspaceAccordionItem({
           </div>
 
           {!collapsed && (
-            <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <span
+              title={workspace.name}
+              style={{
+                fontSize: '0.8125rem', fontWeight: 700, color: '#fff',
+                whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: 1.3,
+                flex: 1, minWidth: 0,
+              }}
+            >
               {workspace.name}
             </span>
           )}
         </div>
 
         {!collapsed && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 10 }}>
             {/* Create Project (+) Button */}
             <button
               onClick={(e) => {
@@ -318,7 +325,7 @@ function WorkspaceAccordionItem({
               <Link
                 key={proj.id}
                 href={`/projects/${proj.id}`}
-                title={collapsed ? proj.name : undefined}
+                title={proj.name}
                 style={{
                   display: 'flex', alignItems: 'center',
                   justifyContent: collapsed ? 'center' : 'flex-start',
@@ -350,7 +357,7 @@ function WorkspaceAccordionItem({
                 ) : (
                   /* Expanded Row Styling */
                   <div style={{
-                    display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+                    display: 'flex', alignItems: 'center', gap: 8, width: '100%', minWidth: 0,
                     backgroundColor: isProjectActive ? 'var(--color-green-accent)' : 'transparent',
                     padding: '6px 10px', borderRadius: 8,
                   }}>
@@ -364,7 +371,8 @@ function WorkspaceAccordionItem({
                     </div>
                     <span style={{
                       fontSize: '0.8125rem', fontWeight: isProjectActive ? 700 : 500,
-                      color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      color: '#fff', whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: 1.3,
+                      flex: 1, minWidth: 0,
                     }}>
                       {proj.name}
                     </span>

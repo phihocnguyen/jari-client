@@ -1,15 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useParams } from 'next/navigation';
 
-interface ProjectNavTabsProps {
-  projectId: string;
-}
-
-export function ProjectNavTabs({ projectId }: ProjectNavTabsProps) {
+export function ProjectNavTabs() {
   const pathname = usePathname();
-  const pId = projectId || 'proj-demo-1';
+  const params = useParams();
+  const pId = (params?.projectId as string) || 'proj-demo-1';
 
   const tabs = [
     { label: 'Summary',    href: `/projects/${pId}/summary` },
@@ -26,25 +23,32 @@ export function ProjectNavTabs({ projectId }: ProjectNavTabsProps) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: '0.25rem',
-      borderBottom: '1px solid rgba(0,0,0,0.08)', marginBottom: '1.25rem',
-      overflowX: 'auto', paddingBottom: 0,
+      borderBottom: '1px solid rgba(0,0,0,0.08)', marginBottom: '1.5rem',
+      overflowX: 'auto', paddingBottom: 0, height: 42,
+      boxSizing: 'border-box',
+      scrollbarWidth: 'none',
     }}>
       {tabs.map((tab) => {
-        const isActive = pathname === tab.href || pathname.startsWith(`${tab.href}/`);
+        const isActive = pathname === tab.href || (tab.href !== `/projects/${pId}/issues` && pathname.startsWith(`${tab.href}/`));
 
         return (
           <Link
             key={tab.label}
             href={tab.href}
             style={{
-              padding: '10px 16px',
+              height: 42,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0 16px',
               fontSize: '0.875rem',
-              fontWeight: isActive ? 600 : 500,
+              fontWeight: 600,
               color: isActive ? 'var(--color-green-brand)' : 'var(--color-text-secondary)',
               borderBottom: isActive ? '2px solid var(--color-green-accent)' : '2px solid transparent',
               textDecoration: 'none',
               whiteSpace: 'nowrap',
-              transition: 'var(--transition-fast)',
+              boxSizing: 'border-box',
+              transition: 'color 0.15s ease, border-color 0.15s ease',
             }}
           >
             {tab.label}

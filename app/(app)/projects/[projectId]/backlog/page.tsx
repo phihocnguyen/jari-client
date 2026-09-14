@@ -86,17 +86,12 @@ export default function BacklogPage({ params }: PageProps) {
   const backlogIssues = allIssues.filter((i: Issue) => !i.sprintId);
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>
-            <span>{project?.name || 'Project'}</span>
-            <span>/</span>
-            <span>Backlog</span>
-          </div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Backlog</h1>
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <h1 style={{ fontSize: '1.625rem', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.02em' }}>
+          Backlog
+        </h1>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <Button variant="outlined" onClick={() => setCreateSprintOpen(true)}>
