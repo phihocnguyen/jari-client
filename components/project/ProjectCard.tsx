@@ -14,7 +14,8 @@ const AVATAR_COLORS = [
 function getColor(key: string) { let h=0; for(let i=0;i<key.length;i++) h=key.charCodeAt(i)+((h<<5)-h); return AVATAR_COLORS[Math.abs(h)%AVATAR_COLORS.length]; }
 
 export function ProjectCard({ project }: ProjectCardProps) {
-  const color = project.avatarColor ?? getColor(project.key);
+  const pKey = project.projectKey || project.key || '';
+  const color = project.avatarColor ?? getColor(pKey);
 
   return (
     <Link href={`/projects/${project.id}/board`} style={{ textDecoration: 'none' }}>
@@ -31,11 +32,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: '#fff', fontWeight: 700, fontSize: '0.9rem', flexShrink: 0,
             }}>
-              {project.key}
+              {pKey}
             </div>
             <div>
               <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--color-text-primary)', lineHeight: 1.3 }}>{project.name}</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: 1 }}>Key: {project.key}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: 1 }}>Key: {pKey}</div>
             </div>
           </div>
           <ArrowRight size={16} style={{ color: 'var(--color-green-accent)', marginTop: 4, flexShrink: 0 }} />

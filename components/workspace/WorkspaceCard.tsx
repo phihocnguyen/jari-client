@@ -54,7 +54,7 @@ export function WorkspaceCard({ workspace }: WorkspaceCardProps) {
                 {workspace.name}
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: 2 }}>
-                /{workspace.slug}
+                /{workspace.workspaceKey || workspace.slug}
               </div>
             </div>
           </div>

@@ -11,8 +11,8 @@ import { toast } from '@/components/ui/Toast';
 import { createProjectSchema, type CreateProjectFormData } from '@/lib/validations/project';
 
 interface Props {
-  open:        boolean;
-  onClose:     () => void;
+  open: boolean;
+  onClose: () => void;
   workspaceId: string;
 }
 
@@ -21,6 +21,7 @@ export function CreateProjectModal({ open, onClose, workspaceId }: Props) {
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<CreateProjectFormData>({
     resolver: zodResolver(createProjectSchema),
+    defaultValues: { projectType: 'SOFTWARE' },
   });
 
   const mutation = useMutation({
@@ -37,17 +38,12 @@ export function CreateProjectModal({ open, onClose, workspaceId }: Props) {
     },
   });
 
-  // Auto-generate key from name (e.g. "My Project" → "MP")
+  // Auto-generate projectKey from name
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
     setValue('name', name);
-    const key = name
-      .split(/\s+/)
-      .map(w => w[0]?.toUpperCase() ?? '')
-      .join('')
-      .replace(/[^A-Z0-9]/g, '')
-      .slice(0, 6);
-    setValue('key', key);
+    const key = name.toUpperCase().replace(/\s+/g, '_').replace(/[^A-Z0-9_]/g, '').slice(0, 10);
+    setValue('projectKey', key);
   };
 
   return (
@@ -55,11 +51,14 @@ export function CreateProjectModal({ open, onClose, workspaceId }: Props) {
       open={open}
       onClose={onClose}
       title="Create project"
-      size="sm"
+      size="md"
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button loading={mutation.isPending} onClick={handleSubmit(d => mutation.mutate(d))}>
+          <Button
+            loading={mutation.isPending}
+            onClick={handleSubmit(d => mutation.mutate(d))}
+          >
             Create project
           </Button>
         </>
@@ -71,28 +70,38 @@ export function CreateProjectModal({ open, onClose, workspaceId }: Props) {
       >
         <Input
           id="proj-name"
-          label="Project name"
-          placeholder="e.g. My Awesome Project"
+          label="Project name *"
+          placeholder="My Mobile App"
           error={errors.name?.message}
           {...register('name')}
           onChange={handleNameChange}
         />
         <Input
           id="proj-key"
-          label="Project key"
-          placeholder="e.g. MAP"
-          hint="Short identifier used in issue keys (MAP-1, MAP-2…)"
-          error={errors.key?.message}
-          {...register('key')}
-          style={{ textTransform: 'uppercase' }}
+          label="Project Key *"
+          placeholder="MOBILE"
+          hint="Uppercase letters, numbers, and underscores (max 20)"
+          error={errors.projectKey?.message}
+          {...register('projectKey')}
         />
-        <Input
-          id="proj-description"
-          label="Description (optional)"
-          placeholder="What is this project about?"
-          error={errors.description?.message}
-          {...register('description')}
-        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label style={{ fontSize: '0.875rem', fontWeight: 500 }}>Project Type</label>
+          <select {...register('projectType')} className="input" style={{ cursor: 'pointer' }}>
+            <option value="SOFTWARE">Software (Scrum/Kanban)</option>
+            <option value="BUSINESS">Business</option>
+            <option value="SERVICE_DESK">Service Desk</option>
+          </select>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label style={{ fontSize: '0.875rem', fontWeight: 500 }}>Description</label>
+          <textarea
+            {...register('description')}
+            className="input"
+            rows={3}
+            style={{ resize: 'vertical' }}
+            placeholder="Add a short description..."
+          />
+        </div>
       </form>
     </Modal>
   );

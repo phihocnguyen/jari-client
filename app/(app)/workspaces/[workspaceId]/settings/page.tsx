@@ -178,11 +178,11 @@ function WorkspaceSettingsContent({
 }
 
 // ─── General Tab ──────────────────────────────────────────────────
-function GeneralTab({ workspaceId, workspace }: { workspaceId: string; workspace: { name: string; slug: string } }) {
+function GeneralTab({ workspaceId, workspace }: { workspaceId: string; workspace: { name: string; description?: string } }) {
   const qc = useQueryClient();
   const { register, handleSubmit, formState: { errors } } = useForm<UpdateWorkspaceFormData>({
     resolver: zodResolver(updateWorkspaceSchema),
-    defaultValues: { name: workspace.name, slug: workspace.slug },
+    defaultValues: { name: workspace.name, description: workspace.description ?? '' },
   });
 
   const mutation = useMutation({
@@ -199,8 +199,8 @@ function GeneralTab({ workspaceId, workspace }: { workspaceId: string; workspace
     <div className="card" style={{ padding: '1.5rem' }}>
       <h3 style={{ fontWeight: 600, marginBottom: '1.25rem' }}>General settings</h3>
       <form onSubmit={handleSubmit(d => mutation.mutate(d))} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <Input id="ws-settings-name" label="Workspace name" error={errors.name?.message} {...register('name')} />
-        <Input id="ws-settings-slug" label="Slug" error={errors.slug?.message} {...register('slug')} />
+        <Input id="ws-settings-name" label="Workspace name *" error={errors.name?.message} {...register('name')} />
+        <Input id="ws-settings-desc" label="Description" error={errors.description?.message} {...register('description')} />
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <Button type="submit" loading={mutation.isPending}>Save changes</Button>
         </div>
@@ -214,7 +214,7 @@ function InviteMemberModal({ open, onClose, workspaceId }: { open: boolean; onCl
   const qc = useQueryClient();
   const { register, handleSubmit, reset, formState: { errors } } = useForm<InviteMemberFormData>({
     resolver: zodResolver(inviteMemberSchema),
-    defaultValues: { role: 'WORKSPACE_MEMBER' },
+    defaultValues: { roleName: 'WORKSPACE_MEMBER' },
   });
 
   const mutation = useMutation({
@@ -242,12 +242,12 @@ function InviteMemberModal({ open, onClose, workspaceId }: { open: boolean; onCl
       }
     >
       <form style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <Input id="invite-email" label="Email address" type="email" placeholder="colleague@example.com"
-          error={errors.email?.message} {...register('email')} />
+        <Input id="invite-userId" label="User ID *" placeholder="Enter User UUID"
+          error={errors.userId?.message} {...register('userId')} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ fontSize: '0.875rem', fontWeight: 500 }}>Role</label>
+          <label style={{ fontSize: '0.875rem', fontWeight: 500 }}>Role *</label>
           <select
-            {...register('role')}
+            {...register('roleName')}
             className="input"
             style={{ cursor: 'pointer' }}
           >

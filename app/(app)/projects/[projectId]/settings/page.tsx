@@ -107,11 +107,11 @@ function ProjectSettingsContent({ projectId, tab, setTab }: { projectId: string;
   );
 }
 
-function GeneralTab({ projectId, project }: { projectId: string; project: { name: string; key: string; description?: string } }) {
+function GeneralTab({ projectId, project }: { projectId: string; project: { name: string; description?: string } }) {
   const qc = useQueryClient();
   const { register, handleSubmit, formState: { errors } } = useForm<UpdateProjectFormData>({
     resolver: zodResolver(updateProjectSchema),
-    defaultValues: { name: project.name, key: project.key, description: project.description ?? '' },
+    defaultValues: { name: project.name, description: project.description ?? '' },
   });
 
   const mutation = useMutation({
@@ -127,8 +127,7 @@ function GeneralTab({ projectId, project }: { projectId: string; project: { name
     <div className="card" style={{ padding: '1.5rem' }}>
       <h3 style={{ fontWeight: 600, marginBottom: '1.25rem' }}>General settings</h3>
       <form onSubmit={handleSubmit(d => mutation.mutate(d))} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <Input id="proj-settings-name" label="Project name" error={errors.name?.message} {...register('name')} />
-        <Input id="proj-settings-key" label="Project key" error={errors.key?.message} {...register('key')} style={{ textTransform: 'uppercase' }} />
+        <Input id="proj-settings-name" label="Project name *" error={errors.name?.message} {...register('name')} />
         <Input id="proj-settings-desc" label="Description" error={errors.description?.message} {...register('description')} />
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <Button type="submit" loading={mutation.isPending}>Save changes</Button>

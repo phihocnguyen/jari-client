@@ -11,14 +11,14 @@ import { toast } from '@/components/ui/Toast';
 import { createWorkspaceSchema, type CreateWorkspaceFormData } from '@/lib/validations/workspace';
 
 interface Props {
-  open:    boolean;
+  open: boolean;
   onClose: () => void;
 }
 
 export function CreateWorkspaceModal({ open, onClose }: Props) {
   const qc = useQueryClient();
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<CreateWorkspaceFormData>({
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<CreateWorkspaceFormData>({
     resolver: zodResolver(createWorkspaceSchema),
   });
 
@@ -36,12 +36,12 @@ export function CreateWorkspaceModal({ open, onClose }: Props) {
     },
   });
 
-  // Auto-generate slug from name
+  // Auto-generate workspaceKey from name
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
     setValue('name', name);
-    const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').slice(0, 32);
-    setValue('slug', slug);
+    const key = name.toUpperCase().replace(/\s+/g, '_').replace(/[^A-Z0-9_]/g, '').slice(0, 20);
+    setValue('workspaceKey', key);
   };
 
   return (
@@ -68,19 +68,26 @@ export function CreateWorkspaceModal({ open, onClose }: Props) {
       >
         <Input
           id="ws-name"
-          label="Workspace name"
+          label="Workspace name *"
           placeholder="My Workspace"
           error={errors.name?.message}
           {...register('name')}
           onChange={handleNameChange}
         />
         <Input
-          id="ws-slug"
-          label="Slug (URL identifier)"
-          placeholder="my-workspace"
-          hint="Used in URLs — lowercase, numbers, hyphens only"
-          error={errors.slug?.message}
-          {...register('slug')}
+          id="ws-key"
+          label="Workspace key *"
+          placeholder="MY_WORKSPACE"
+          hint="Uppercase letters, numbers, and underscores only (max 20)"
+          error={errors.workspaceKey?.message}
+          {...register('workspaceKey')}
+        />
+        <Input
+          id="ws-desc"
+          label="Description"
+          placeholder="Optional description"
+          error={errors.description?.message}
+          {...register('description')}
         />
       </form>
     </Modal>
