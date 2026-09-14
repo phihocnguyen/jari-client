@@ -323,7 +323,7 @@ a:hover { text-decoration: underline; }
   z-index: 40;
   background-color: var(--color-house-green);
   transition: width 0.25s ease;
-  overflow: hidden;
+  overflow: visible;
 }
 .app-sidebar.collapsed { width: var(--sidebar-collapsed); }
 .app-content {

@@ -53,10 +53,12 @@ export function Sidebar({ collapsed, onToggle, projectId }: SidebarProps) {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
+          position: 'fixed',
+          overflow: 'visible',
         }}
       >
         {/* Top Section */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'visible', position: 'relative' }}>
           {/* Brand Header */}
           <div style={{
             height: 'var(--topbar-height)',
@@ -64,6 +66,7 @@ export function Sidebar({ collapsed, onToggle, projectId }: SidebarProps) {
             padding: collapsed ? '0 12px' : '0 16px',
             borderBottom: '1px solid rgba(255,255,255,0.08)',
             flexShrink: 0,
+            position: 'relative',
           }}>
             <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
               {/* Diamond Logo */}
@@ -92,7 +95,7 @@ export function Sidebar({ collapsed, onToggle, projectId }: SidebarProps) {
             onClick={onToggle}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             style={{
-              position: 'absolute', top: 76, right: -12,
+              position: 'absolute', top: 20, right: -12,
               width: 24, height: 24,
               background: 'var(--color-green-accent)',
               border: '2px solid var(--color-house-green)',
@@ -100,7 +103,7 @@ export function Sidebar({ collapsed, onToggle, projectId }: SidebarProps) {
               color: '#fff',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer',
-              zIndex: 50,
+              zIndex: 100,
               boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
               transition: 'var(--transition-base)',
             }}
@@ -119,28 +122,6 @@ export function Sidebar({ collapsed, onToggle, projectId }: SidebarProps) {
               flexShrink: 0,
             }}>
               <span>WORKSPACES ({workspaces.length})</span>
-              {/* Discord-style + Create Workspace Button */}
-              <button
-                onClick={() => setCreateWorkspaceOpen(true)}
-                title="Create Workspace"
-                style={{
-                  background: 'rgba(255,255,255,0.12)',
-                  border: 'none',
-                  borderRadius: 4,
-                  width: 22,
-                  height: 22,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#fff',
-                  cursor: 'pointer',
-                  transition: 'background 0.2s',
-                }}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--color-green-accent)')}
-                onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)')}
-              >
-                <Plus size={14} />
-              </button>
             </div>
           )}
 
