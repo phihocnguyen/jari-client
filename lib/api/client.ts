@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { tokenStorage } from '@/lib/auth/token';
+import { getDemoResponse } from './demoMock';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080/api/v1';
 
@@ -10,11 +11,13 @@ const apiClient: AxiosInstance = axios.create({
   timeout: 15_000,
 });
 
-// ─── Request Interceptor: Attach Bearer Token ─────────────────────
+// ─── Request Interceptor: Attach Bearer Token / Handle Demo Adapter ───
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = tokenStorage.getAccess();
-    if (token && config.headers) {
+    if (token === 'demo-access-token') {
+      config.adapter = async (cfg) => getDemoResponse(cfg);
+    } else if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -37,7 +40,12 @@ const processQueue = (error: AxiosError | null, token: string | null = null) => 
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: AxiosError) => {
+    const token = tokenStorage.getAccess();
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+
+    if (token === 'demo-access-token') {
+      return Promise.resolve(getDemoResponse(originalRequest ?? {}));
+    }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       const refreshToken = tokenStorage.getRefresh();

@@ -54,7 +54,7 @@ export default function LoginPage() {
       createdAt: new Date().toISOString(),
     }, 'demo-access-token', 'demo-refresh-token');
     toast.success('Bypassed login', 'Welcome to Jari Demo Mode!');
-    router.push('/');
+    window.location.href = '/';
   };
 
   return (
