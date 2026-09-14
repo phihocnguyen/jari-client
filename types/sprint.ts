@@ -28,11 +28,13 @@ export interface UpdateSprintRequest {
 }
 
 export interface BoardColumn {
-  status: string;
+  statusId?: string;
+  statusName: string;
+  statusCategory?: string;
   issues: import('./issue').Issue[];
 }
 
 export interface BoardResponse {
-  sprint: Sprint;
+  sprint?: Sprint;
   columns: BoardColumn[];
 }
