@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
@@ -37,8 +37,13 @@ export default function LoginPage() {
     }
   };
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
-  const googleOAuthUrl = `${API_URL.replace('/api/v1', '')}/oauth2/authorize/google?redirect_uri=${encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '')}`;
+  const [googleOAuthUrl, setGoogleOAuthUrl] = useState('#');
+
+  useEffect(() => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
+    const origin = window.location.origin;
+    setGoogleOAuthUrl(`${API_URL.replace('/api/v1', '')}/oauth2/authorize/google?redirect_uri=${encodeURIComponent(`${origin}/auth/callback`)}`);
+  }, []);
 
   const handleBypassLogin = () => {
     login({

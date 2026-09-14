@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth.store';
 import { useQuery } from '@tanstack/react-query';
@@ -17,7 +18,11 @@ export default function DashboardPage() {
     queryFn:  () => workspaceApi.list().then(r => r.data),
   });
 
-  const greeting = getGreeting();
+  const [greeting, setGreeting] = useState('Welcome back');
+
+  useEffect(() => {
+    setGreeting(getGreeting());
+  }, []);
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto' }}>
