@@ -26,6 +26,10 @@ export interface Issue {
   position?: string;
   createdAt: string;
   updatedAt: string;
+  tags?: string[];
+  subtext?: string;
+  progressPercent?: number;
+  extraAssigneeCount?: number;
 }
 
 export interface IssueDetail extends Issue {
