@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
 import { authApi } from '@/lib/api/auth';
@@ -9,7 +9,7 @@ import { toast } from '@/components/ui/Toast';
 
 // ─── OAuth2 Callback Page ─────────────────────────────────────────
 // After Google OAuth, backend redirects to this page with ?token=<access>&refresh=<refresh>
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const login = useAuthStore(s => s.login);
@@ -55,5 +55,17 @@ export default function AuthCallbackPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="animate-spin" style={{ width: 40, height: 40, border: '3px solid var(--color-green-light)', borderTop: '3px solid var(--color-green-accent)', borderRadius: '50%' }} />
+      </div>
+    }>
+      <AuthCallbackContent />
+    </Suspense>
   );
 }

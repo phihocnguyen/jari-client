@@ -1,7 +1,5 @@
 @import "tailwindcss";
 
-/* ─── Google Fonts ─────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* ─── Design Tokens (Starbucks-inspired for Jari) ─────────────── */
 :root {
@@ -56,7 +54,7 @@
   --shadow-dropdown: 0 4px 16px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.08);
 
   /* === Typography === */
-  --font-sans: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-sans: var(--font-inter), 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --tracking-tight:  -0.01em;
   --tracking-normal: 0em;
   --leading-compact: 1.2;

@@ -83,6 +83,7 @@ export interface IssueFilter {
   assigneeId?: string;
   sprintId?: string;
   keyword?: string;
+  query?: string;
   page?: number;
   size?: number;
 }
