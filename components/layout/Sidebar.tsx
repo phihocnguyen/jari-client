@@ -3,13 +3,17 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import {
   LayoutDashboard, Settings, ChevronLeft, ChevronRight,
   FolderKanban, BarChart3, Tag, Layers, AlertCircle,
-  Plus, Grid, Rocket, PieChart, PlayCircle, ChevronRight as ChevronRightIcon,
+  Plus, Grid, Rocket, PieChart, PlayCircle, Folder, Briefcase,
+  ChevronDown, ChevronRight as ChevronRightIcon,
 } from 'lucide-react';
+import { projectApi } from '@/lib/api/project';
 import { Avatar } from '@/components/ui/Avatar';
 import { useAuthStore } from '@/store/auth.store';
+import type { Project } from '@/types/project';
 
 interface SidebarProps {
   collapsed:   boolean;
@@ -18,24 +22,19 @@ interface SidebarProps {
   workspaceId?: string;
 }
 
-export function Sidebar({ collapsed, onToggle, projectId }: SidebarProps) {
+export function Sidebar({ collapsed, onToggle, projectId, workspaceId }: SidebarProps) {
   const pathname = usePathname();
   const user     = useAuthStore(s => s.user);
 
-  const pId = projectId ?? 'proj-demo-1';
+  // Fetch existing projects from workspace
+  const { data: projects = [] } = useQuery({
+    queryKey: ['projects', workspaceId],
+    queryFn: () => projectApi.list(workspaceId || 'ws-demo-1').then(r => r.data),
+  });
 
-  // Dynamic project nav items with all 9 core Agile sections
-  const navItems = [
-    { href: `/projects/${pId}/summary`,    label: 'Summary',    icon: PieChart },
-    { href: `/projects/${pId}/board`,      label: 'Board',      icon: LayoutDashboard },
-    { href: `/projects/${pId}/backlog`,    label: 'Backlog',    icon: FolderKanban },
-    { href: `/projects/${pId}/issues`,     label: 'Issues',     icon: AlertCircle },
-    { href: `/projects/${pId}/sprints`,    label: 'Sprints',    icon: PlayCircle },
-    { href: `/projects/${pId}/reports`,    label: 'Reports',    icon: BarChart3 },
-    { href: `/projects/${pId}/releases`,   label: 'Releases',   icon: Tag },
-    { href: `/projects/${pId}/components`, label: 'Components', icon: Layers },
-    { href: `/projects/${pId}/settings`,   label: 'Settings',   icon: Settings },
-  ];
+  // Extract active project ID from URL if not passed explicitly
+  const urlMatch = pathname.match(/\/projects\/([^\/]+)/);
+  const activeProjectId = projectId || (urlMatch ? urlMatch[1] : projects[0]?.id || 'proj-demo-1');
 
   const w = collapsed ? 'var(--sidebar-collapsed)' : 'var(--sidebar-width)';
 
@@ -59,7 +58,7 @@ export function Sidebar({ collapsed, onToggle, projectId }: SidebarProps) {
           padding: collapsed ? '0 12px' : '0 16px',
           borderBottom: '1px solid rgba(255,255,255,0.08)',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
             {/* Diamond Logo */}
             <div style={{
               width: 32, height: 32, borderRadius: 8, flexShrink: 0,
@@ -78,30 +77,22 @@ export function Sidebar({ collapsed, onToggle, projectId }: SidebarProps) {
                 Jari
               </span>
             )}
-          </div>
+          </Link>
 
           {!collapsed && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <button
-                style={{
-                  background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: 6,
-                  width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#fff', cursor: 'pointer',
-                }}
-                title="Create new"
-              >
-                <Plus size={16} />
-              </button>
-              <button
-                style={{
-                  background: 'transparent', border: 'none', borderRadius: 6,
-                  width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: 'rgba(255,255,255,0.7)', cursor: 'pointer',
-                }}
-                title="App switcher"
-              >
-                <Grid size={16} />
-              </button>
+              <Link href="/workspaces">
+                <button
+                  style={{
+                    background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: 6,
+                    width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#fff', cursor: 'pointer',
+                  }}
+                  title="Workspaces"
+                >
+                  <Briefcase size={16} />
+                </button>
+              </Link>
             </div>
           )}
         </div>
@@ -127,68 +118,120 @@ export function Sidebar({ collapsed, onToggle, projectId }: SidebarProps) {
           {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
         </button>
 
-        {/* Project Header Card */}
-        <div style={{ padding: collapsed ? '12px 8px' : '16px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-              backgroundColor: '#EAB308',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-            }}>
-              <Rocket size={18} />
-            </div>
-            {!collapsed && (
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  Teams in Space
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', whiteSpace: 'nowrap' }}>
-                  Software project
-                </div>
-              </div>
-            )}
+        {/* PROJECTS Section Header */}
+        {!collapsed && (
+          <div style={{
+            padding: '16px 16px 6px',
+            fontSize: '0.6875rem', fontWeight: 700,
+            color: 'rgba(255,255,255,0.4)',
+            letterSpacing: '0.08em', textTransform: 'uppercase',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            <span>PROJECTS ({projects.length})</span>
           </div>
-        </div>
+        )}
 
-        {/* Navigation List */}
-        <nav style={{ padding: '12px 0', flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
-          {navItems.map(item => {
-            const isActive = pathname === item.href || (item.label === 'Board' && pathname === '/');
+        {/* Dynamic List of Existing Projects */}
+        <nav style={{ padding: '8px 0', flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+          {projects.map((proj: Project) => {
+            const isProjectActive = activeProjectId === proj.id;
+            const projectKey = proj.projectKey || proj.key || 'PROJ';
+
+            const subNavItems = [
+              { href: `/projects/${proj.id}/summary`,    label: 'Summary',    icon: PieChart },
+              { href: `/projects/${proj.id}/board`,      label: 'Board',      icon: LayoutDashboard },
+              { href: `/projects/${proj.id}/backlog`,    label: 'Backlog',    icon: FolderKanban },
+              { href: `/projects/${proj.id}/issues`,     label: 'Issues',     icon: AlertCircle },
+              { href: `/projects/${proj.id}/sprints`,    label: 'Sprints',    icon: PlayCircle },
+              { href: `/projects/${proj.id}/reports`,    label: 'Reports',    icon: BarChart3 },
+              { href: `/projects/${proj.id}/releases`,   label: 'Releases',   icon: Tag },
+              { href: `/projects/${proj.id}/components`, label: 'Components', icon: Layers },
+              { href: `/projects/${proj.id}/settings`,   label: 'Settings',   icon: Settings },
+            ];
 
             return (
-              <Link
-                key={item.label}
-                href={item.href}
-                title={collapsed ? item.label : undefined}
-                style={{
-                  display: 'flex', alignItems: 'center',
-                  gap: 12,
-                  padding: collapsed ? '10px 0' : '10px 16px',
-                  justifyContent: collapsed ? 'center' : 'flex-start',
-                  marginInline: collapsed ? 0 : 8,
-                  marginBottom: 2,
-                  borderRadius: 'var(--radius-pill)',
-                  color: isActive ? '#fff' : 'rgba(255,255,255,0.72)',
-                  backgroundColor: isActive ? 'var(--color-green-accent)' : 'transparent',
-                  fontWeight: isActive ? 600 : 400,
-                  fontSize: '0.875rem',
-                  textDecoration: 'none',
-                  transition: 'var(--transition-fast)',
-                  whiteSpace: 'nowrap',
-                }}
-                onMouseEnter={e => {
-                  if (!isActive) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)';
-                  e.currentTarget.style.color = '#fff';
-                }}
-                onMouseLeave={e => {
-                  if (!isActive) e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.color = isActive ? '#fff' : 'rgba(255,255,255,0.72)';
-                }}
-              >
-                <item.icon size={18} style={{ flexShrink: 0 }} />
-                {!collapsed && <span>{item.label}</span>}
-              </Link>
+              <div key={proj.id} style={{ marginBottom: 6 }}>
+                {/* Project Title Row */}
+                <Link
+                  href={`/projects/${proj.id}/board`}
+                  title={collapsed ? proj.name : undefined}
+                  style={{
+                    display: 'flex', alignItems: 'center',
+                    justifyContent: collapsed ? 'center' : 'space-between',
+                    padding: collapsed ? '10px 0' : '10px 14px',
+                    marginInline: collapsed ? 0 : 8,
+                    borderRadius: '10px',
+                    color: isProjectActive ? '#fff' : 'rgba(255,255,255,0.85)',
+                    backgroundColor: isProjectActive ? 'rgba(255,255,255,0.1)' : 'transparent',
+                    textDecoration: 'none',
+                    transition: 'var(--transition-fast)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                    {/* Project Avatar */}
+                    <div style={{
+                      width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+                      backgroundColor: proj.avatarColor || '#EAB308',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: '#fff', fontSize: '0.75rem', fontWeight: 800,
+                    }}>
+                      {proj.name.charAt(0).toUpperCase()}
+                    </div>
+
+                    {!collapsed && (
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: '0.875rem', fontWeight: isProjectActive ? 700 : 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {proj.name}
+                        </div>
+                        <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace' }}>
+                          {projectKey}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {!collapsed && (
+                    <ChevronDown
+                      size={14}
+                      color="rgba(255,255,255,0.5)"
+                      style={{
+                        transform: isProjectActive ? 'rotate(0deg)' : 'rotate(-90deg)',
+                        transition: 'transform 0.2s',
+                      }}
+                    />
+                  )}
+                </Link>
+
+                {/* Sub-Navigation Items for Active Project */}
+                {isProjectActive && !collapsed && (
+                  <div style={{ paddingLeft: 22, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {subNavItems.map(subItem => {
+                      const isSubActive = pathname === subItem.href || (subItem.label === 'Board' && pathname === `/projects/${proj.id}`);
+
+                      return (
+                        <Link
+                          key={subItem.label}
+                          href={subItem.href}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            padding: '7px 12px',
+                            borderRadius: 'var(--radius-pill)',
+                            color: isSubActive ? '#fff' : 'rgba(255,255,255,0.68)',
+                            backgroundColor: isSubActive ? 'var(--color-green-accent)' : 'transparent',
+                            fontWeight: isSubActive ? 600 : 400,
+                            fontSize: '0.8125rem',
+                            textDecoration: 'none',
+                            transition: 'var(--transition-fast)',
+                          }}
+                        >
+                          <subItem.icon size={16} style={{ flexShrink: 0 }} />
+                          <span>{subItem.label}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
           })}
         </nav>
