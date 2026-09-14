@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, CheckCircle, Search, SlidersHorizontal, ArrowRight, Bookmark, CheckSquare, AlertCircle, Zap, ArrowUp, ArrowDown, Minus } from 'lucide-react';
+import { Plus, CheckCircle, Search, Bookmark, CheckSquare, AlertCircle, Zap, ArrowUp, ArrowDown, Minus } from 'lucide-react';
 import { sprintApi } from '@/lib/api/sprint';
 import { issueApi } from '@/lib/api/issue';
 import { projectApi } from '@/lib/api/project';
@@ -31,6 +31,7 @@ export default function BoardPage({ params }: PageProps) {
   const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
   const [createIssueOpen, setCreateIssueOpen] = useState(false);
   const [draggedIssueId, setDraggedIssueId] = useState<string | null>(null);
+  const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 
   useEffect(() => {
     params.then(p => setResolvedParams(p));
@@ -117,18 +118,30 @@ export default function BoardPage({ params }: PageProps) {
     }
   };
 
-  // Drag and Drop handlers
+  // Drag and Drop handlers with Jira-like visual effects
   const handleDragStart = (e: React.DragEvent, issueId: string) => {
     setDraggedIssueId(issueId);
     e.dataTransfer.setData('text/plain', issueId);
+    e.dataTransfer.effectAllowed = 'move';
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, columnId: string) => {
     e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverColumn !== columnId) {
+      setDragOverColumn(columnId);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent, columnId: string) => {
+    if (dragOverColumn === columnId) {
+      setDragOverColumn(null);
+    }
   };
 
   const handleDrop = (e: React.DragEvent, targetStatus: IssueStatus) => {
     e.preventDefault();
+    setDragOverColumn(null);
     const issueId = e.dataTransfer.getData('text/plain') || draggedIssueId;
     if (issueId) {
       updateStatusMutation.mutate({ issueId, status: targetStatus });
@@ -222,25 +235,29 @@ export default function BoardPage({ params }: PageProps) {
           }}
         >
           {DEFAULT_COLUMNS.map((col) => {
-            // Find issues matching status column from boardData or allIssues
             const columnIssues = filterIssues(
               allIssues.filter((i) => i.status === col.id)
             );
             const totalPoints = columnIssues.reduce((acc, curr) => acc + (curr.storyPoints || 0), 0);
+            const isHovered = dragOverColumn === col.id;
 
             return (
               <div
                 key={col.id}
-                onDragOver={handleDragOver}
+                onDragOver={(e) => handleDragOver(e, col.id)}
+                onDragLeave={(e) => handleDragLeave(e, col.id)}
                 onDrop={(e) => handleDrop(e, col.id)}
                 style={{
-                  backgroundColor: 'rgba(0,0,0,0.03)',
+                  backgroundColor: isHovered ? 'rgba(0, 117, 74, 0.06)' : 'rgba(0,0,0,0.03)',
                   borderRadius: 'var(--radius-card)',
                   padding: '12px',
-                  minHeight: '500px',
+                  minHeight: '520px',
                   display: 'flex',
                   flexDirection: 'column',
-                  border: '1px solid rgba(0,0,0,0.06)',
+                  border: isHovered
+                    ? '2px dashed var(--color-green-accent)'
+                    : '1px solid rgba(0,0,0,0.06)',
+                  transition: 'background-color 0.2s ease, border 0.2s ease',
                 }}
               >
                 {/* Column Header */}
@@ -280,100 +297,116 @@ export default function BoardPage({ params }: PageProps) {
 
                 {/* Cards Container */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
-                  {columnIssues.map((issue) => (
-                    <div
-                      key={issue.id}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, issue.id)}
-                      onClick={() => setSelectedIssueId(issue.id)}
-                      style={{
-                        backgroundColor: 'var(--color-surface-white)',
-                        padding: '12px',
-                        borderRadius: 'var(--radius-md)',
-                        boxShadow: 'var(--shadow-card)',
-                        cursor: 'grab',
-                        transition: 'var(--transition-fast)',
-                        border: '1px solid rgba(0,0,0,0.06)',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--color-green-accent)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)';
-                        e.currentTarget.style.boxShadow = 'var(--shadow-card)';
-                      }}
-                    >
+                  {columnIssues.map((issue) => {
+                    const isDragging = draggedIssueId === issue.id;
+
+                    return (
                       <div
+                        key={issue.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, issue.id)}
+                        onDragEnd={() => {
+                          setDraggedIssueId(null);
+                          setDragOverColumn(null);
+                        }}
+                        onClick={() => setSelectedIssueId(issue.id)}
                         style={{
-                          fontSize: '0.875rem',
-                          fontWeight: 500,
-                          color: 'var(--color-text-primary)',
-                          marginBottom: '10px',
-                          lineHeight: 1.4,
+                          backgroundColor: 'var(--color-surface-white)',
+                          padding: '12px',
+                          borderRadius: 'var(--radius-md)',
+                          boxShadow: isDragging ? 'none' : 'var(--shadow-card)',
+                          cursor: 'grab',
+                          opacity: isDragging ? 0.4 : 1,
+                          transform: isDragging ? 'scale(0.97)' : 'none',
+                          border: isDragging
+                            ? '1px dashed var(--color-green-accent)'
+                            : '1px solid rgba(0,0,0,0.06)',
+                          transition: 'all 0.15s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isDragging) {
+                            e.currentTarget.style.borderColor = 'var(--color-green-accent)';
+                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isDragging) {
+                            e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)';
+                            e.currentTarget.style.boxShadow = 'var(--shadow-card)';
+                          }
                         }}
                       >
-                        {issue.title}
-                      </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          {getTypeIcon(issue.type)}
-                          <span
-                            style={{
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              color: 'var(--color-text-secondary)',
-                              fontFamily: 'monospace',
-                            }}
-                          >
-                            {issue.key}
-                          </span>
+                        <div
+                          style={{
+                            fontSize: '0.875rem',
+                            fontWeight: 500,
+                            color: 'var(--color-text-primary)',
+                            marginBottom: '10px',
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          {issue.title}
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {issue.storyPoints !== undefined && issue.storyPoints !== null && (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            {getTypeIcon(issue.type)}
                             <span
                               style={{
-                                padding: '1px 5px',
-                                backgroundColor: 'rgba(0,0,0,0.06)',
-                                borderRadius: 'var(--radius-pill)',
-                                fontSize: '0.7rem',
+                                fontSize: '0.75rem',
                                 fontWeight: 600,
+                                color: 'var(--color-text-secondary)',
+                                fontFamily: 'monospace',
                               }}
                             >
-                              {issue.storyPoints}
+                              {issue.key}
                             </span>
-                          )}
-
-                          <div title={`Priority: ${issue.priority}`}>
-                            {getPriorityIcon(issue.priority)}
                           </div>
 
-                          {issue.assignee ? (
-                            <Avatar name={issue.assignee.fullName} src={issue.assignee.avatarUrl} size={22} />
-                          ) : (
-                            <div
-                              style={{
-                                width: 22,
-                                height: 22,
-                                borderRadius: '50%',
-                                border: '1px dashed rgba(0,0,0,0.3)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '0.6rem',
-                                color: 'var(--color-text-secondary)',
-                              }}
-                              title="Unassigned"
-                            >
-                              ?
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {issue.storyPoints !== undefined && issue.storyPoints !== null && (
+                              <span
+                                style={{
+                                  padding: '1px 5px',
+                                  backgroundColor: 'rgba(0,0,0,0.06)',
+                                  borderRadius: 'var(--radius-pill)',
+                                  fontSize: '0.7rem',
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {issue.storyPoints}
+                              </span>
+                            )}
+
+                            <div title={`Priority: ${issue.priority}`}>
+                              {getPriorityIcon(issue.priority)}
                             </div>
-                          )}
+
+                            {issue.assignee ? (
+                              <Avatar name={issue.assignee.fullName} src={issue.assignee.avatarUrl} size={22} />
+                            ) : (
+                              <div
+                                style={{
+                                  width: 22,
+                                  height: 22,
+                                  borderRadius: '50%',
+                                  border: '1px dashed rgba(0,0,0,0.3)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '0.6rem',
+                                  color: 'var(--color-text-secondary)',
+                                }}
+                                title="Unassigned"
+                              >
+                                ?
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
 
                   {columnIssues.length === 0 && (
                     <div
@@ -382,11 +415,15 @@ export default function BoardPage({ params }: PageProps) {
                         textAlign: 'center',
                         color: 'var(--color-text-secondary)',
                         fontSize: '0.75rem',
-                        border: '1px dashed rgba(0,0,0,0.15)',
+                        border: isHovered
+                          ? '1px dashed var(--color-green-accent)'
+                          : '1px dashed rgba(0,0,0,0.15)',
                         borderRadius: 'var(--radius-md)',
+                        backgroundColor: isHovered ? 'rgba(0, 117, 74, 0.04)' : 'transparent',
+                        transition: 'all 0.2s ease',
                       }}
                     >
-                      Drag items here
+                      Drop items here
                     </div>
                   )}
                 </div>
