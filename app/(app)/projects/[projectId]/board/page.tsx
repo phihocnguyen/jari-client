@@ -14,7 +14,6 @@ import { Avatar } from '@/components/ui/Avatar';
 import { toast } from '@/components/ui/Toast';
 import { CreateIssueModal } from '@/components/issue/CreateIssueModal';
 import { IssueDetailModal } from '@/components/issue/IssueDetailModal';
-import { SprintTimeline } from '@/components/sprint/SprintTimeline';
 import type { Issue, IssueStatus } from '@/types/issue';
 
 interface PageProps {
@@ -175,9 +174,6 @@ export default function BoardPage({ params }: PageProps) {
           </button>
         </div>
       </div>
-
-      {/* Sprint Timeline Navigation Bar */}
-      <SprintTimeline />
 
       {/* Filter / Search Bar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
@@ -416,23 +412,15 @@ export default function BoardPage({ params }: PageProps) {
                             <ChevronsUp size={16} color="#DC2626" />
                           </div>
 
-                          {/* Right Stacked Avatars */}
-                          <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 10 }}>
-                            <div style={{ zIndex: 3, marginRight: -6 }}>
-                              <Avatar name={issue.assignee?.fullName ?? 'Admin User'} size={24} />
-                            </div>
-                            <div style={{ zIndex: 2, marginRight: -6 }}>
-                              <Avatar name="Sarah Chen" size={24} />
-                            </div>
-                            <div style={{
-                              zIndex: 1, width: 24, height: 24, borderRadius: '50%',
-                              backgroundColor: '#3B82F6', color: '#fff',
-                              fontSize: '0.65rem', fontWeight: 700,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              border: '2px solid #fff',
-                            }}>
-                              +{issue.extraAssigneeCount ?? 4}
-                            </div>
+                          {/* Right Assignee Display matching display name */}
+                          <div
+                            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                            title={issue.assignee?.fullName ?? 'Học Nguyễn'}
+                          >
+                            <Avatar name={issue.assignee?.fullName ?? 'Học Nguyễn'} size={24} />
+                            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569' }}>
+                              {issue.assignee?.fullName ?? 'Học Nguyễn'}
+                            </span>
                           </div>
                         </div>
                       </div>
