@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { issueApi } from '@/lib/api/issue';
@@ -322,9 +323,15 @@ export function TaskDetailView({
               <Plus size={13} /> Add epic
             </span>
             <span>/</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: '#172b4d' }}>
+            <Link
+              href={`/projects/${projectId}/issues/${issue.key}`}
+              title="Open full page"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600, color: '#172b4d', textDecoration: 'none' }}
+              onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+              onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+            >
               <span>{issue.key}</span>
-            </div>
+            </Link>
           </div>
         )}
 
@@ -350,6 +357,7 @@ export function TaskDetailView({
 
             <TaskDescription
               description={issue.description}
+              projectId={projectId}
               onUpdateDescription={(description) => updateMutation.mutate({ description })}
               isUpdating={updateMutation.isPending}
             />
@@ -367,6 +375,7 @@ export function TaskDetailView({
             <TaskActivity
               comments={commentsQuery.data ?? issue.comments ?? []}
               history={history}
+              projectId={projectId}
               onAddComment={(content) => addCommentMutation.mutate(content)}
               isAddingComment={addCommentMutation.isPending}
             />
