@@ -50,7 +50,6 @@ function SortableTab({ tab, isActive, activeId, overId, tabs }: SortableTabProps
 
   const style: React.CSSProperties = {
     transform: CSS.Translate.toString(transform),
-    transition,
     height: 42,
     display: 'inline-flex',
     alignItems: 'center',
@@ -68,7 +67,7 @@ function SortableTab({ tab, isActive, activeId, overId, tabs }: SortableTabProps
     zIndex: isDragging ? 20 : 'auto',
     userSelect: 'none',
     position: 'relative',
-    transitionProperty: 'color, border-color, opacity, transform',
+    transition: transition || 'color 0.15s ease, border-color 0.15s ease',
   };
 
   // Determine if drop indicator line with pin should be displayed
