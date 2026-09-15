@@ -8,10 +8,12 @@ import type { Comment, IssueHistory } from '@/types/issue';
 
 import { getUserInitials } from '@/utils/user';
 import { formatDate, timeAgo } from '@/utils/date';
+import { renderTextWithIssueKeys } from '@/utils/issueText';
 
 interface TaskActivityProps {
   comments: Comment[];
   history: IssueHistory[];
+  projectId?: string;
   onAddComment: (content: string) => void;
   isAddingComment: boolean;
 }
@@ -148,6 +150,7 @@ function renderHistoryValueBadge(field: string, val?: string) {
 export function TaskActivity({
   comments,
   history,
+  projectId = '',
   onAddComment,
   isAddingComment,
 }: TaskActivityProps) {
@@ -371,7 +374,7 @@ export function TaskActivity({
                       whiteSpace: 'pre-wrap',
                     }}
                   >
-                    {c.content}
+                    {renderTextWithIssueKeys(c.content || '', projectId)}
                   </div>
                 </div>
               </div>

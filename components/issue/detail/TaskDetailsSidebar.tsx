@@ -326,7 +326,6 @@ export function TaskDetailsSidebar({
           border: '1px solid rgba(0,0,0,0.1)',
           borderRadius: 8,
           backgroundColor: '#ffffff',
-          overflow: 'hidden',
         }}
       >
         {/* Accordion Header */}

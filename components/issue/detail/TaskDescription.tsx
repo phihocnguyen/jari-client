@@ -2,15 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
+import { renderTextWithIssueKeys } from '@/utils/issueText';
 
 interface TaskDescriptionProps {
   description?: string;
+  projectId?: string;
   onUpdateDescription: (newDesc: string) => void;
   isUpdating: boolean;
 }
 
 export function TaskDescription({
   description = '',
+  projectId = '',
   onUpdateDescription,
   isUpdating,
 }: TaskDescriptionProps) {
@@ -84,7 +87,7 @@ export function TaskDescription({
             e.currentTarget.style.borderColor = 'transparent';
           }}
         >
-          {description || 'Add a description...'}
+          {description ? renderTextWithIssueKeys(description, projectId) : 'Add a description...'}
         </div>
       )}
     </div>

@@ -122,7 +122,15 @@ export function TaskDetailHeader({
             <span>/</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: '#172b4d' }}>
               {getTypeIcon(issue.type)}
-              <span>{issue.key}</span>
+              <Link
+                href={`/projects/${projectId}/issues/${issue.key}`}
+                title="Open full page"
+                style={{ color: '#172b4d', textDecoration: 'none' }}
+                onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+              >
+                {issue.key}
+              </Link>
             </div>
           </div>
         )}
