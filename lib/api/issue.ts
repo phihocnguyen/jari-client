@@ -60,6 +60,24 @@ export function normalizeIssue(item: any): Issue {
   };
 }
 
+// Backend returns comments with flat author fields (authorId/authorName)
+// while the UI expects a nested `author` object.
+export function normalizeComment(item: any): Comment {
+  if (!item) return item;
+  const rawAuthorName =
+    item.author?.fullName || item.author?.name || item.authorName || 'Unknown';
+  return {
+    ...item,
+    issueId: item.issueId,
+    author: item.author
+      ? { ...item.author, fullName: rawAuthorName }
+      : { id: item.authorId || 'unknown', fullName: rawAuthorName },
+    content: item.content ?? '',
+    createdAt: item.createdAt || new Date().toISOString(),
+    updatedAt: item.updatedAt || item.createdAt || new Date().toISOString(),
+  };
+}
+
 // ─── Issue API ────────────────────────────────────────────────────
 export const issueApi = {
   list: async (projectId: string, filters?: IssueFilter): Promise<PageResponse<Issue>> => {
@@ -91,9 +109,9 @@ export const issueApi = {
       return {
         ...r.data,
         data: {
-          ...normalizeIssue(data),
-          comments: data.comments || [],
-          children: (data.children || []).map(normalizeIssue),
+        ...normalizeIssue(data),
+        comments: (data.comments || []).map(normalizeComment),
+        children: (data.children || []).map(normalizeIssue),
           sprint: data.sprint,
         },
       };
@@ -175,7 +193,10 @@ export const issueApi = {
 
   // Comments
   listComments: (issueId: string) =>
-    apiClient.get<ApiResponse<Comment[]>>(`/issues/${issueId}/comments`).then((r) => r.data),
+    apiClient.get<ApiResponse<Comment[]>>(`/issues/${issueId}/comments`).then((r) => {
+      const rawList = r.data?.data ?? r.data;
+      return (Array.isArray(rawList) ? rawList : []).map(normalizeComment);
+    }),
 
   addComment: (issueId: string, content: string) =>
     apiClient.post<ApiResponse<Comment>>(`/issues/${issueId}/comments`, { content }).then((r) => r.data),

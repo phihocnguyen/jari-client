@@ -63,6 +63,13 @@ export function TaskDetailView({
     enabled: Boolean(issueId),
   });
 
+  // 3.1 Fetch Comments (dedicated endpoint, section 9.1 of API docs)
+  const commentsQuery = useQuery({
+    queryKey: ['issue-comments', issueId],
+    queryFn: () => issueApi.listComments(issueId),
+    enabled: Boolean(issueId),
+  });
+
   // 4. Fetch Reference Data for Subtask Creation
   const { data: issueTypesRes } = useQuery({
     queryKey: ['ref', 'issue-types'],
@@ -119,6 +126,7 @@ export function TaskDetailView({
   const addCommentMutation = useMutation({
     mutationFn: (content: string) => issueApi.addComment(issueId, content),
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['issue-comments', issueId] });
       qc.invalidateQueries({ queryKey: ['issue', issueId] });
       toast.success('Comment added');
     },
@@ -309,7 +317,7 @@ export function TaskDetailView({
             </div>
 
             <TaskActivity
-              comments={issue.comments || []}
+              comments={commentsQuery.data ?? issue.comments ?? []}
               history={history}
               onAddComment={(content) => addCommentMutation.mutate(content)}
               isAddingComment={addCommentMutation.isPending}

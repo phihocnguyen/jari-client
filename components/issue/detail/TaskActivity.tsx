@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import type { Comment, IssueHistory } from '@/types/issue';
 
 import { getUserInitials } from '@/utils/user';
-import { formatDate } from '@/utils/date';
+import { formatDate, timeAgo } from '@/utils/date';
 
 interface TaskActivityProps {
   comments: Comment[];
@@ -184,6 +184,11 @@ export function TaskActivity({
     }
   };
 
+  // Newest comments first
+  const sortedComments = [...comments].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
   return (
     <div>
       <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#44546f', marginBottom: 12 }}>
@@ -341,7 +346,7 @@ export function TaskActivity({
 
           {/* Comment List */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 12 }}>
-            {comments.map((c) => (
+            {sortedComments.map((c) => (
               <div key={c.id} style={{ display: 'flex', gap: 12 }}>
                 <Avatar name={c.author?.fullName || 'User'} src={c.author?.avatarUrl} size={30} />
                 <div style={{ flex: 1 }}>
@@ -349,9 +354,11 @@ export function TaskActivity({
                     <span style={{ fontWeight: 600, fontSize: '0.84rem', color: '#172b4d' }}>
                       {c.author?.fullName || 'Anonymous'}
                     </span>
-                    <span style={{ fontSize: '0.75rem', color: '#626f86' }}>
-                      {new Date(c.createdAt).toLocaleDateString()} at{' '}
-                      {new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    <span
+                      title={formatDate(c.createdAt)}
+                      style={{ fontSize: '0.75rem', color: '#626f86' }}
+                    >
+                      {timeAgo(c.createdAt)}
                     </span>
                   </div>
                   <div
