@@ -9,9 +9,9 @@ import {
   User as UserIcon,
 } from 'lucide-react';
 import type { Issue, IssueType, IssuePriority, IssueStatus } from '@/types/issue';
-import { getStatusBadgeStyle } from '@/utils/issueStatus';
-import { renderTypeIcon } from '@/utils/issueType';
-import { renderPriorityIcon } from '@/utils/issuePriority';
+import { getStatusBadgeStyle } from '@/utils/issue-status';
+import { renderTypeIcon } from '@/utils/issue-type';
+import { renderPriorityIcon } from '@/utils/issue-priority';
 import { formatDate } from '@/utils/date';
 import { getUserInitials, getUserDisplayName } from '@/utils/user';
 import { Select } from '@/components/ui/Select';

@@ -8,7 +8,7 @@ import type { Comment, IssueHistory } from '@/types/issue';
 
 import { getUserInitials } from '@/utils/user';
 import { formatDate, timeAgo } from '@/utils/date';
-import { renderTextWithIssueKeys } from '@/utils/issueText';
+import { renderTextWithIssueKeys } from '@/utils/issue-text';
 
 interface TaskActivityProps {
   comments: Comment[];

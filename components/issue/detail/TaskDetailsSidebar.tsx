@@ -21,8 +21,8 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { toast } from '@/components/ui/Toast';
 import { Select } from '@/components/ui/Select';
-import { renderPriorityIcon } from '@/utils/issuePriority';
-import { getStatusBadgeStyle } from '@/utils/issueStatus';
+import { renderPriorityIcon } from '@/utils/issue-priority';
+import { getStatusBadgeStyle } from '@/utils/issue-status';
 import type { Issue, IssueLabel, IssuePriority, IssueStatus, Release } from '@/types/issue';
 
 interface ProjectMember {
