@@ -6,6 +6,7 @@ import { Plus } from 'lucide-react';
 import { issueApi } from '@/lib/api/issue';
 import { projectApi } from '@/lib/api/project';
 import { refApi } from '@/lib/api/ref';
+import { labelApi } from '@/lib/api/label';
 import { toast } from '@/components/ui/Toast';
 import type { Issue, IssuePriority, IssueStatus } from '@/types/issue';
 
@@ -77,6 +78,13 @@ export function TaskDetailView({
     staleTime: 1000 * 60 * 30,
   });
 
+  // 4.1 Fetch Project Labels
+  const { data: projectLabels = [] } = useQuery({
+    queryKey: ['project-labels', projectId],
+    queryFn: () => labelApi.list(projectId),
+    enabled: Boolean(projectId),
+  });
+
   const { data: statusesRes } = useQuery({
     queryKey: ['ref', 'statuses'],
     queryFn: () => refApi.getStatuses(),
@@ -98,6 +106,47 @@ export function TaskDetailView({
       toast.success('Updated');
     },
     onError: () => toast.error('Failed to update issue'),
+  });
+
+  // Update Dates Mutation (null clears a date)
+  const updateDatesMutation = useMutation({
+    mutationFn: (dates: { startDate?: string | null; dueDate?: string | null }) =>
+      issueApi.updateDates(issueId, dates),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['issue', issueId] });
+      qc.invalidateQueries({ queryKey: ['issues', projectId] });
+      toast.success('Updated');
+    },
+    onError: () => toast.error('Failed to update dates'),
+  });
+
+  // Update Parent Mutation
+  const updateParentMutation = useMutation({
+    mutationFn: (parentId: string | null) => issueApi.updateParent(issueId, parentId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['issue', issueId] });
+      qc.invalidateQueries({ queryKey: ['issues', projectId] });
+      toast.success('Parent updated');
+    },
+    onError: () => toast.error('Failed to update parent'),
+  });
+
+  // Labels Mutations
+  const createLabelMutation = useMutation({
+    mutationFn: (name: string) => labelApi.create(projectId, name),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['project-labels', projectId] });
+    },
+    onError: () => toast.error('Failed to create label'),
+  });
+
+  const setLabelsMutation = useMutation({
+    mutationFn: (labelIds: string[]) => issueApi.setLabels(issueId, labelIds),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['issue', issueId] });
+      qc.invalidateQueries({ queryKey: ['issues', projectId] });
+    },
+    onError: () => toast.error('Failed to update labels'),
   });
 
   // Status Update Mutation
@@ -288,34 +337,6 @@ export function TaskDetailView({
               onToggleSubtask={(subId, done) => toggleSubtaskMutation.mutate({ subId, done })}
             />
 
-            {/* Linked Work Items */}
-            <div style={{ marginBottom: 28 }}>
-              <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#44546f', marginBottom: 8 }}>
-                Linked work items
-              </h3>
-              <button
-                type="button"
-                onClick={() => toast.info('Link issue dialog')}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  padding: '6px 8px',
-                  borderRadius: 4,
-                  color: '#44546f',
-                  cursor: 'pointer',
-                  fontSize: '0.8125rem',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-              >
-                <Plus size={14} />
-                <span>Add linked work item</span>
-              </button>
-            </div>
-
             <TaskActivity
               comments={commentsQuery.data ?? issue.comments ?? []}
               history={history}
@@ -329,11 +350,25 @@ export function TaskDetailView({
             issue={issue}
             members={members}
             viewMode={viewMode}
+            issues={issues}
+            projectLabels={projectLabels}
             onUpdateStatus={(status) => updateStatusMutation.mutate(status)}
             onUpdatePriority={(priority) => updateMutation.mutate({ priority })}
             onUpdateAssignee={(assigneeId) => updateMutation.mutate({ assigneeId })}
             onUpdateStoryPoints={(storyPoints) => updateMutation.mutate({ storyPoints })}
-            onUpdateDueDate={(dueDate) => updateMutation.mutate({ dueDate })}
+            onUpdateStartDate={(startDate) =>
+              updateDatesMutation.mutate({ startDate, dueDate: issue.dueDate ?? null })
+            }
+            onUpdateDueDate={(dueDate) =>
+              updateDatesMutation.mutate({ startDate: issue.startDate ?? null, dueDate })
+            }
+            onUpdateParent={(parentId) => updateParentMutation.mutate(parentId)}
+            onSetLabels={(labelIds) => setLabelsMutation.mutate(labelIds)}
+            onCreateLabel={(name) =>
+              new Promise((resolve, reject) => {
+                createLabelMutation.mutate(name, { onSuccess: resolve, onError: reject });
+              })
+            }
             onOpenAiAssistant={() => setAiModalOpen(true)}
           />
         </div>

@@ -31,6 +31,7 @@ export interface Issue {
   reporterId?: string;
   reporterName?: string;
   storyPoints?: number;
+  startDate?: string;
   dueDate?: string;
   position?: string;
   createdAt: string;
@@ -39,6 +40,13 @@ export interface Issue {
   subtext?: string;
   progressPercent?: number;
   extraAssigneeCount?: number;
+  labels?: IssueLabel[];
+}
+
+export interface IssueLabel {
+  id: string;
+  name: string;
+  color?: string;
 }
 
 export interface IssueDetail extends Issue {
@@ -79,6 +87,7 @@ export interface CreateIssueRequest {
   sprintId?: string;
   parentId?: string;
   storyPoints?: number;
+  startDate?: string;
   dueDate?: string;
 }
 
@@ -95,6 +104,7 @@ export interface UpdateIssueRequest {
   sprintId?: string | null;
   parentId?: string | null;
   storyPoints?: number;
+  startDate?: string;
   dueDate?: string;
 }
 
