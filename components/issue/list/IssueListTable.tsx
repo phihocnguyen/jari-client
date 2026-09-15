@@ -34,6 +34,7 @@ interface IssueListTableProps {
     priority: IssuePriority;
     assigneeId?: string;
   }) => Promise<void>;
+  onAddChild?: (issue: Issue) => void;
   members: ProjectMember[];
   isSubmittingCreate: boolean;
   onRefresh: () => void;
@@ -55,6 +56,7 @@ export function IssueListTable({
   onCloseInlineCreate,
   onOpenInlineCreate,
   onSubmitInlineCreate,
+  onAddChild,
   members,
   isSubmittingCreate,
   onRefresh,
@@ -192,6 +194,7 @@ export function IssueListTable({
                   onUpdateStatus={onUpdateStatus}
                   onUpdateAssignee={onUpdateAssignee}
                   onUpdatePriority={onUpdatePriority}
+                  onAddChild={onAddChild}
                   members={members}
                 />
               ))

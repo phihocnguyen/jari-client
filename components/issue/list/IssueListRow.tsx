@@ -36,6 +36,7 @@ interface IssueListRowProps {
   onUpdateStatus: (id: string, status: IssueStatus) => void;
   onUpdateAssignee: (id: string, assigneeId: string | null) => void;
   onUpdatePriority: (id: string, priority: IssuePriority) => void;
+  onAddChild?: (issue: Issue) => void;
   members: ProjectMember[];
 }
 
@@ -48,6 +49,7 @@ export function IssueListRow({
   onUpdateStatus,
   onUpdateAssignee,
   onUpdatePriority,
+  onAddChild,
   members,
 }: IssueListRowProps) {
   const [isHovered, setIsHovered] = useState(false);
@@ -302,7 +304,11 @@ export function IssueListRow({
 
             <button
               type="button"
-              onClick={() => onOpenDetail(issue.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onAddChild) onAddChild(issue);
+                else onOpenDetail(issue.id);
+              }}
               title="Add child issue"
               style={{
                 background: 'transparent',

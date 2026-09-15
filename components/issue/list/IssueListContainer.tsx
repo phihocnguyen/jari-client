@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search, Plus, Filter, CheckCircle2 } from 'lucide-react';
 import { issueApi } from '@/lib/api/issue';
 import { projectApi } from '@/lib/api/project';
+import { refApi } from '@/lib/api/ref';
 import { toast } from '@/components/ui/Toast';
 import { IssueDetailModal } from '@/components/issue/IssueDetailModal';
 import { CreateIssueModal } from '@/components/issue/CreateIssueModal';
@@ -30,6 +31,7 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
   // Modals & Inline Create state
   const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
   const [fullCreateModalOpen, setFullCreateModalOpen] = useState(false);
+  const [parentForCreate, setParentForCreate] = useState<Issue | null>(null);
   const [inlineCreateOpen, setInlineCreateOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -46,6 +48,29 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
     queryFn: () => (projectId ? projectApi.listMembers(projectId).then((r) => r.data) : []),
     enabled: Boolean(projectId),
   });
+
+  // 3. Fetch Reference Data (Issue Types, Statuses, Priorities)
+  const { data: issueTypesRes } = useQuery({
+    queryKey: ['ref', 'issue-types'],
+    queryFn: () => refApi.getIssueTypes(),
+    staleTime: 1000 * 60 * 30,
+  });
+
+  const { data: statusesRes } = useQuery({
+    queryKey: ['ref', 'statuses'],
+    queryFn: () => refApi.getStatuses(),
+    staleTime: 1000 * 60 * 30,
+  });
+
+  const { data: prioritiesRes } = useQuery({
+    queryKey: ['ref', 'priorities'],
+    queryFn: () => refApi.getPriorities(),
+    staleTime: 1000 * 60 * 30,
+  });
+
+  const issueTypes = issueTypesRes?.data ?? [];
+  const statuses = statusesRes?.data ?? [];
+  const priorities = prioritiesRes?.data ?? [];
 
   const allIssues: Issue[] = issuesPage?.data ?? [];
 
@@ -162,12 +187,25 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
     priority: IssuePriority;
     assigneeId?: string;
   }) => {
+    const matchedType = issueTypes.find(
+      (t) => t.name.toUpperCase() === data.type.toUpperCase()
+    );
+    const matchedStatus = statuses.find(
+      (s) => s.name.toUpperCase() === 'TO DO' || s.extra === 'TODO'
+    );
+    const matchedPriority = priorities.find(
+      (p) => p.name.toUpperCase() === data.priority.toUpperCase()
+    );
+
     await inlineCreateMutation.mutateAsync({
       title: data.title,
       type: data.type,
       priority: data.priority,
-      assigneeId: data.assigneeId,
       status: 'TODO',
+      issueTypeId: matchedType?.id,
+      statusId: matchedStatus?.id,
+      priorityId: matchedPriority?.id,
+      assigneeId: data.assigneeId,
     });
   };
 
@@ -266,7 +304,10 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
         {/* Action Button to open Modal creation */}
         <button
           type="button"
-          onClick={() => setFullCreateModalOpen(true)}
+          onClick={() => {
+            setParentForCreate(null);
+            setFullCreateModalOpen(true);
+          }}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -319,6 +360,10 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
           onCloseInlineCreate={() => setInlineCreateOpen(false)}
           onOpenInlineCreate={() => setInlineCreateOpen(true)}
           onSubmitInlineCreate={handleSubmitInlineCreate}
+          onAddChild={(parent) => {
+            setParentForCreate(parent);
+            setFullCreateModalOpen(true);
+          }}
           members={members}
           isSubmittingCreate={inlineCreateMutation.isPending}
           onRefresh={handleRefresh}
@@ -345,8 +390,15 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
       {/* 4. Full Create Issue Modal */}
       <CreateIssueModal
         open={fullCreateModalOpen}
-        onClose={() => setFullCreateModalOpen(false)}
+        onClose={() => {
+          setFullCreateModalOpen(false);
+          setParentForCreate(null);
+        }}
         projectId={projectId}
+        initialParentId={parentForCreate?.id}
+        initialParentKey={parentForCreate?.key}
+        initialParentTitle={parentForCreate?.title}
+        initialType={parentForCreate ? 'SUBTASK' : undefined}
       />
 
       {/* 5. Issue Detail Peek Modal */}
