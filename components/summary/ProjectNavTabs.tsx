@@ -110,7 +110,7 @@ function SortableTab({ tab, isActive, activeId, overId, tabs }: SortableTabProps
             top: 4,
             bottom: 4,
             width: 2,
-            backgroundColor: '#0c66e4',
+            backgroundColor: 'var(--color-green-accent)',
             zIndex: 50,
             pointerEvents: 'none',
           }}
@@ -124,8 +124,8 @@ function SortableTab({ tab, isActive, activeId, overId, tabs }: SortableTabProps
               width: 8,
               height: 8,
               borderRadius: '50%',
-              backgroundColor: '#0c66e4',
-              boxShadow: '0 0 2px rgba(0,0,0,0.3)',
+              backgroundColor: 'var(--color-green-accent)',
+              boxShadow: '0 0 2px rgba(0, 98, 65, 0.4)',
             }}
           />
         </div>
@@ -289,11 +289,11 @@ export function ProjectNavTabs() {
                 padding: '0 16px',
                 fontSize: '0.84rem',
                 fontWeight: 600,
-                color: '#0c66e4',
-                backgroundColor: '#ffffff',
-                border: '1.5px solid #0c66e4',
+                color: 'var(--color-green-brand)',
+                backgroundColor: 'var(--color-surface-white)',
+                border: '1.5px solid var(--color-green-accent)',
                 borderRadius: '6px',
-                boxShadow: '0 8px 24px rgba(9, 30, 66, 0.25)',
+                boxShadow: '0 8px 24px rgba(0, 98, 65, 0.22)',
                 cursor: 'grabbing',
                 userSelect: 'none',
                 opacity: 0.95,
