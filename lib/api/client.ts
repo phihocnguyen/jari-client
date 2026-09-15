@@ -15,7 +15,8 @@ const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = tokenStorage.getAccess();
-    if (token === 'demo-access-token') {
+    const useMock = process.env.NEXT_PUBLIC_USE_MOCK === 'true';
+    if (useMock && token === 'demo-access-token') {
       config.adapter = async (cfg) => getDemoResponse(cfg);
     } else if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -42,8 +43,9 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     const token = tokenStorage.getAccess();
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const useMock = process.env.NEXT_PUBLIC_USE_MOCK === 'true';
 
-    if (token === 'demo-access-token') {
+    if (useMock && token === 'demo-access-token') {
       return Promise.resolve(getDemoResponse(originalRequest ?? {}));
     }
 

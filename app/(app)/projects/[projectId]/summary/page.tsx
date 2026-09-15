@@ -13,7 +13,7 @@ interface PageProps {
 // ─── Project Summary Sub-Page ──────────────────────────────────────
 export default async function ProjectSummaryPage({ params }: PageProps) {
   const resolvedParams = await params;
-  const projectId = resolvedParams?.projectId ?? 'proj-demo-1';
+  const projectId = resolvedParams?.projectId ?? '00000000-0000-0000-0000-000000000003';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>

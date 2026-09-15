@@ -137,7 +137,7 @@ function SortableTab({ tab, isActive, activeId, overId, tabs }: SortableTabProps
 export function ProjectNavTabs() {
   const pathname = usePathname();
   const params = useParams();
-  const pId = (params?.projectId as string) || 'proj-demo-1';
+  const pId = (params?.projectId as string) || '00000000-0000-0000-0000-000000000003';
 
   // Default tabs list (with 'List' included and 'Issues' removed)
   const defaultTabs: TabItem[] = [

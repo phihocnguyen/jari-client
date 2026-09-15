@@ -6,7 +6,7 @@ interface StatusOverviewWidgetProps {
 }
 
 export function StatusOverviewWidget({ projectId }: StatusOverviewWidgetProps) {
-  const pId = projectId || 'proj-demo-1';
+  const pId = projectId || '00000000-0000-0000-0000-000000000003';
 
   return (
     <div className="card" style={{ padding: '1.5rem' }}>

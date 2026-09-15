@@ -35,7 +35,7 @@ export function Sidebar({ collapsed, onToggle, projectId }: SidebarProps) {
 
   // Extract active project ID from URL
   const urlMatch = pathname.match(/\/projects\/([^\/]+)/);
-  const activeProjectId = projectId || (urlMatch ? urlMatch[1] : 'proj-demo-1');
+  const activeProjectId = projectId || (urlMatch ? urlMatch[1] : '00000000-0000-0000-0000-000000000003');
 
   const toggleWorkspace = (wsId: string) => {
     setExpandedWorkspaces(prev => ({ ...prev, [wsId]: !prev[wsId] }));
