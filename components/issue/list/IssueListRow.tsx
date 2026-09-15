@@ -53,6 +53,19 @@ export function IssueListRow({
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
   const [assigneeMenuOpen, setAssigneeMenuOpen] = useState(false);
   const [priorityMenuOpen, setPriorityMenuOpen] = useState(false);
+  const statusRef = useRef<HTMLTableCellElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (statusRef.current && !statusRef.current.contains(e.target as Node)) {
+        setStatusMenuOpen(false);
+      }
+    }
+    if (statusMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [statusMenuOpen]);
 
   const statusStyle = getStatusBadgeStyle(issue.status);
   const reporterInitials = getUserInitials(issue.reporter?.fullName);
@@ -537,6 +550,7 @@ export function IssueListRow({
 
       {/* 6. Status Column (Jira Pill Dropdown) */}
       <td
+        ref={statusRef}
         style={{
           padding: '8px 12px',
           verticalAlign: 'middle',
@@ -546,7 +560,10 @@ export function IssueListRow({
       >
         <button
           type="button"
-          onClick={() => setStatusMenuOpen(!statusMenuOpen)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setStatusMenuOpen((v) => !v);
+          }}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -575,11 +592,11 @@ export function IssueListRow({
               position: 'absolute',
               top: '100%',
               left: 12,
-              zIndex: 50,
+              zIndex: 100,
               backgroundColor: '#ffffff',
               border: '1px solid rgba(0,0,0,0.15)',
               borderRadius: 6,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.22)',
               minWidth: 130,
               padding: '4px 0',
             }}

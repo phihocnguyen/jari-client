@@ -34,6 +34,19 @@ export function TaskTitleAndActions({
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState(issue.title || '');
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
+  const statusRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (statusRef.current && !statusRef.current.contains(e.target as Node)) {
+        setStatusMenuOpen(false);
+      }
+    }
+    if (statusMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [statusMenuOpen]);
 
   useEffect(() => {
     setTitleValue(issue.title || '');
@@ -186,10 +199,13 @@ export function TaskTitleAndActions({
         {/* Right-Bar Mode: status & improve task inline */}
         {viewMode === 'right-bar' && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
-            <div style={{ position: 'relative' }}>
+            <div ref={statusRef} style={{ position: 'relative' }}>
               <button
                 type="button"
-                onClick={() => setStatusMenuOpen(!statusMenuOpen)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setStatusMenuOpen((v) => !v);
+                }}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -217,11 +233,11 @@ export function TaskTitleAndActions({
                     marginTop: 4,
                     backgroundColor: '#ffffff',
                     borderRadius: 6,
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
-                    border: '1px solid rgba(0,0,0,0.1)',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.22)',
+                    border: '1px solid rgba(0,0,0,0.12)',
                     padding: '4px 0',
                     minWidth: 140,
-                    zIndex: 30,
+                    zIndex: 100,
                   }}
                 >
                   {(['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'] as IssueStatus[]).map((st) => {

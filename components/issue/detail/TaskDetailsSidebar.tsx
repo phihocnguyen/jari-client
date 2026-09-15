@@ -53,6 +53,19 @@ export function TaskDetailsSidebar({
   const [devExpanded, setDevExpanded] = useState(false);
   const [autoExpanded, setAutoExpanded] = useState(false);
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
+  const statusRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (statusRef.current && !statusRef.current.contains(e.target as Node)) {
+        setStatusMenuOpen(false);
+      }
+    }
+    if (statusMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [statusMenuOpen]);
 
   const getStatusBadgeProps = (status?: IssueStatus) => {
     switch (status) {
@@ -92,10 +105,13 @@ export function TaskDetailsSidebar({
       {viewMode === 'modal' && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {/* Status Dropdown Pill */}
-          <div style={{ position: 'relative', flex: 1 }}>
+          <div ref={statusRef} style={{ position: 'relative', flex: 1 }}>
             <button
               type="button"
-              onClick={() => setStatusMenuOpen(!statusMenuOpen)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setStatusMenuOpen((v) => !v);
+              }}
               style={{
                 width: '100%',
                 display: 'inline-flex',
@@ -125,10 +141,10 @@ export function TaskDetailsSidebar({
                   marginTop: 4,
                   backgroundColor: '#ffffff',
                   borderRadius: 6,
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
-                  border: '1px solid rgba(0,0,0,0.1)',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.22)',
+                  border: '1px solid rgba(0,0,0,0.12)',
                   padding: '4px 0',
-                  zIndex: 30,
+                  zIndex: 100,
                 }}
               >
                 {(['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'] as IssueStatus[]).map((st) => {

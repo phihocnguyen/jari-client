@@ -196,7 +196,7 @@ export function TaskDetailView({
         style={{
           flex: 1,
           overflowY: 'auto',
-          padding: viewMode === 'modal' ? '20px 32px' : '16px 20px',
+          padding: viewMode === 'modal' ? '20px 32px 100px 32px' : '16px 20px 100px 20px',
         }}
       >
         {/* Right-bar Breadcrumb */}
