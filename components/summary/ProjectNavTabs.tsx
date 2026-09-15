@@ -10,7 +10,10 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  DragStartEvent,
+  DragOverEvent,
   DragEndEvent,
+  DragOverlay,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -30,9 +33,12 @@ interface TabItem {
 interface SortableTabProps {
   tab: TabItem;
   isActive: boolean;
+  activeId: string | null;
+  overId: string | null;
+  tabs: TabItem[];
 }
 
-function SortableTab({ tab, isActive }: SortableTabProps) {
+function SortableTab({ tab, isActive, activeId, overId, tabs }: SortableTabProps) {
   const {
     attributes,
     listeners,
@@ -58,12 +64,18 @@ function SortableTab({ tab, isActive }: SortableTabProps) {
     whiteSpace: 'nowrap',
     boxSizing: 'border-box',
     cursor: isDragging ? 'grabbing' : 'grab',
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.35 : 1,
     zIndex: isDragging ? 20 : 'auto',
     userSelect: 'none',
     position: 'relative',
     transitionProperty: 'color, border-color, opacity, transform',
   };
+
+  // Determine if drop indicator line with pin should be displayed
+  const isOverCurrent = overId === tab.id && activeId !== null && activeId !== tab.id;
+  const activeIndex = tabs.findIndex((t) => t.id === activeId);
+  const currentIndex = tabs.findIndex((t) => t.id === tab.id);
+  const isDropOnRight = activeIndex < currentIndex;
 
   return (
     <div
@@ -89,6 +101,36 @@ function SortableTab({ tab, isActive }: SortableTabProps) {
       >
         {tab.label}
       </Link>
+
+      {/* Jira-style Drop Indicator: Vertical Line with Pin Top */}
+      {isOverCurrent && (
+        <div
+          style={{
+            position: 'absolute',
+            [isDropOnRight ? 'right' : 'left']: -2,
+            top: 4,
+            bottom: 4,
+            width: 2,
+            backgroundColor: '#0c66e4',
+            zIndex: 50,
+            pointerEvents: 'none',
+          }}
+        >
+          {/* Circular Pin Head on top */}
+          <div
+            style={{
+              position: 'absolute',
+              top: -4,
+              left: -3,
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              backgroundColor: '#0c66e4',
+              boxShadow: '0 0 2px rgba(0,0,0,0.3)',
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -112,6 +154,8 @@ export function ProjectNavTabs() {
   ];
 
   const [tabs, setTabs] = useState<TabItem[]>(defaultTabs);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
 
   // Sync hrefs if pId changes & restore custom order from localStorage
   useEffect(() => {
@@ -122,13 +166,11 @@ export function ProjectNavTabs() {
       try {
         const orderIds: string[] = JSON.parse(savedOrder);
         const reordered: TabItem[] = [];
-        // Add existing items in saved order (ignoring 'issues' if previously saved)
         orderIds.forEach((id) => {
           if (id === 'issues') return;
           const found = defaultTabs.find((t) => t.id === id);
           if (found) reordered.push(found);
         });
-        // Append any new tabs not in saved order
         defaultTabs.forEach((tab) => {
           if (!reordered.find((t) => t.id === tab.id)) {
             reordered.push(tab);
@@ -137,7 +179,7 @@ export function ProjectNavTabs() {
         setTabs(reordered);
         return;
       } catch {
-        // Fallback to default
+        // Fallback
       }
     }
     setTabs(defaultTabs);
@@ -146,7 +188,7 @@ export function ProjectNavTabs() {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 4, // 4px drag before activating DnD so standard clicks navigate cleanly
+        distance: 4,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -154,8 +196,19 @@ export function ProjectNavTabs() {
     })
   );
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    setOverId(event.over ? (event.over.id as string) : null);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    setActiveId(null);
+    setOverId(null);
+
     if (!over || active.id === over.id) return;
 
     setTabs((currentTabs) => {
@@ -171,6 +224,13 @@ export function ProjectNavTabs() {
     });
   };
 
+  const handleDragCancel = () => {
+    setActiveId(null);
+    setOverId(null);
+  };
+
+  const activeTab = activeId ? tabs.find((t) => t.id === activeId) : null;
+
   return (
     <div
       style={{
@@ -184,12 +244,16 @@ export function ProjectNavTabs() {
         height: 42,
         boxSizing: 'border-box',
         scrollbarWidth: 'none',
+        position: 'relative',
       }}
     >
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
       >
         <SortableContext
           items={tabs.map((t) => t.id)}
@@ -206,10 +270,40 @@ export function ProjectNavTabs() {
                 key={tab.id}
                 tab={tab}
                 isActive={isActive}
+                activeId={activeId}
+                overId={overId}
+                tabs={tabs}
               />
             );
           })}
         </SortableContext>
+
+        {/* Floating Drag Overlay */}
+        <DragOverlay>
+          {activeTab ? (
+            <div
+              style={{
+                height: 36,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0 16px',
+                fontSize: '0.84rem',
+                fontWeight: 600,
+                color: '#0c66e4',
+                backgroundColor: '#ffffff',
+                border: '1.5px solid #0c66e4',
+                borderRadius: '6px',
+                boxShadow: '0 8px 24px rgba(9, 30, 66, 0.25)',
+                cursor: 'grabbing',
+                userSelect: 'none',
+                opacity: 0.95,
+              }}
+            >
+              {activeTab.label}
+            </div>
+          ) : null}
+        </DragOverlay>
       </DndContext>
     </div>
   );
