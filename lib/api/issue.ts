@@ -71,10 +71,10 @@ export const issueApi = {
     const rawList: any[] = Array.isArray(pageData?.data)
       ? pageData.data
       : Array.isArray(pageData?.content)
-      ? pageData.content
-      : Array.isArray(pageData)
-      ? pageData
-      : [];
+        ? pageData.content
+        : Array.isArray(pageData)
+          ? pageData
+          : [];
 
     return {
       data: rawList.map(normalizeIssue),

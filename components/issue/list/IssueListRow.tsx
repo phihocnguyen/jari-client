@@ -13,8 +13,9 @@ import { getStatusBadgeStyle } from '@/utils/issueStatus';
 import { renderTypeIcon } from '@/utils/issueType';
 import { renderPriorityIcon } from '@/utils/issuePriority';
 import { formatDate } from '@/utils/date';
-import { getUserInitials } from '@/utils/user';
+import { getUserInitials, getUserDisplayName } from '@/utils/user';
 import { Select } from '@/components/ui/Select';
+import { Avatar } from '@/components/ui/Avatar';
 
 interface ProjectMember {
   userId: string;
@@ -53,7 +54,7 @@ export function IssueListRow({
   const [isHovered, setIsHovered] = useState(false);
 
   const statusStyle = getStatusBadgeStyle(issue.status);
-  const reporterInitials = getUserInitials(issue.reporter?.fullName || issue.reporter?.email);
+  const reporterInitials = getUserInitials(getUserDisplayName(issue.reporter, 'Học Nguyễn'));
 
   const isRowHighlighted = isSelected || isHovered;
 
@@ -299,95 +300,64 @@ export function IssueListRow({
             },
             ...members.map((m) => {
               const memberId = m.userId || (m as any).id;
-              const displayName = m.fullName || m.email || 'Member';
+              const displayName = getUserDisplayName(m, 'Học Nguyễn');
               return {
                 value: memberId,
                 label: displayName,
-                icon: (
+                icon: <Avatar name={displayName} size={22} />,
+              };
+            }),
+          ]}
+          renderTrigger={(selected) => {
+            const assigneeName = issue.assignee ? getUserDisplayName(issue.assignee, 'Học Nguyễn') : 'Unassigned';
+            return (
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '4px 6px',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                  transition: 'background-color 0.12s ease',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+              >
+                {issue.assignee ? (
+                  <Avatar name={assigneeName} size={24} />
+                ) : (
                   <div
                     style={{
-                      width: 22,
-                      height: 22,
+                      width: 24,
+                      height: 24,
                       borderRadius: '50%',
-                      backgroundColor: '#e0e7ff',
-                      color: '#3730a3',
-                      fontSize: '0.625rem',
-                      fontWeight: 700,
+                      backgroundColor: '#f1f2f4',
+                      color: '#626f86',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       flexShrink: 0,
                     }}
                   >
-                    {getUserInitials(m.fullName || m.email)}
+                    <UserIcon size={14} />
                   </div>
-                ),
-              };
-            }),
-          ]}
-          renderTrigger={(selected) => (
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '4px 6px',
-                borderRadius: 4,
-                cursor: 'pointer',
-                transition: 'background-color 0.12s ease',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-            >
-              {issue.assignee ? (
-                <div
-                  style={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: '50%',
-                    backgroundColor: '#e0e7ff',
-                    color: '#3730a3',
-                    fontSize: '0.6875rem',
-                    fontWeight: 700,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                  }}
-                >
-                  {getUserInitials(issue.assignee.fullName || issue.assignee.email)}
-                </div>
-              ) : (
-                <div
-                  style={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: '50%',
-                    backgroundColor: '#f1f2f4',
-                    color: '#626f86',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                  }}
-                >
-                  <UserIcon size={14} />
-                </div>
-              )}
+                )}
 
-              <span
-                style={{
-                  fontSize: '0.8125rem',
-                  color: issue.assignee ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-                  fontWeight: 400,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {selected?.label || (issue.assignee ? issue.assignee.fullName || issue.assignee.email : 'Unassigned')}
-              </span>
-              <ChevronDown size={12} style={{ color: 'var(--color-text-secondary)', opacity: 0.7 }} />
-            </div>
-          )}
+                <span
+                  style={{
+                    fontSize: '0.8125rem',
+                    color: issue.assignee ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+                    fontWeight: 400,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {selected?.label || assigneeName}
+                </span>
+                <ChevronDown size={12} style={{ color: 'var(--color-text-secondary)', opacity: 0.7 }} />
+              </div>
+            );
+          }}
         />
       </td>
 
@@ -400,23 +370,7 @@ export function IssueListRow({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div
-            style={{
-              width: 24,
-              height: 24,
-              borderRadius: '50%',
-              backgroundColor: '#00875A',
-              color: '#ffffff',
-              fontSize: '0.6875rem',
-              fontWeight: 700,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            {reporterInitials}
-          </div>
+          <Avatar name={getUserDisplayName(issue.reporter, 'Học Nguyễn')} size={24} />
           <span
             style={{
               fontSize: '0.8125rem',
@@ -424,7 +378,7 @@ export function IssueListRow({
               whiteSpace: 'nowrap',
             }}
           >
-            {issue.reporter?.fullName || issue.reporter?.email || 'Reporter'}
+            {getUserDisplayName(issue.reporter, 'Học Nguyễn')}
           </span>
         </div>
       </td>
