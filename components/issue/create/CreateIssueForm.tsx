@@ -162,7 +162,7 @@ export function CreateIssueForm({
               {...register('assigneeId')}
               className="input"
               style={{
-                paddingLeft: '2.3rem',
+                paddingLeft: '1.85rem',
                 height: 36,
                 fontSize: '0.84rem',
                 cursor: 'pointer',
@@ -229,7 +229,7 @@ export function CreateIssueForm({
             {...register('dueDate')}
             className="input"
             style={{
-              paddingLeft: '2.3rem',
+              paddingLeft: '1.85rem',
               height: 36,
               fontSize: '0.84rem',
               backgroundColor: '#ffffff',
