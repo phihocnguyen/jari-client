@@ -7,6 +7,7 @@ import { issueApi } from '@/lib/api/issue';
 import { projectApi } from '@/lib/api/project';
 import { refApi } from '@/lib/api/ref';
 import { labelApi } from '@/lib/api/label';
+import { releaseApi } from '@/lib/api/release';
 import { toast } from '@/components/ui/Toast';
 import type { Issue, IssuePriority, IssueStatus } from '@/types/issue';
 
@@ -85,6 +86,13 @@ export function TaskDetailView({
     enabled: Boolean(projectId),
   });
 
+  // 4.2 Fetch Project Releases (fix versions)
+  const { data: projectReleases = [] } = useQuery({
+    queryKey: ['project-releases', projectId],
+    queryFn: () => releaseApi.list(projectId),
+    enabled: Boolean(projectId),
+  });
+
   const { data: statusesRes } = useQuery({
     queryKey: ['ref', 'statuses'],
     queryFn: () => refApi.getStatuses(),
@@ -147,6 +155,25 @@ export function TaskDetailView({
       qc.invalidateQueries({ queryKey: ['issues', projectId] });
     },
     onError: () => toast.error('Failed to update labels'),
+  });
+
+  // Release (Fix Version) Mutations
+  const createReleaseMutation = useMutation({
+    mutationFn: (data: { name: string; description?: string; releaseDate?: string }) =>
+      releaseApi.create(projectId, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['project-releases', projectId] });
+    },
+    onError: () => toast.error('Failed to create release'),
+  });
+
+  const setReleaseMutation = useMutation({
+    mutationFn: (releaseId: string | null) => issueApi.setRelease(issueId, releaseId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['issue', issueId] });
+      qc.invalidateQueries({ queryKey: ['issues', projectId] });
+    },
+    onError: () => toast.error('Failed to update fix version'),
   });
 
   // Status Update Mutation
@@ -352,6 +379,7 @@ export function TaskDetailView({
             viewMode={viewMode}
             issues={issues}
             projectLabels={projectLabels}
+            projectReleases={projectReleases}
             onUpdateStatus={(status) => updateStatusMutation.mutate(status)}
             onUpdatePriority={(priority) => updateMutation.mutate({ priority })}
             onUpdateAssignee={(assigneeId) => updateMutation.mutate({ assigneeId })}
@@ -364,6 +392,12 @@ export function TaskDetailView({
             }
             onUpdateParent={(parentId) => updateParentMutation.mutate(parentId)}
             onSetLabels={(labelIds) => setLabelsMutation.mutate(labelIds)}
+            onSetRelease={(releaseId) => setReleaseMutation.mutate(releaseId)}
+            onCreateRelease={(data) =>
+              new Promise((resolve, reject) => {
+                createReleaseMutation.mutate(data, { onSuccess: resolve, onError: reject });
+              })
+            }
             onCreateLabel={(name) =>
               new Promise((resolve, reject) => {
                 createLabelMutation.mutate(name, { onSuccess: resolve, onError: reject });

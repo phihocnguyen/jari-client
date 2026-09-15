@@ -18,11 +18,12 @@ import {
   X,
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
+import { Button } from '@/components/ui/Button';
 import { toast } from '@/components/ui/Toast';
 import { Select } from '@/components/ui/Select';
 import { renderPriorityIcon } from '@/utils/issuePriority';
 import { getStatusBadgeStyle } from '@/utils/issueStatus';
-import type { Issue, IssueLabel, IssuePriority, IssueStatus } from '@/types/issue';
+import type { Issue, IssueLabel, IssuePriority, IssueStatus, Release } from '@/types/issue';
 
 interface ProjectMember {
   userId: string;
@@ -37,6 +38,7 @@ interface TaskDetailsSidebarProps {
   viewMode: 'modal' | 'right-bar';
   issues?: Issue[];
   projectLabels?: IssueLabel[];
+  projectReleases?: Release[];
   onUpdateStatus: (status: IssueStatus) => void;
   onUpdatePriority: (priority: IssuePriority) => void;
   onUpdateAssignee: (assigneeId: string | null) => void;
@@ -46,6 +48,8 @@ interface TaskDetailsSidebarProps {
   onUpdateParent: (parentId: string | null) => void;
   onSetLabels: (labelIds: string[]) => void;
   onCreateLabel: (name: string) => Promise<IssueLabel>;
+  onSetRelease: (releaseId: string | null) => void;
+  onCreateRelease: (data: { name: string; description?: string; releaseDate?: string }) => Promise<Release>;
   onOpenAiAssistant: () => void;
 }
 
@@ -71,6 +75,7 @@ export function TaskDetailsSidebar({
   viewMode,
   issues = [],
   projectLabels = [],
+  projectReleases = [],
   onUpdateStatus,
   onUpdatePriority,
   onUpdateAssignee,
@@ -80,6 +85,8 @@ export function TaskDetailsSidebar({
   onUpdateParent,
   onSetLabels,
   onCreateLabel,
+  onSetRelease,
+  onCreateRelease,
   onOpenAiAssistant,
 }: TaskDetailsSidebarProps) {
   const [detailsExpanded, setDetailsExpanded] = useState(true);
@@ -91,9 +98,12 @@ export function TaskDetailsSidebar({
   const [labelsMenuOpen, setLabelsMenuOpen] = useState(false);
   const [labelInput, setLabelInput] = useState('');
   const [savingLabel, setSavingLabel] = useState(false);
+  const [releaseMenuOpen, setReleaseMenuOpen] = useState(false);
+  const [releaseModalOpen, setReleaseModalOpen] = useState(false);
   const statusRef = useRef<HTMLDivElement>(null);
   const parentRef = useRef<HTMLDivElement>(null);
   const labelsRef = useRef<HTMLDivElement>(null);
+  const releaseRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -107,12 +117,13 @@ export function TaskDetailsSidebar({
         setLabelsMenuOpen(false);
         setLabelInput('');
       }
+      if (releaseRef.current && !releaseRef.current.contains(target)) setReleaseMenuOpen(false);
     }
-    if (statusMenuOpen || parentMenuOpen || labelsMenuOpen) {
+    if (statusMenuOpen || parentMenuOpen || labelsMenuOpen || releaseMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  }, [statusMenuOpen, parentMenuOpen, labelsMenuOpen]);
+  }, [statusMenuOpen, parentMenuOpen, labelsMenuOpen, releaseMenuOpen]);
 
   const getPriorityIcon = (priority?: IssuePriority) => {
     switch (priority) {
@@ -133,11 +144,17 @@ export function TaskDetailsSidebar({
   const statusBadge = getStatusBadgeStyle(issue.status);
 
   // ── Parent helpers ──────────────────────────────────────────
+  // Hierarchy: EPIC has no parent; TASK/STORY/BUG can only be children of an
+  // EPIC; SUBTASK can only be a child of TASK/STORY/BUG.
+  const issueType = (issue.type || '').toUpperCase();
+  const allowedParentTypes =
+    issueType === 'EPIC' ? [] : issueType === 'SUBTASK' ? ['TASK', 'STORY', 'BUG'] : ['EPIC'];
   const parentIssue = issues.find((it) => it.id === issue.parentId);
   const parentCandidates = issues.filter(
     (it) =>
       it.id !== issue.id &&
       it.parentId !== issue.id &&
+      allowedParentTypes.includes((it.type || '').toUpperCase()) &&
       it.title.toLowerCase().includes(parentSearch.toLowerCase())
   );
 
@@ -400,6 +417,11 @@ export function TaskDetailsSidebar({
             {/* Parent */}
             <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center' }}>
               <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Parent</span>
+              {issueType === 'EPIC' ? (
+                <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>
+                  None (epics have no parent)
+                </span>
+              ) : (
               <div ref={parentRef} style={{ position: 'relative' }}>
                 <button
                   type="button"
@@ -497,13 +519,16 @@ export function TaskDetailsSidebar({
                       ))}
                       {parentCandidates.length === 0 && !parentIssue && (
                         <div style={{ padding: '8px 12px', color: '#626f86', fontSize: '0.8125rem' }}>
-                          No issues found.
+                          {issueType === 'SUBTASK'
+                            ? 'No tasks or stories found.'
+                            : 'No epics found in this project.'}
                         </div>
                       )}
                     </div>
                   </div>
                 )}
               </div>
+              )}
             </div>
 
             {/* Priority */}
@@ -671,19 +696,9 @@ export function TaskDetailsSidebar({
               <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Start date</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Calendar size={14} color="#626f86" />
-                <input
-                  key={`start-${issue.id}-${issue.startDate ?? ''}`}
-                  type="date"
-                  defaultValue={issue.startDate ? issue.startDate.substring(0, 10) : ''}
-                  onChange={(e) => onUpdateStartDate(e.target.value || null)}
-                  style={{
-                    border: 'none',
-                    background: 'transparent',
-                    color: '#172b4d',
-                    fontSize: '0.8125rem',
-                    cursor: 'pointer',
-                    outline: 'none',
-                  }}
+                <IssueDateInput
+                  value={issue.startDate}
+                  onChange={(iso) => onUpdateStartDate(iso)}
                 />
               </div>
             </div>
@@ -693,19 +708,9 @@ export function TaskDetailsSidebar({
               <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Due date</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Calendar size={14} color="#626f86" />
-                <input
-                  key={`due-${issue.id}-${issue.dueDate ?? ''}`}
-                  type="date"
-                  defaultValue={issue.dueDate ? issue.dueDate.substring(0, 10) : ''}
-                  onChange={(e) => onUpdateDueDate(e.target.value || null)}
-                  style={{
-                    border: 'none',
-                    background: 'transparent',
-                    color: '#172b4d',
-                    fontSize: '0.8125rem',
-                    cursor: 'pointer',
-                    outline: 'none',
-                  }}
+                <IssueDateInput
+                  value={issue.dueDate}
+                  onChange={(iso) => onUpdateDueDate(iso)}
                 />
               </div>
             </div>
@@ -713,7 +718,111 @@ export function TaskDetailsSidebar({
             {/* Fix Versions */}
             <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center' }}>
               <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Fix versions</span>
-              <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>None</span>
+              <div ref={releaseRef} style={{ position: 'relative' }}>
+                <button
+                  type="button"
+                  onClick={() => setReleaseMenuOpen((v) => !v)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: issue.releaseId ? '#172b4d' : '#626f86',
+                    fontSize: '0.8125rem',
+                    cursor: 'pointer',
+                    padding: '2px 4px',
+                    borderRadius: 4,
+                    textAlign: 'left',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                >
+                  {issue.releaseName || 'None'}
+                </button>
+
+                {releaseMenuOpen && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: 0,
+                      width: 260,
+                      top: '100%',
+                      marginTop: 4,
+                      backgroundColor: '#ffffff',
+                      borderRadius: 6,
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.22)',
+                      border: '1px solid rgba(0,0,0,0.12)',
+                      zIndex: 100,
+                    }}
+                  >
+                    <div style={{ maxHeight: 200, overflowY: 'auto', padding: '4px 0' }}>
+                      {issue.releaseId && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onSetRelease(null);
+                            setReleaseMenuOpen(false);
+                          }}
+                          style={parentOptionStyle}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                        >
+                          <span style={{ color: '#626f86' }}>None (remove fix version)</span>
+                        </button>
+                      )}
+                      {projectReleases.map((rel) => (
+                        <button
+                          key={rel.id}
+                          type="button"
+                          onClick={() => {
+                            onSetRelease(rel.id);
+                            setReleaseMenuOpen(false);
+                          }}
+                          style={parentOptionStyle}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                        >
+                          <span style={{ color: '#172b4d', flex: 1, textAlign: 'left' }}>{rel.name}</span>
+                          {rel.releaseDate && (
+                            <span style={{ color: '#626f86', fontSize: '0.75rem' }}>
+                              {formatDisplayDateDMY(rel.releaseDate)}
+                            </span>
+                          )}
+                          {issue.releaseId === rel.id && <Check size={13} color="#0c66e4" />}
+                        </button>
+                      ))}
+                      {projectReleases.length === 0 && (
+                        <div style={{ padding: '8px 12px', color: '#626f86', fontSize: '0.8125rem' }}>
+                          No releases yet.
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)', padding: 6 }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setReleaseMenuOpen(false);
+                          setReleaseModalOpen(true);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '6px 10px',
+                          background: 'none',
+                          border: 'none',
+                          color: '#0c66e4',
+                          fontWeight: 600,
+                          fontSize: '0.8125rem',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          borderRadius: 4,
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                      >
+                        + Create release
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Story Points */}
@@ -855,6 +964,249 @@ export function TaskDetailsSidebar({
           <Settings size={13} />
           <span>Configure</span>
         </button>
+      </div>
+
+      {/* ─── Create Release Modal ─────────────────────────────── */}
+      {releaseModalOpen && (
+        <ReleaseModal
+          onClose={() => setReleaseModalOpen(false)}
+          onCreate={async (data) => {
+            const rel = await onCreateRelease(data);
+            onSetRelease(rel.id);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── Date helpers (dd/MM/yyyy) ──────────────────────────────────
+function todayISO(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function formatDisplayDateDMY(iso?: string): string {
+  if (!iso) return '';
+  const datePart = iso.substring(0, 10);
+  const [y, m, d] = datePart.split('-');
+  if (!y || !m || !d) return datePart;
+  return `${d}/${m}/${y}`;
+}
+
+function parseDMYToISO(text: string): string | null {
+  const match = text.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!match) return null;
+  const [, d, m, y] = match;
+  const iso = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  const date = new Date(iso);
+  return isNaN(date.getTime()) ? null : iso;
+}
+
+// ─── Date input: shows dd/MM/yyyy, defaults to today, native picker ──
+function IssueDateInput({
+  value,
+  onChange,
+}: {
+  value?: string;
+  onChange: (iso: string | null) => void;
+}) {
+  const [text, setText] = useState(formatDisplayDateDMY(value) || formatDisplayDateDMY(todayISO()));
+  const pickerRef = useRef<HTMLInputElement>(null);
+
+  // Re-sync when the issue's value changes externally
+  useEffect(() => {
+    setText(formatDisplayDateDMY(value) || formatDisplayDateDMY(todayISO()));
+  }, [value]);
+
+  const commit = () => {
+    const iso = parseDMYToISO(text);
+    if (iso) {
+      if (iso !== (value ? value.substring(0, 10) : null)) onChange(iso);
+    } else {
+      // Invalid input → revert to stored value (or today if empty)
+      setText(formatDisplayDateDMY(value) || formatDisplayDateDMY(todayISO()));
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+      <input
+        type="text"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+        }}
+        placeholder="dd/MM/yyyy"
+        style={{
+          width: 82,
+          border: 'none',
+          background: 'transparent',
+          color: '#172b4d',
+          fontSize: '0.8125rem',
+          outline: 'none',
+          padding: '2px 4px',
+          borderRadius: 4,
+          cursor: 'text',
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
+        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+      />
+      <input
+        ref={pickerRef}
+        type="date"
+        value={value ? value.substring(0, 10) : ''}
+        onChange={(e) => {
+          onChange(e.target.value || null);
+          setText(formatDisplayDateDMY(e.target.value) || formatDisplayDateDMY(todayISO()));
+        }}
+        style={{ position: 'absolute', width: 0, height: 0, opacity: 0, border: 'none', padding: 0 }}
+        tabIndex={-1}
+      />
+      <button
+        type="button"
+        title="Open calendar"
+        onClick={() => {
+          const el = pickerRef.current;
+          if (el) {
+            (el as any).showPicker?.() ?? el.click();
+          }
+        }}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex' }}
+      >
+        <Calendar size={13} color="#626f86" />
+      </button>
+    </div>
+  );
+}
+
+// ─── Create Release Modal ───────────────────────────────────────
+function ReleaseModal({
+  onClose,
+  onCreate,
+}: {
+  onClose: () => void;
+  onCreate: (data: { name: string; description?: string; releaseDate?: string }) => Promise<void>;
+}) {
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [releaseDate, setReleaseDate] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!name.trim() || saving) return;
+    setSaving(true);
+    try {
+      await onCreate({
+        name: name.trim(),
+        description: description.trim() || undefined,
+        releaseDate: releaseDate || undefined,
+      });
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: 'rgba(9, 30, 66, 0.54)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: 420,
+          backgroundColor: '#ffffff',
+          borderRadius: 8,
+          boxShadow: '0 20px 32px rgba(0,0,0,0.3)',
+          padding: 20,
+        }}
+      >
+        <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#172b4d', margin: 0, marginBottom: 14 }}>
+          Create release
+        </h3>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <label style={{ fontSize: '0.8125rem', color: '#44546f', fontWeight: 500 }}>
+            Name (version)
+            <input
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. v1.0.0"
+              style={{
+                width: '100%',
+                marginTop: 4,
+                border: '1px solid rgba(0,0,0,0.14)',
+                borderRadius: 4,
+                padding: '7px 10px',
+                fontSize: '0.8125rem',
+                outline: 'none',
+                color: '#172b4d',
+              }}
+            />
+          </label>
+
+          <label style={{ fontSize: '0.8125rem', color: '#44546f', fontWeight: 500 }}>
+            Description
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              placeholder="What's in this release?"
+              style={{
+                width: '100%',
+                marginTop: 4,
+                border: '1px solid rgba(0,0,0,0.14)',
+                borderRadius: 4,
+                padding: '7px 10px',
+                fontSize: '0.8125rem',
+                outline: 'none',
+                color: '#172b4d',
+                resize: 'vertical',
+                fontFamily: 'inherit',
+              }}
+            />
+          </label>
+
+          <label style={{ fontSize: '0.8125rem', color: '#44546f', fontWeight: 500 }}>
+            Release date
+            <input
+              type="date"
+              value={releaseDate}
+              onChange={(e) => setReleaseDate(e.target.value)}
+              style={{
+                width: '100%',
+                marginTop: 4,
+                border: '1px solid rgba(0,0,0,0.14)',
+                borderRadius: 4,
+                padding: '6px 10px',
+                fontSize: '0.8125rem',
+                color: '#172b4d',
+              }}
+            />
+          </label>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 18 }}>
+          <Button size="sm" variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button size="sm" disabled={!name.trim()} loading={saving} onClick={handleSubmit}>
+            Create
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -306,6 +306,14 @@ export function getDemoResponse(config: InternalAxiosRequestConfig): AxiosRespon
       const id = url.split('/').pop();
       const proj = DEMO_PROJECTS.find(p => p.id === id) ?? DEMO_PROJECTS[0];
       responseData = { success: true, data: proj };
+    } else if (url.includes('/projects/') && url.endsWith('/releases')) {
+      responseData = {
+        success: true,
+        data: [
+          { id: 'release-demo-1', name: 'v1.0.0-beta', description: 'Initial beta launch', status: 'UNRELEASED', releaseDate: '2026-09-30' },
+          { id: 'release-demo-2', name: 'v0.9.0', description: 'Alpha release', status: 'RELEASED', releaseDate: '2026-08-15' },
+        ],
+      };
     } else if (url.includes('/projects/') && url.endsWith('/labels')) {
       responseData = {
         success: true,
@@ -425,6 +433,30 @@ export function getDemoResponse(config: InternalAxiosRequestConfig): AxiosRespon
       };
       DEMO_ISSUES.push(newIssue);
       responseData = { success: true, data: newIssue };
+    } else if (method === 'PATCH' && url.endsWith('/release')) {
+      const id = url.split('/')[2];
+      const found = DEMO_ISSUES.find((i) => i.id === id);
+      const releases = [
+        { id: 'release-demo-1', name: 'v1.0.0-beta' },
+        { id: 'release-demo-2', name: 'v0.9.0' },
+      ];
+      if (found) {
+        const rel = releases.find((r) => r.id === payload.releaseId);
+        (found as any).releaseId = rel?.id;
+        (found as any).releaseName = rel?.name;
+      }
+      responseData = { success: true, data: found };
+    } else if (method === 'POST' && url.endsWith('/releases')) {
+      responseData = {
+        success: true,
+        data: {
+          id: 'release-demo-' + Date.now(),
+          name: payload.name,
+          description: payload.description,
+          status: 'UNRELEASED',
+          releaseDate: payload.releaseDate,
+        },
+      };
     } else if (method === 'PATCH' && url.endsWith('/dates')) {
       const id = url.split('/')[2];
       const found = DEMO_ISSUES.find((i) => i.id === id);

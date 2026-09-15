@@ -41,12 +41,24 @@ export interface Issue {
   progressPercent?: number;
   extraAssigneeCount?: number;
   labels?: IssueLabel[];
+  releaseId?: string;
+  releaseName?: string;
 }
 
 export interface IssueLabel {
   id: string;
   name: string;
   color?: string;
+}
+
+export interface Release {
+  id: string;
+  projectId?: string;
+  name: string;
+  description?: string;
+  status?: 'UNRELEASED' | 'RELEASED' | 'ARCHIVED';
+  releaseDate?: string;
+  createdAt?: string;
 }
 
 export interface IssueDetail extends Issue {
