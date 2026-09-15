@@ -75,7 +75,31 @@ const DEMO_SPRINTS = [
   },
 ];
 
-import type { Issue } from '@/types/issue';
+const DEMO_ISSUE_TYPES = [
+  { id: 'type-epic-1', name: 'EPIC', description: 'Large body of work that can be broken down', extra: null },
+  { id: 'type-story-1', name: 'STORY', description: 'User story or feature request', extra: null },
+  { id: 'type-task-1', name: 'TASK', description: 'A task to be completed', extra: null },
+  { id: 'type-bug-1', name: 'BUG', description: 'A defect or problem found in the product', extra: null },
+  { id: 'type-subtask-1', name: 'SUBTASK', description: 'A subtask belonging to a parent issue', extra: null },
+];
+
+const DEMO_STATUSES = [
+  { id: 'status-todo-1', name: 'TO DO', description: null, extra: 'TODO' },
+  { id: 'status-inprogress-1', name: 'IN PROGRESS', description: null, extra: 'IN_PROGRESS' },
+  { id: 'status-inreview-1', name: 'IN REVIEW', description: null, extra: 'IN_PROGRESS' },
+  { id: 'status-done-1', name: 'DONE', description: null, extra: 'DONE' },
+  { id: 'status-cancelled-1', name: 'CANCELLED', description: null, extra: 'DONE' },
+];
+
+const DEMO_PRIORITIES = [
+  { id: 'priority-highest-1', name: 'HIGHEST', description: null, extra: '1' },
+  { id: 'priority-high-1', name: 'HIGH', description: null, extra: '2' },
+  { id: 'priority-medium-1', name: 'MEDIUM', description: null, extra: '3' },
+  { id: 'priority-low-1', name: 'LOW', description: null, extra: '4' },
+  { id: 'priority-lowest-1', name: 'LOWEST', description: null, extra: '5' },
+];
+
+import type { Issue, IssueType, IssuePriority, IssueStatus } from '@/types/issue';
 
 let DEMO_ISSUES: Issue[] = [
   {
@@ -228,7 +252,13 @@ export function getDemoResponse(config: InternalAxiosRequestConfig): AxiosRespon
   let responseData: unknown = { success: true, data: null };
 
   if (method === 'GET') {
-    if (url.includes('/users/me')) {
+    if (url.includes('/ref/issue-types')) {
+      responseData = { success: true, data: DEMO_ISSUE_TYPES };
+    } else if (url.includes('/ref/statuses')) {
+      responseData = { success: true, data: DEMO_STATUSES };
+    } else if (url.includes('/ref/priorities')) {
+      responseData = { success: true, data: DEMO_PRIORITIES };
+    } else if (url.includes('/users/me')) {
       responseData = { success: true, data: ADMIN_USER };
     } else if (url.includes('/workspaces/') && url.endsWith('/members')) {
       responseData = {
@@ -349,16 +379,36 @@ export function getDemoResponse(config: InternalAxiosRequestConfig): AxiosRespon
         found.updatedAt = new Date().toISOString();
       }
       responseData = { success: true, data: found };
+    } else if (method === 'POST' && url.includes('/sprints/') && url.endsWith('/issues')) {
+      const parts = url.split('/');
+      const sprintId = parts[parts.indexOf('sprints') + 1];
+      const found = DEMO_ISSUES.find((i) => i.id === payload.issueId);
+      if (found) {
+        found.sprintId = sprintId;
+      }
+      responseData = { success: true, data: null, message: 'Issue added to sprint' };
     } else if (method === 'POST' && url.includes('/issues')) {
+      const typeItem = DEMO_ISSUE_TYPES.find((t) => t.id === payload.issueTypeId);
+      const prioItem = DEMO_PRIORITIES.find((p) => p.id === payload.priorityId);
+      const statItem = DEMO_STATUSES.find((s) => s.id === payload.statusId);
+
+      const resolvedType = (payload.type || typeItem?.name || 'TASK') as IssueType;
+      const resolvedPriority = (payload.priority || prioItem?.name || 'MEDIUM') as IssuePriority;
+      const resolvedStatus = (payload.status || (statItem?.extra || 'TODO')) as IssueStatus;
+
       const newIssue: Issue = {
         id: 'issue-demo-' + Date.now(),
         key: 'TIS-' + (DEMO_ISSUES.length + 101),
         title: payload.title || 'New Demo Issue',
-        type: payload.type || 'TASK',
-        status: payload.status || 'TODO',
-        priority: payload.priority || 'MEDIUM',
+        description: payload.description,
+        type: resolvedType,
+        status: resolvedStatus,
+        priority: resolvedPriority,
         projectId: payload.projectId || 'proj-demo-1',
-        sprintId: 'sprint-demo-1',
+        sprintId: payload.sprintId || 'sprint-demo-1',
+        parentId: payload.parentId,
+        storyPoints: payload.storyPoints != null ? Number(payload.storyPoints) : undefined,
+        dueDate: payload.dueDate,
         reporter: ADMIN_USER,
         assignee: payload.assigneeId ? ADMIN_USER : undefined,
         createdAt: new Date().toISOString(),

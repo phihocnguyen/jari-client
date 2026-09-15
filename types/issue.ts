@@ -7,22 +7,31 @@ export interface Assignee {
   id: string;
   fullName: string;
   avatarUrl?: string;
+  email?: string;
 }
 
 export interface Issue {
   id: string;
   key: string;
+  issueKey?: string;
   title: string;
   description?: string;
   type: IssueType;
+  issueType?: string;
   status: IssueStatus;
+  statusCategory?: string;
   priority: IssuePriority;
   projectId: string;
   sprintId?: string;
   parentId?: string;
   assignee?: Assignee;
-  reporter: Assignee;
+  assigneeId?: string;
+  assigneeName?: string;
+  reporter?: Assignee;
+  reporterId?: string;
+  reporterName?: string;
   storyPoints?: number;
+  dueDate?: string;
   position?: string;
   createdAt: string;
   updatedAt: string;
@@ -60,31 +69,43 @@ export interface IssueHistory {
 export interface CreateIssueRequest {
   title: string;
   description?: string;
-  type: IssueType;
+  issueTypeId?: string;
+  statusId?: string;
+  priorityId?: string;
+  type?: IssueType;
   status?: IssueStatus;
-  priority: IssuePriority;
+  priority?: IssuePriority;
   assigneeId?: string;
   sprintId?: string;
   parentId?: string;
   storyPoints?: number;
+  dueDate?: string;
 }
 
 export interface UpdateIssueRequest {
   title?: string;
   description?: string;
+  issueTypeId?: string;
+  statusId?: string;
+  priorityId?: string;
   type?: IssueType;
   status?: IssueStatus;
   priority?: IssuePriority;
   assigneeId?: string | null;
   sprintId?: string | null;
+  parentId?: string | null;
   storyPoints?: number;
+  dueDate?: string;
 }
 
 export interface IssueFilter {
   status?: IssueStatus[];
   type?: IssueType[];
   priority?: IssuePriority[];
+  statusId?: string;
   assigneeId?: string;
+  issueTypeId?: string;
+  priorityId?: string;
   sprintId?: string;
   keyword?: string;
   query?: string;
