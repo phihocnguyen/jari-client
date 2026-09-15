@@ -412,6 +412,8 @@ export default function BoardPage({ params }: PageProps) {
         issueId={selectedIssueId}
         projectId={projectId}
         onClose={() => setSelectedIssueId(null)}
+        issues={allIssues}
+        onNavigateIssue={(id) => setSelectedIssueId(id)}
       />
     </div>
   );

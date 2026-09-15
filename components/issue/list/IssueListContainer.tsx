@@ -349,6 +349,7 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
           issues={filteredIssues}
           allIssuesCount={allIssues.length}
           selectedIds={selectedIds}
+          selectedIssueId={selectedIssueId}
           onToggleSelect={handleToggleSelect}
           onToggleSelectAll={handleToggleSelectAll}
           onOpenDetail={(id) => setSelectedIssueId(id)}
@@ -401,11 +402,13 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
         initialType={parentForCreate ? 'SUBTASK' : undefined}
       />
 
-      {/* 5. Issue Detail Peek Modal */}
+      {/* 5. Issue Detail Peek / Right Bar Modal */}
       <IssueDetailModal
         issueId={selectedIssueId}
         projectId={projectId}
         onClose={() => setSelectedIssueId(null)}
+        issues={filteredIssues}
+        onNavigateIssue={(id) => setSelectedIssueId(id)}
       />
     </div>
   );

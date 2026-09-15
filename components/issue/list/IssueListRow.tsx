@@ -2,16 +2,6 @@
 
 import React, { useState } from 'react';
 import {
-  CheckSquare,
-  Bookmark,
-  AlertCircle,
-  Zap,
-  GitFork,
-  ArrowUp,
-  ArrowDown,
-  Minus,
-  ChevronsUp,
-  ChevronsDown,
   PanelRight,
   Plus,
   Trash2,
@@ -19,6 +9,11 @@ import {
   User as UserIcon,
 } from 'lucide-react';
 import type { Issue, IssueType, IssuePriority, IssueStatus } from '@/types/issue';
+import { getStatusBadgeStyle } from '@/utils/issueStatus';
+import { renderTypeIcon } from '@/utils/issueType';
+import { renderPriorityIcon } from '@/utils/issuePriority';
+import { formatDate } from '@/utils/date';
+import { getUserInitials } from '@/utils/user';
 
 interface ProjectMember {
   userId: string;
@@ -38,6 +33,7 @@ interface IssueListRowProps {
   onUpdatePriority: (id: string, priority: IssuePriority) => void;
   onAddChild?: (issue: Issue) => void;
   members: ProjectMember[];
+  isActiveIssue?: boolean;
 }
 
 export function IssueListRow({
@@ -51,108 +47,15 @@ export function IssueListRow({
   onUpdatePriority,
   onAddChild,
   members,
+  isActiveIssue = false,
 }: IssueListRowProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
   const [assigneeMenuOpen, setAssigneeMenuOpen] = useState(false);
   const [priorityMenuOpen, setPriorityMenuOpen] = useState(false);
 
-  // Type Icon renderer
-  const renderTypeIcon = (type: IssueType) => {
-    switch (type) {
-      case 'EPIC':
-        return <Zap size={15} color="#9333ea" fill="#9333ea" />;
-      case 'STORY':
-        return <Bookmark size={15} color="#16a34a" fill="#16a34a" />;
-      case 'BUG':
-        return <AlertCircle size={15} color="#dc2626" />;
-      case 'SUBTASK':
-        return <GitFork size={15} color="#0284c7" />;
-      case 'TASK':
-      default:
-        return <CheckSquare size={15} color="#2563eb" />;
-    }
-  };
-
-  // Priority Icon renderer
-  const renderPriorityIcon = (priority: IssuePriority) => {
-    switch (priority) {
-      case 'HIGHEST':
-        return <ChevronsUp size={14} color="#dc2626" />;
-      case 'HIGH':
-        return <ArrowUp size={14} color="#dc2626" />;
-      case 'LOW':
-        return <ArrowDown size={14} color="#2563eb" />;
-      case 'LOWEST':
-        return <ChevronsDown size={14} color="#2563eb" />;
-      case 'MEDIUM':
-        return <Minus size={14} color="#d97706" />;
-      default:
-        return null;
-    }
-  };
-
-  // Status Badge styling according to Jira design
-  const getStatusBadgeStyle = (status: IssueStatus) => {
-    switch (status) {
-      case 'DONE':
-        return {
-          bg: '#e3fcef',
-          color: '#006644',
-          border: '#abf5d1',
-          label: 'Done',
-        };
-      case 'IN_PROGRESS':
-        return {
-          bg: '#deebff',
-          color: '#0052cc',
-          border: '#b3d4ff',
-          label: 'In Progress',
-        };
-      case 'IN_REVIEW':
-        return {
-          bg: '#f3e8ff',
-          color: '#6b21a8',
-          border: '#e9d5ff',
-          label: 'In Review',
-        };
-      case 'TODO':
-      default:
-        return {
-          bg: '#f1f2f4',
-          color: '#44546f',
-          border: '#dcdfe4',
-          label: 'To Do',
-        };
-    }
-  };
-
   const statusStyle = getStatusBadgeStyle(issue.status);
-
-  // Format dates
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return '—';
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-      });
-    } catch {
-      return dateStr;
-    }
-  };
-
-  // Reporter initials
-  const reporterInitials = (issue.reporter?.fullName || 'HN')
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+  const reporterInitials = getUserInitials(issue.reporter?.fullName);
 
   const isRowHighlighted = isSelected || isHovered;
 
@@ -166,7 +69,9 @@ export function IssueListRow({
         setPriorityMenuOpen(false);
       }}
       style={{
-        backgroundColor: isRowHighlighted
+        backgroundColor: isActiveIssue
+          ? '#e9f2ff'
+          : isRowHighlighted
           ? 'rgba(12, 102, 228, 0.05)'
           : 'var(--color-surface-white)',
         borderBottom: '1px solid rgba(0, 0, 0, 0.06)',

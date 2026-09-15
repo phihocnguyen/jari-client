@@ -18,6 +18,7 @@ interface IssueListTableProps {
   issues: Issue[];
   allIssuesCount: number;
   selectedIds: Set<string>;
+  selectedIssueId?: string | null;
   onToggleSelect: (id: string) => void;
   onToggleSelectAll: () => void;
   onOpenDetail: (id: string) => void;
@@ -45,6 +46,7 @@ export function IssueListTable({
   issues,
   allIssuesCount,
   selectedIds,
+  selectedIssueId,
   onToggleSelect,
   onToggleSelectAll,
   onOpenDetail,
@@ -196,6 +198,7 @@ export function IssueListTable({
                   onUpdatePriority={onUpdatePriority}
                   onAddChild={onAddChild}
                   members={members}
+                  isActiveIssue={selectedIssueId === issue.id}
                 />
               ))
             ) : (
