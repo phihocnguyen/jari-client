@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { UseFormRegister, UseFormSetValue, FieldErrors } from 'react-hook-form';
-import { User, Layers, Hash, Calendar } from 'lucide-react';
+import { User, Calendar } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { IssueTypeSelect } from './IssueTypeSelect';
 import { IssueParentBanner } from './IssueParentBanner';
@@ -35,10 +35,8 @@ export function CreateIssueForm({
   errors,
   selectedType,
   issueTypes,
-  statuses,
   priorities,
   members,
-  sprints,
   existingIssues,
   initialParentId,
   initialParentKey,
@@ -57,41 +55,14 @@ export function CreateIssueForm({
         parentTitle={initialParentTitle}
       />
 
-      {/* Row 1: Issue Type & Status */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+      {/* Row 1: Issue Type */}
+      <div>
         <IssueTypeSelect
           selectedType={selectedType}
           issueTypes={issueTypes}
           register={register}
           setValue={setValue}
         />
-
-        {/* Status */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-          <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-            Status <span style={{ color: 'var(--color-red)' }}>*</span>
-          </label>
-          <select
-            {...register('statusId')}
-            className="input"
-            style={{
-              height: 36,
-              fontSize: '0.84rem',
-              cursor: 'pointer',
-              backgroundColor: '#ffffff',
-            }}
-          >
-            {statuses.length > 0 ? (
-              statuses.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))
-            ) : (
-              <option value="">To Do</option>
-            )}
-          </select>
-        </div>
       </div>
 
       {/* Row 2: Title / Summary */}
@@ -209,142 +180,61 @@ export function CreateIssueForm({
         </div>
       </div>
 
-      {/* Row 5: Sprint & Parent / Epic */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-        {/* Sprint */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-          <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-            Sprint
-          </label>
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <span
-              style={{
-                position: 'absolute',
-                left: 10,
-                pointerEvents: 'none',
-                color: 'var(--color-text-secondary)',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
-              <Layers size={15} />
-            </span>
-            <select
-              {...register('sprintId')}
-              className="input"
-              style={{
-                paddingLeft: '2.3rem',
-                height: 36,
-                fontSize: '0.84rem',
-                cursor: 'pointer',
-                backgroundColor: '#ffffff',
-              }}
-            >
-              <option value="">No Sprint (Backlog)</option>
-              {sprints.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name} {s.status === 'ACTIVE' ? ' (Active)' : ' (Planned)'}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Parent Issue / Epic */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-          <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-            Parent Issue / Epic
-          </label>
-          <select
-            {...register('parentId')}
-            className="input"
-            style={{
-              height: 36,
-              fontSize: '0.84rem',
-              cursor: 'pointer',
-              backgroundColor: '#ffffff',
-            }}
-          >
-            <option value="">None (Top level issue)</option>
-            {existingIssues
-              .filter((iss) => iss.id !== initialParentId)
-              .map((iss) => (
-                <option key={iss.id} value={iss.id}>
-                  [{iss.key}] {iss.title.length > 35 ? iss.title.slice(0, 35) + '...' : iss.title}
-                </option>
-              ))}
-          </select>
-        </div>
+      {/* Row 5: Parent Issue / Epic */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+        <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
+          Parent Issue / Epic
+        </label>
+        <select
+          {...register('parentId')}
+          className="input"
+          style={{
+            height: 36,
+            fontSize: '0.84rem',
+            cursor: 'pointer',
+            backgroundColor: '#ffffff',
+          }}
+        >
+          <option value="">None (Top level issue)</option>
+          {existingIssues
+            .filter((iss) => iss.id !== initialParentId)
+            .map((iss) => (
+              <option key={iss.id} value={iss.id}>
+                [{iss.key}] {iss.title.length > 35 ? iss.title.slice(0, 35) + '...' : iss.title}
+              </option>
+            ))}
+        </select>
       </div>
 
-      {/* Row 6: Story Points & Due Date */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-        {/* Story Points */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-          <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-            Story Points
-          </label>
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <span
-              style={{
-                position: 'absolute',
-                left: 10,
-                pointerEvents: 'none',
-                color: 'var(--color-text-secondary)',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
-              <Hash size={14} />
-            </span>
-            <input
-              type="number"
-              min={0}
-              max={100}
-              step={0.5}
-              placeholder="e.g. 1, 2, 3, 5, 8"
-              {...register('storyPoints')}
-              className="input"
-              style={{
-                paddingLeft: '2.3rem',
-                height: 36,
-                fontSize: '0.84rem',
-                backgroundColor: '#ffffff',
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Due Date */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-          <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-            Due Date
-          </label>
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <span
-              style={{
-                position: 'absolute',
-                left: 10,
-                pointerEvents: 'none',
-                color: 'var(--color-text-secondary)',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
-              <Calendar size={15} />
-            </span>
-            <input
-              type="date"
-              {...register('dueDate')}
-              className="input"
-              style={{
-                paddingLeft: '2.3rem',
-                height: 36,
-                fontSize: '0.84rem',
-                backgroundColor: '#ffffff',
-              }}
-            />
-          </div>
+      {/* Row 6: Due Date */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+        <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
+          Due Date
+        </label>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <span
+            style={{
+              position: 'absolute',
+              left: 10,
+              pointerEvents: 'none',
+              color: 'var(--color-text-secondary)',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <Calendar size={15} />
+          </span>
+          <input
+            type="date"
+            {...register('dueDate')}
+            className="input"
+            style={{
+              paddingLeft: '2.3rem',
+              height: 36,
+              fontSize: '0.84rem',
+              backgroundColor: '#ffffff',
+            }}
+          />
         </div>
       </div>
     </form>
