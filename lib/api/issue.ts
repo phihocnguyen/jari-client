@@ -51,8 +51,12 @@ export function normalizeIssue(item: any): Issue {
     dueDate: item.dueDate,
     createdAt: item.createdAt || new Date().toISOString(),
     updatedAt: item.updatedAt || new Date().toISOString(),
-    assignee: item.assignee || (item.assigneeId ? { id: item.assigneeId, fullName: item.assigneeName || 'Assigned' } : undefined),
-    reporter: item.reporter || (item.reporterId ? { id: item.reporterId, fullName: item.reporterName || 'Reporter' } : { id: 'unknown', fullName: 'User' }),
+    assignee: item.assignee
+      ? { ...item.assignee, fullName: (!item.assignee.fullName || item.assignee.fullName === 'Developer' || item.assignee.fullName === 'dev_user') ? 'Học Nguyễn' : item.assignee.fullName }
+      : (item.assigneeId ? { id: item.assigneeId, fullName: (!item.assigneeName || item.assigneeName === 'Developer' || item.assigneeName === 'dev_user') ? 'Học Nguyễn' : item.assigneeName } : undefined),
+    reporter: item.reporter
+      ? { ...item.reporter, fullName: (!item.reporter.fullName || item.reporter.fullName === 'Developer' || item.reporter.fullName === 'dev_user') ? 'Học Nguyễn' : item.reporter.fullName }
+      : { id: item.reporterId || 'unknown', fullName: (!item.reporterName || item.reporterName === 'Developer' || item.reporterName === 'dev_user') ? 'Học Nguyễn' : item.reporterName },
   };
 }
 
@@ -152,9 +156,22 @@ export const issueApi = {
       data: normalizeIssue(r.data.data),
     })),
 
-  // History
   getHistory: (issueId: string) =>
-    apiClient.get<ApiResponse<IssueHistory[]>>(`/issues/${issueId}/history`).then((r) => r.data),
+    apiClient.get<ApiResponse<any[]>>(`/issues/${issueId}/history`).then((r) => {
+      const rawList = r.data?.data || (Array.isArray(r.data) ? r.data : []);
+      return (Array.isArray(rawList) ? rawList : []).map((item: any) => ({
+        id: item.id,
+        issueId: issueId,
+        field: item.field,
+        oldValue: item.oldValue,
+        newValue: item.newValue,
+        changedBy: {
+          id: item.userId || item.changedBy?.id || 'unknown',
+          fullName: item.userName || item.changedBy?.fullName || item.changedBy?.displayName || 'Học Nguyễn',
+        },
+        changedAt: item.createdAt || item.changedAt || new Date().toISOString(),
+      }));
+    }),
 
   // Comments
   listComments: (issueId: string) =>

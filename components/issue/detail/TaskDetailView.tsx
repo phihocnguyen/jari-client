@@ -58,7 +58,7 @@ export function TaskDetailView({
   // 3. Fetch Issue History
   const { data: history = [] } = useQuery({
     queryKey: ['issue-history', issueId],
-    queryFn: () => issueApi.getHistory(issueId).then((r) => r.data),
+    queryFn: () => issueApi.getHistory(issueId),
     enabled: Boolean(issueId),
   });
 

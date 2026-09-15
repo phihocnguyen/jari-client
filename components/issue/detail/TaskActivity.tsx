@@ -6,11 +6,143 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import type { Comment, IssueHistory } from '@/types/issue';
 
+import { getUserInitials } from '@/utils/user';
+import { formatDate } from '@/utils/date';
+
 interface TaskActivityProps {
   comments: Comment[];
   history: IssueHistory[];
   onAddComment: (content: string) => void;
   isAddingComment: boolean;
+}
+
+function renderHistoryValueBadge(field: string, val?: string) {
+  if (!val || val === 'none') {
+    return (
+      <span
+        style={{
+          color: '#94a3b8',
+          backgroundColor: '#f8fafc',
+          border: '1px solid #e2e8f0',
+          padding: '2px 8px',
+          borderRadius: 4,
+          fontSize: '0.75rem',
+        }}
+      >
+        None
+      </span>
+    );
+  }
+
+  const normField = field.toLowerCase().trim();
+  const normVal = val.toUpperCase().trim();
+
+  // Priority values: High/Highest (Red), Medium (Amber/Yellow), Low/Lowest (Green)
+  if (normField === 'priority' || ['HIGHEST', 'HIGH', 'MEDIUM', 'LOW', 'LOWEST'].includes(normVal)) {
+    if (normVal === 'HIGHEST' || normVal === 'HIGH') {
+      return (
+        <span
+          style={{
+            fontWeight: 700,
+            color: '#dc2626',
+            backgroundColor: '#fee2e2',
+            border: '1px solid #fca5a5',
+            padding: '2px 8px',
+            borderRadius: 4,
+            fontSize: '0.75rem',
+          }}
+        >
+          {val}
+        </span>
+      );
+    }
+    if (normVal === 'MEDIUM') {
+      return (
+        <span
+          style={{
+            fontWeight: 700,
+            color: '#d97706',
+            backgroundColor: '#fef3c7',
+            border: '1px solid #fcd34d',
+            padding: '2px 8px',
+            borderRadius: 4,
+            fontSize: '0.75rem',
+          }}
+        >
+          {val}
+        </span>
+      );
+    }
+    return (
+      <span
+        style={{
+          fontWeight: 700,
+          color: '#15803d',
+          backgroundColor: '#dcfce7',
+          border: '1px solid #86efac',
+          padding: '2px 8px',
+          borderRadius: 4,
+          fontSize: '0.75rem',
+        }}
+      >
+        {val}
+      </span>
+    );
+  }
+
+  // Status values:
+  if (normField === 'status' || ['TODO', 'IN_PROGRESS', 'IN PROGRESS', 'IN_REVIEW', 'IN REVIEW', 'DONE', 'TO DO'].includes(normVal)) {
+    let bg = '#f1f2f4';
+    let color = '#44546f';
+    let border = '#dcdfe4';
+
+    if (normVal === 'DONE') {
+      bg = '#e3fcef';
+      color = '#006644';
+      border = '#abf5d1';
+    } else if (normVal.includes('PROGRESS')) {
+      bg = '#e9f2ff';
+      color = '#0c66e4';
+      border = '#cce0ff';
+    } else if (normVal.includes('REVIEW')) {
+      bg = '#f3e8ff';
+      color = '#6b21a8';
+      border = '#e9d5ff';
+    }
+
+    return (
+      <span
+        style={{
+          fontWeight: 700,
+          backgroundColor: bg,
+          color: color,
+          border: `1px solid ${border}`,
+          padding: '2px 8px',
+          borderRadius: 4,
+          fontSize: '0.75rem',
+        }}
+      >
+        {val}
+      </span>
+    );
+  }
+
+  // Default value highlight badge (no line-through)
+  return (
+    <span
+      style={{
+        fontWeight: 600,
+        color: '#0c66e4',
+        backgroundColor: '#e9f2ff',
+        border: '1px solid #cce0ff',
+        padding: '2px 8px',
+        borderRadius: 4,
+        fontSize: '0.75rem',
+      }}
+    >
+      {val}
+    </span>
+  );
 }
 
 export function TaskActivity({
@@ -248,21 +380,83 @@ export function TaskActivity({
 
       {/* History Tab */}
       {(activeTab === 'history' || activeTab === 'all') && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {history.map((h) => (
-            <div
-              key={h.id}
-              style={{
-                fontSize: '0.8125rem',
-                color: '#44546f',
-                padding: '6px 0',
-                borderBottom: '1px solid rgba(0,0,0,0.04)',
-              }}
-            >
-              <strong>{h.changedBy?.fullName || 'User'}</strong> updated <strong>{h.field}</strong> from{' '}
-              <em>{h.oldValue || 'none'}</em> to <em>{h.newValue || 'none'}</em>
-            </div>
-          ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {history.map((h) => {
+            const userName = h.changedBy?.fullName || 'Học Nguyễn';
+            return (
+              <div
+                key={h.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 10,
+                  padding: '8px 0',
+                  borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+                }}
+              >
+                <div
+                  style={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: '50%',
+                    backgroundColor: '#00875A',
+                    color: '#ffffff',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    marginTop: 2,
+                  }}
+                >
+                  {getUserInitials(userName)}
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontWeight: 600, fontSize: '0.8125rem', color: 'var(--color-text-primary)' }}>
+                      {userName}
+                    </span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+                      {formatDate(h.changedAt)}
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: '0.8125rem',
+                      color: 'var(--color-text-primary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <span style={{ color: 'var(--color-text-secondary)' }}>updated</span>
+                    <span
+                      style={{
+                        fontWeight: 600,
+                        backgroundColor: '#f1f2f4',
+                        color: '#172b4d',
+                        padding: '1px 8px',
+                        borderRadius: 4,
+                        fontSize: '0.75rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.02em',
+                      }}
+                    >
+                      {h.field}
+                    </span>
+                    <span style={{ color: 'var(--color-text-secondary)' }}>from</span>
+                    {renderHistoryValueBadge(h.field, h.oldValue)}
+                    <span style={{ color: 'var(--color-text-secondary)' }}>to</span>
+                    {renderHistoryValueBadge(h.field, h.newValue)}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
           {history.length === 0 && (
             <p style={{ fontSize: '0.8125rem', color: '#626f86' }}>No activity recorded yet.</p>
           )}
