@@ -14,13 +14,15 @@ import {
   ArrowDown,
   ChevronsDown,
   Minus,
+  Search,
+  X,
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { toast } from '@/components/ui/Toast';
 import { Select } from '@/components/ui/Select';
 import { renderPriorityIcon } from '@/utils/issuePriority';
 import { getStatusBadgeStyle } from '@/utils/issueStatus';
-import type { Issue, IssuePriority, IssueStatus } from '@/types/issue';
+import type { Issue, IssueLabel, IssuePriority, IssueStatus } from '@/types/issue';
 
 interface ProjectMember {
   userId: string;
@@ -33,42 +35,84 @@ interface TaskDetailsSidebarProps {
   issue: Issue;
   members: ProjectMember[];
   viewMode: 'modal' | 'right-bar';
+  issues?: Issue[];
+  projectLabels?: IssueLabel[];
   onUpdateStatus: (status: IssueStatus) => void;
   onUpdatePriority: (priority: IssuePriority) => void;
   onUpdateAssignee: (assigneeId: string | null) => void;
   onUpdateStoryPoints: (points?: number) => void;
-  onUpdateDueDate: (dueDate?: string) => void;
+  onUpdateStartDate: (startDate: string | null) => void;
+  onUpdateDueDate: (dueDate: string | null) => void;
+  onUpdateParent: (parentId: string | null) => void;
+  onSetLabels: (labelIds: string[]) => void;
+  onCreateLabel: (name: string) => Promise<IssueLabel>;
   onOpenAiAssistant: () => void;
+}
+
+function labelChipStyle(color?: string): React.CSSProperties {
+  const c = color || '#626f86';
+  return {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 4,
+    padding: '1px 8px',
+    borderRadius: 10,
+    fontSize: '0.75rem',
+    fontWeight: 600,
+    backgroundColor: `${c}1f`,
+    color: c,
+    cursor: 'pointer',
+  };
 }
 
 export function TaskDetailsSidebar({
   issue,
   members,
   viewMode,
+  issues = [],
+  projectLabels = [],
   onUpdateStatus,
   onUpdatePriority,
   onUpdateAssignee,
   onUpdateStoryPoints,
+  onUpdateStartDate,
   onUpdateDueDate,
+  onUpdateParent,
+  onSetLabels,
+  onCreateLabel,
   onOpenAiAssistant,
 }: TaskDetailsSidebarProps) {
   const [detailsExpanded, setDetailsExpanded] = useState(true);
   const [devExpanded, setDevExpanded] = useState(false);
   const [autoExpanded, setAutoExpanded] = useState(false);
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
+  const [parentMenuOpen, setParentMenuOpen] = useState(false);
+  const [parentSearch, setParentSearch] = useState('');
+  const [labelsMenuOpen, setLabelsMenuOpen] = useState(false);
+  const [labelInput, setLabelInput] = useState('');
+  const [savingLabel, setSavingLabel] = useState(false);
   const statusRef = useRef<HTMLDivElement>(null);
+  const parentRef = useRef<HTMLDivElement>(null);
+  const labelsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (statusRef.current && !statusRef.current.contains(e.target as Node)) {
-        setStatusMenuOpen(false);
+      const target = e.target as Node;
+      if (statusRef.current && !statusRef.current.contains(target)) setStatusMenuOpen(false);
+      if (parentRef.current && !parentRef.current.contains(target)) {
+        setParentMenuOpen(false);
+        setParentSearch('');
+      }
+      if (labelsRef.current && !labelsRef.current.contains(target)) {
+        setLabelsMenuOpen(false);
+        setLabelInput('');
       }
     }
-    if (statusMenuOpen) {
+    if (statusMenuOpen || parentMenuOpen || labelsMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  }, [statusMenuOpen]);
+  }, [statusMenuOpen, parentMenuOpen, labelsMenuOpen]);
 
   const getPriorityIcon = (priority?: IssuePriority) => {
     switch (priority) {
@@ -87,6 +131,44 @@ export function TaskDetailsSidebar({
   };
 
   const statusBadge = getStatusBadgeStyle(issue.status);
+
+  // ── Parent helpers ──────────────────────────────────────────
+  const parentIssue = issues.find((it) => it.id === issue.parentId);
+  const parentCandidates = issues.filter(
+    (it) =>
+      it.id !== issue.id &&
+      it.parentId !== issue.id &&
+      it.title.toLowerCase().includes(parentSearch.toLowerCase())
+  );
+
+  // ── Label helpers ───────────────────────────────────────────
+  const currentLabelIds = (issue.labels || []).map((l) => l.id);
+  const isLabelAttached = (id: string) => currentLabelIds.includes(id);
+
+  const toggleLabel = (label: IssueLabel) => {
+    const nextIds = isLabelAttached(label.id)
+      ? currentLabelIds.filter((id) => id !== label.id)
+      : [...currentLabelIds, label.id];
+    onSetLabels(nextIds);
+  };
+
+  const handleLabelEnter = async () => {
+    const name = labelInput.trim();
+    if (!name || savingLabel) return;
+    setSavingLabel(true);
+    try {
+      const existing = projectLabels.find(
+        (l) => l.name.toLowerCase() === name.toLowerCase()
+      );
+      const label = existing ?? (await onCreateLabel(name));
+      if (!isLabelAttached(label.id)) {
+        onSetLabels([...currentLabelIds, label.id]);
+      }
+      setLabelInput('');
+    } finally {
+      setSavingLabel(false);
+    }
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -318,9 +400,110 @@ export function TaskDetailsSidebar({
             {/* Parent */}
             <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center' }}>
               <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Parent</span>
-              <span style={{ color: '#0c66e4', fontSize: '0.8125rem', cursor: 'pointer' }}>
-                {issue.parentId ? issue.parentId : 'Add parent'}
-              </span>
+              <div ref={parentRef} style={{ position: 'relative' }}>
+                <button
+                  type="button"
+                  onClick={() => setParentMenuOpen((v) => !v)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#0c66e4',
+                    fontSize: '0.8125rem',
+                    cursor: 'pointer',
+                    padding: '2px 4px',
+                    borderRadius: 4,
+                    textAlign: 'left',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                >
+                  {parentIssue ? `${parentIssue.key} ${parentIssue.title}` : 'Add parent'}
+                </button>
+
+                {parentMenuOpen && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: 0,
+                      width: 260,
+                      top: '100%',
+                      marginTop: 4,
+                      backgroundColor: '#ffffff',
+                      borderRadius: 6,
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.22)',
+                      border: '1px solid rgba(0,0,0,0.12)',
+                      zIndex: 100,
+                    }}
+                  >
+                    <div style={{ padding: 8, borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          padding: '4px 8px',
+                          backgroundColor: '#f1f2f4',
+                          borderRadius: 4,
+                        }}
+                      >
+                        <Search size={13} color="#626f86" />
+                        <input
+                          autoFocus
+                          value={parentSearch}
+                          onChange={(e) => setParentSearch(e.target.value)}
+                          placeholder="Search issues..."
+                          style={{
+                            flex: 1,
+                            border: 'none',
+                            outline: 'none',
+                            background: 'transparent',
+                            fontSize: '0.8125rem',
+                            color: '#172b4d',
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div style={{ maxHeight: 220, overflowY: 'auto', padding: '4px 0' }}>
+                      {parentIssue && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onUpdateParent(null);
+                            setParentMenuOpen(false);
+                          }}
+                          style={parentOptionStyle}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                        >
+                          <span style={{ color: '#626f86' }}>None (remove parent)</span>
+                        </button>
+                      )}
+                      {parentCandidates.map((it) => (
+                        <button
+                          key={it.id}
+                          type="button"
+                          onClick={() => {
+                            onUpdateParent(it.id);
+                            setParentMenuOpen(false);
+                          }}
+                          style={parentOptionStyle}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                        >
+                          <span style={{ color: '#626f86', marginRight: 6 }}>{it.key}</span>
+                          <span style={{ color: '#172b4d', flex: 1, textAlign: 'left' }}>{it.title}</span>
+                          {issue.parentId === it.id && <Check size={13} color="#0c66e4" />}
+                        </button>
+                      ))}
+                      {parentCandidates.length === 0 && !parentIssue && (
+                        <div style={{ padding: '8px 12px', color: '#626f86', fontSize: '0.8125rem' }}>
+                          No issues found.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Priority */}
@@ -371,22 +554,128 @@ export function TaskDetailsSidebar({
             </div>
 
             {/* Labels */}
-            <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center' }}>
-              <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Labels</span>
-              <span style={{ color: '#626f86', fontSize: '0.8125rem', cursor: 'pointer' }}>
-                Add labels
-              </span>
+            <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'start' }}>
+              <span style={{ color: '#626f86', fontSize: '0.8125rem', paddingTop: 2 }}>Labels</span>
+              <div ref={labelsRef} style={{ position: 'relative' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+                  {(issue.labels || []).map((l) => (
+                    <span
+                      key={l.id}
+                      style={{
+                        ...labelChipStyle(l.color),
+                        paddingRight: 4,
+                      }}
+                      title="Click to remove"
+                      onClick={() => toggleLabel(l)}
+                    >
+                      {l.name}
+                      <X size={11} />
+                    </span>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setLabelsMenuOpen((v) => !v)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: (issue.labels || []).length === 0 ? '#626f86' : '#0c66e4',
+                      fontSize: '0.8125rem',
+                      cursor: 'pointer',
+                      padding: '2px 4px',
+                      borderRadius: 4,
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  >
+                    {labelsMenuOpen ? 'Close' : (issue.labels || []).length === 0 ? 'Add labels' : '+ Add'}
+                  </button>
+                </div>
+
+                {labelsMenuOpen && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: 0,
+                      width: 260,
+                      top: '100%',
+                      marginTop: 4,
+                      backgroundColor: '#ffffff',
+                      borderRadius: 6,
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.22)',
+                      border: '1px solid rgba(0,0,0,0.12)',
+                      zIndex: 100,
+                    }}
+                  >
+                    <div style={{ padding: 8, borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+                      <input
+                        autoFocus
+                        value={labelInput}
+                        disabled={savingLabel}
+                        onChange={(e) => setLabelInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleLabelEnter();
+                          }
+                        }}
+                        placeholder="Type a label and press Enter..."
+                        style={{
+                          width: '100%',
+                          border: '1px solid rgba(0,0,0,0.12)',
+                          borderRadius: 4,
+                          padding: '5px 8px',
+                          fontSize: '0.8125rem',
+                          outline: 'none',
+                          color: '#172b4d',
+                        }}
+                      />
+                    </div>
+                    <div style={{ maxHeight: 200, overflowY: 'auto', padding: '4px 0' }}>
+                      {projectLabels.map((l) => (
+                        <button
+                          key={l.id}
+                          type="button"
+                          onClick={() => toggleLabel(l)}
+                          style={{
+                            width: '100%',
+                            padding: '6px 12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 8,
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '0.8125rem',
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                        >
+                          <span style={labelChipStyle(l.color)}>{l.name}</span>
+                          {isLabelAttached(l.id) && <Check size={13} color="#0c66e4" />}
+                        </button>
+                      ))}
+                      {projectLabels.length === 0 && (
+                        <div style={{ padding: '8px 12px', color: '#626f86', fontSize: '0.8125rem' }}>
+                          Type above to create the first label.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Due Date */}
+            {/* Start Date */}
             <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center' }}>
-              <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Due date</span>
+              <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Start date</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Calendar size={14} color="#626f86" />
                 <input
+                  key={`start-${issue.id}-${issue.startDate ?? ''}`}
                   type="date"
-                  defaultValue={issue.dueDate ? issue.dueDate.substring(0, 10) : ''}
-                  onChange={(e) => onUpdateDueDate(e.target.value || undefined)}
+                  defaultValue={issue.startDate ? issue.startDate.substring(0, 10) : ''}
+                  onChange={(e) => onUpdateStartDate(e.target.value || null)}
                   style={{
                     border: 'none',
                     background: 'transparent',
@@ -399,20 +688,26 @@ export function TaskDetailsSidebar({
               </div>
             </div>
 
-            {/* Team */}
+            {/* Due Date */}
             <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center' }}>
-              <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Team</span>
-              <span style={{ color: '#626f86', fontSize: '0.8125rem', cursor: 'pointer' }}>
-                Add team
-              </span>
-            </div>
-
-            {/* Start Date */}
-            <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center' }}>
-              <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Start date</span>
-              <span style={{ color: '#626f86', fontSize: '0.8125rem', cursor: 'pointer' }}>
-                Add date
-              </span>
+              <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Due date</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Calendar size={14} color="#626f86" />
+                <input
+                  key={`due-${issue.id}-${issue.dueDate ?? ''}`}
+                  type="date"
+                  defaultValue={issue.dueDate ? issue.dueDate.substring(0, 10) : ''}
+                  onChange={(e) => onUpdateDueDate(e.target.value || null)}
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    color: '#172b4d',
+                    fontSize: '0.8125rem',
+                    cursor: 'pointer',
+                    outline: 'none',
+                  }}
+                />
+              </div>
             </div>
 
             {/* Fix Versions */}
@@ -425,6 +720,7 @@ export function TaskDetailsSidebar({
             <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center' }}>
               <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Story points</span>
               <input
+                key={`sp-${issue.id}-${issue.storyPoints ?? ''}`}
                 type="number"
                 min={0}
                 max={100}
@@ -563,3 +859,16 @@ export function TaskDetailsSidebar({
     </div>
   );
 }
+
+const parentOptionStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '7px 12px',
+  display: 'flex',
+  alignItems: 'center',
+  gap: 4,
+  background: 'none',
+  border: 'none',
+  cursor: 'pointer',
+  fontSize: '0.8125rem',
+  textAlign: 'left',
+};

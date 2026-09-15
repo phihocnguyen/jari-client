@@ -306,6 +306,15 @@ export function getDemoResponse(config: InternalAxiosRequestConfig): AxiosRespon
       const id = url.split('/').pop();
       const proj = DEMO_PROJECTS.find(p => p.id === id) ?? DEMO_PROJECTS[0];
       responseData = { success: true, data: proj };
+    } else if (url.includes('/projects/') && url.endsWith('/labels')) {
+      responseData = {
+        success: true,
+        data: [
+          { id: 'label-demo-1', name: 'frontend', color: '#0c66e4' },
+          { id: 'label-demo-2', name: 'backend', color: '#22a06b' },
+          { id: 'label-demo-3', name: 'design', color: '#ae4787' },
+        ],
+      };
     } else if (url.includes('/issues/') && url.endsWith('/comments')) {
       responseData = {
         success: true,
@@ -416,6 +425,39 @@ export function getDemoResponse(config: InternalAxiosRequestConfig): AxiosRespon
       };
       DEMO_ISSUES.push(newIssue);
       responseData = { success: true, data: newIssue };
+    } else if (method === 'PATCH' && url.endsWith('/dates')) {
+      const id = url.split('/')[2];
+      const found = DEMO_ISSUES.find((i) => i.id === id);
+      if (found) {
+        found.startDate = payload.startDate ?? undefined;
+        found.dueDate = payload.dueDate ?? undefined;
+      }
+      responseData = { success: true, data: found };
+    } else if (method === 'PATCH' && url.endsWith('/parent')) {
+      const id = url.split('/')[2];
+      const found = DEMO_ISSUES.find((i) => i.id === id);
+      if (found) {
+        found.parentId = payload.parentId ?? undefined;
+      }
+      responseData = { success: true, data: found };
+    } else if (method === 'PUT' && url.endsWith('/labels')) {
+      const id = url.split('/')[2];
+      const allLabels = [
+        { id: 'label-demo-1', name: 'frontend', color: '#0c66e4' },
+        { id: 'label-demo-2', name: 'backend', color: '#22a06b' },
+        { id: 'label-demo-3', name: 'design', color: '#ae4787' },
+      ];
+      const selected = allLabels.filter((l) => (payload.labelIds || []).includes(l.id));
+      const found = DEMO_ISSUES.find((i) => i.id === id);
+      if (found) {
+        (found as any).labels = selected;
+      }
+      responseData = { success: true, data: found };
+    } else if (method === 'POST' && url.endsWith('/labels')) {
+      responseData = {
+        success: true,
+        data: { id: 'label-demo-' + Date.now(), name: payload.name, color: '#0c66e4' },
+      };
     } else if (method === 'PUT' && url.includes('/issues/')) {
       const id = url.split('/').pop();
       const found = DEMO_ISSUES.find((i) => i.id === id);

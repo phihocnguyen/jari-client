@@ -128,6 +128,7 @@ export const issueApi = {
       assigneeId: data.assigneeId || null,
       parentId: data.parentId || null,
       storyPoints: data.storyPoints ?? null,
+      startDate: data.startDate || null,
       dueDate: data.dueDate || null,
       // Fallback fields for demo mock compatibility
       type: data.type,
@@ -170,6 +171,24 @@ export const issueApi = {
 
   updateAssignee: (issueId: string, assigneeId: string | null) =>
     apiClient.patch<ApiResponse<Issue>>(`/issues/${issueId}/assignee`, { assigneeId }).then((r) => ({
+      ...r.data,
+      data: normalizeIssue(r.data.data),
+    })),
+
+  updateParent: (issueId: string, parentId: string | null) =>
+    apiClient.patch<ApiResponse<Issue>>(`/issues/${issueId}/parent`, { parentId }).then((r) => ({
+      ...r.data,
+      data: normalizeIssue(r.data.data),
+    })),
+
+  updateDates: (issueId: string, dates: { startDate?: string | null; dueDate?: string | null }) =>
+    apiClient.patch<ApiResponse<Issue>>(`/issues/${issueId}/dates`, dates).then((r) => ({
+      ...r.data,
+      data: normalizeIssue(r.data.data),
+    })),
+
+  setLabels: (issueId: string, labelIds: string[]) =>
+    apiClient.put<ApiResponse<Issue>>(`/issues/${issueId}/labels`, { labelIds }).then((r) => ({
       ...r.data,
       data: normalizeIssue(r.data.data),
     })),
