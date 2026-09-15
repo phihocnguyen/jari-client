@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { UseFormRegister, UseFormSetValue, FieldErrors } from 'react-hook-form';
-import { User, Calendar } from 'lucide-react';
+import { User } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { IssueTypeSelect } from './IssueTypeSelect';
 import { IssueParentBanner } from './IssueParentBanner';
@@ -117,6 +117,7 @@ export function CreateIssueForm({
             className="input"
             style={{
               height: 36,
+              padding: '0 10px',
               fontSize: '0.84rem',
               cursor: 'pointer',
               backgroundColor: '#ffffff',
@@ -162,7 +163,7 @@ export function CreateIssueForm({
               {...register('assigneeId')}
               className="input"
               style={{
-                paddingLeft: '1.85rem',
+                padding: '0 10px 0 2.2rem',
                 height: 36,
                 fontSize: '0.84rem',
                 cursor: 'pointer',
@@ -190,6 +191,7 @@ export function CreateIssueForm({
           className="input"
           style={{
             height: 36,
+            padding: '0 10px',
             fontSize: '0.84rem',
             cursor: 'pointer',
             backgroundColor: '#ffffff',
@@ -211,31 +213,18 @@ export function CreateIssueForm({
         <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
           Due Date
         </label>
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-          <span
-            style={{
-              position: 'absolute',
-              left: 10,
-              pointerEvents: 'none',
-              color: 'var(--color-text-secondary)',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <Calendar size={15} />
-          </span>
-          <input
-            type="date"
-            {...register('dueDate')}
-            className="input"
-            style={{
-              paddingLeft: '1.85rem',
-              height: 36,
-              fontSize: '0.84rem',
-              backgroundColor: '#ffffff',
-            }}
-          />
-        </div>
+        <input
+          type="date"
+          {...register('dueDate')}
+          className="input"
+          style={{
+            height: 36,
+            padding: '0 10px',
+            fontSize: '0.84rem',
+            backgroundColor: '#ffffff',
+            cursor: 'pointer',
+          }}
+        />
       </div>
     </form>
   );
