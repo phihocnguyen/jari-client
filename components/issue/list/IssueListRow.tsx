@@ -461,7 +461,7 @@ export function IssueListRow({
                 padding: '3px 8px',
                 backgroundColor: statusStyle.bg,
                 color: statusStyle.color,
-                border: `1px solid ${statusStyle.border}`,
+                border: 'none',
                 borderRadius: 4,
                 fontSize: '0.75rem',
                 fontWeight: 700,

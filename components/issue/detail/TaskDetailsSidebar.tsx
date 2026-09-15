@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { toast } from '@/components/ui/Toast';
+import { Select } from '@/components/ui/Select';
+import { renderPriorityIcon } from '@/utils/issuePriority';
 import type { Issue, IssuePriority, IssueStatus } from '@/types/issue';
 
 interface ProjectMember {
@@ -337,32 +339,48 @@ export function TaskDetailsSidebar({
             {/* Priority */}
             <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center' }}>
               <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Priority</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                {getPriorityIcon(issue.priority)}
-                <select
-                  value={issue.priority}
-                  onChange={(e) => onUpdatePriority(e.target.value as IssuePriority)}
-                  style={{
-                    border: 'none',
-                    background: 'transparent',
-                    color: '#172b4d',
-                    fontWeight: 500,
-                    fontSize: '0.8125rem',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    padding: '2px 4px',
-                    borderRadius: 4,
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                >
-                  <option value="HIGHEST">Highest</option>
-                  <option value="HIGH">High</option>
-                  <option value="MEDIUM">Medium</option>
-                  <option value="LOW">Low</option>
-                  <option value="LOWEST">Lowest</option>
-                </select>
-              </div>
+              <Select<IssuePriority>
+                value={issue.priority}
+                onChange={(pr) => onUpdatePriority(pr)}
+                minWidth={140}
+                options={(
+                  ['HIGHEST', 'HIGH', 'MEDIUM', 'LOW', 'LOWEST'] as IssuePriority[]
+                ).map((pr) => ({
+                  value: pr,
+                  label:
+                    pr === 'HIGHEST'
+                      ? 'Highest'
+                      : pr === 'HIGH'
+                      ? 'High'
+                      : pr === 'MEDIUM'
+                      ? 'Medium'
+                      : pr === 'LOW'
+                      ? 'Low'
+                      : 'Lowest',
+                  icon: renderPriorityIcon(pr),
+                }))}
+                renderTrigger={(selected) => (
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '2px 6px',
+                      borderRadius: 4,
+                      cursor: 'pointer',
+                      transition: 'background-color 0.12s ease',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  >
+                    {renderPriorityIcon(issue.priority)}
+                    <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#172b4d' }}>
+                      {selected?.label || (issue.priority === 'HIGHEST' ? 'Highest' : issue.priority === 'HIGH' ? 'High' : issue.priority === 'MEDIUM' ? 'Medium' : issue.priority === 'LOW' ? 'Low' : 'Lowest')}
+                    </span>
+                    <ChevronDown size={12} style={{ color: '#626f86' }} />
+                  </div>
+                )}
+              />
             </div>
 
             {/* Labels */}
