@@ -15,8 +15,8 @@ function AuthCallbackContent() {
   const login = useAuthStore(s => s.login);
 
   useEffect(() => {
-    const accessToken  = searchParams.get('token');
-    const refreshToken = searchParams.get('refresh');
+    const accessToken  = searchParams.get('token') || searchParams.get('accessToken');
+    const refreshToken = searchParams.get('refresh') || searchParams.get('refreshToken');
 
     if (!accessToken || !refreshToken) {
       toast.error('Authentication failed', 'No tokens received from OAuth provider.');

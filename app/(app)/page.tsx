@@ -56,7 +56,7 @@ export default function DashboardPage() {
               color: '#fff', fontSize: '1.625rem', fontWeight: 700,
               marginBottom: '0.375rem',
             }}>
-              {greeting}, {user?.fullName.split(' ')[0]} 👋
+              {greeting}, {(user?.fullName || (user as any)?.displayName || 'User').split(' ')[0]} 👋
             </h1>
             <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.9375rem' }}>
               Here&apos;s what&apos;s on your plate today.

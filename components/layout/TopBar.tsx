@@ -133,9 +133,9 @@ export function TopBar({ breadcrumbs }: TopBarProps) {
               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.06)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'none')}
             >
-              <Avatar name={user.fullName} src={user.avatarUrl} size={30} />
+              <Avatar name={user?.fullName || (user as any)?.displayName || 'User'} src={user?.avatarUrl} size={30} />
               <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text-primary)' }}>
-                {user.fullName.split(' ')[0]}
+                {(user?.fullName || (user as any)?.displayName || 'User').split(' ')[0]}
               </span>
               <ChevronDown size={14} style={{ color: 'var(--color-text-secondary)' }} />
             </button>
@@ -161,7 +161,7 @@ export function TopBar({ breadcrumbs }: TopBarProps) {
                   borderBottom: '1px solid rgba(0,0,0,0.08)',
                 }}>
                   <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-primary)' }}>
-                    {user.fullName}
+                    {user?.fullName || (user as any)?.displayName || 'User'}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: 1 }}>
                     {user.email}

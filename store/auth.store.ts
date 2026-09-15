@@ -17,6 +17,16 @@ interface AuthState {
   logout:        ()              => void;
 }
 
+const normalizeUser = (user: User): User => {
+  if (!user) return user;
+  const rawUser = user as any;
+  const name = rawUser.fullName || rawUser.displayName || rawUser.email?.split('@')[0] || 'User';
+  return {
+    ...user,
+    fullName: name,
+  };
+};
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -24,12 +34,12 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading:       false,
 
-      setUser:    (user)    => set({ user, isAuthenticated: true }),
+      setUser:    (user)    => set({ user: normalizeUser(user), isAuthenticated: true }),
       setLoading: (v)       => set({ isLoading: v }),
 
       login: (user, accessToken, refreshToken) => {
         tokenStorage.set(accessToken, refreshToken);
-        set({ user, isAuthenticated: true });
+        set({ user: normalizeUser(user), isAuthenticated: true });
       },
 
       logout: () => {

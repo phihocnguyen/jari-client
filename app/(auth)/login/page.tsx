@@ -40,7 +40,7 @@ export default function LoginPage() {
   const [googleOAuthUrl, setGoogleOAuthUrl] = useState('#');
 
   useEffect(() => {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
+    const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080/api/v1';
     const origin = window.location.origin;
     setGoogleOAuthUrl(`${API_URL.replace('/api/v1', '')}/oauth2/authorize/google?redirect_uri=${encodeURIComponent(`${origin}/auth/callback`)}`);
   }, []);
