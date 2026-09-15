@@ -66,12 +66,33 @@ export default function BoardPage({ params }: PageProps) {
   const updateStatusMutation = useMutation({
     mutationFn: ({ issueId, status }: { issueId: string; status: IssueStatus }) =>
       issueApi.updateStatus(issueId, status),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['board', projectId] });
-      qc.invalidateQueries({ queryKey: ['issues', projectId] });
-      toast.success('Task status updated');
+    onMutate: async ({ issueId, status }) => {
+      await qc.cancelQueries({ queryKey: ['issues', projectId] });
+      await qc.cancelQueries({ queryKey: ['board', projectId] });
+
+      const previousIssues = qc.getQueryData<any>(['issues', projectId]);
+
+      if (previousIssues && Array.isArray(previousIssues.data)) {
+        qc.setQueryData(['issues', projectId], {
+          ...previousIssues,
+          data: previousIssues.data.map((issue: Issue) =>
+            issue.id === issueId ? { ...issue, status } : issue
+          ),
+        });
+      }
+
+      return { previousIssues };
     },
-    onError: () => toast.error('Failed to update status'),
+    onError: (_err, _variables, context) => {
+      if (context?.previousIssues) {
+        qc.setQueryData(['issues', projectId], context.previousIssues);
+      }
+      toast.error('Failed to update status');
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ['issues', projectId], refetchType: 'none' });
+      qc.invalidateQueries({ queryKey: ['board', projectId], refetchType: 'none' });
+    },
   });
 
   if (!projectId) return null;
@@ -210,12 +231,14 @@ export default function BoardPage({ params }: PageProps) {
                 onDragLeave={(e) => handleDragLeave(e, col.id)}
                 onDrop={(e) => handleDrop(e, col.id)}
                 style={{
-                  backgroundColor: isHovered ? 'rgba(0, 117, 74, 0.04)' : 'transparent',
-                  borderRadius: 'var(--radius-card)',
+                  backgroundColor: isHovered ? '#f0fdf4' : '#f8fafc',
+                  border: isHovered ? '2px dashed #22c55e' : '1px solid #e2e8f0',
+                  borderRadius: '14px',
+                  padding: '14px 12px',
                   minHeight: '560px',
                   display: 'flex',
                   flexDirection: 'column',
-                  transition: 'background-color 0.2s ease',
+                  transition: 'all 0.15s ease',
                 }}
               >
                 {/* Column Header */}
@@ -225,8 +248,18 @@ export default function BoardPage({ params }: PageProps) {
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: col.color }} />
-                    <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--color-text-primary)' }}>
-                      {col.title} ({columnIssues.length})
+                    <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#1e293b' }}>
+                      {col.title}
+                    </span>
+                    <span style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      color: '#64748b',
+                      backgroundColor: '#e2e8f0',
+                      padding: '2px 8px',
+                      borderRadius: '12px',
+                    }}>
+                      {columnIssues.length}
                     </span>
                   </div>
                   <MoreHorizontal size={18} color="var(--color-text-secondary)" style={{ cursor: 'pointer' }} />
@@ -271,25 +304,27 @@ export default function BoardPage({ params }: PageProps) {
                         onDragEnd={() => { setDraggedIssueId(null); setDragOverColumn(null); }}
                         onClick={() => setSelectedIssueId(issue.id)}
                         style={{
-                          backgroundColor: 'var(--color-surface-white)',
+                          backgroundColor: '#ffffff',
                           padding: '16px',
-                          borderRadius: '16px',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                          borderRadius: '12px',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03)',
                           cursor: 'grab',
                           opacity: isDragging ? 0.4 : 1,
                           transform: isDragging ? 'scale(0.98)' : 'none',
-                          border: '1px solid rgba(0,0,0,0.06)',
-                          transition: 'var(--transition-base)',
+                          border: '1px solid #cbd5e1',
+                          transition: 'all 0.15s ease',
                         }}
                         onMouseEnter={(e) => {
                           if (!isDragging) {
-                            e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)';
+                            e.currentTarget.style.borderColor = '#94a3b8';
+                            e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.08)';
                             e.currentTarget.style.transform = 'translateY(-2px)';
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (!isDragging) {
-                            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)';
+                            e.currentTarget.style.borderColor = '#cbd5e1';
+                            e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03)';
                             e.currentTarget.style.transform = 'none';
                           }
                         }}
