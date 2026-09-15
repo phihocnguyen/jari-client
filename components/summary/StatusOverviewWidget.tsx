@@ -12,7 +12,7 @@ export function StatusOverviewWidget({ projectId }: StatusOverviewWidgetProps) {
     <div className="card" style={{ padding: '1.5rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
         <h2 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Status overview</h2>
-        <Link href={`/projects/${pId}/issues`} style={{ fontSize: '0.8125rem', color: 'var(--color-green-accent)', fontWeight: 500 }}>
+        <Link href={`/projects/${pId}/list`} style={{ fontSize: '0.8125rem', color: 'var(--color-green-accent)', fontWeight: 500 }}>
           View all issues
         </Link>
       </div>
