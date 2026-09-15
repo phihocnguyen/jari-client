@@ -19,6 +19,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { toast } from '@/components/ui/Toast';
 import { Select } from '@/components/ui/Select';
 import { renderPriorityIcon } from '@/utils/issuePriority';
+import { getStatusBadgeStyle } from '@/utils/issueStatus';
 import type { Issue, IssuePriority, IssueStatus } from '@/types/issue';
 
 interface ProjectMember {
@@ -69,20 +70,6 @@ export function TaskDetailsSidebar({
     }
   }, [statusMenuOpen]);
 
-  const getStatusBadgeProps = (status?: IssueStatus) => {
-    switch (status) {
-      case 'DONE':
-        return { label: 'Done', bg: '#e3fcef', text: '#006644' };
-      case 'IN_PROGRESS':
-        return { label: 'In Progress', bg: '#e9f2ff', text: '#0052cc' };
-      case 'IN_REVIEW':
-        return { label: 'In Review', bg: '#eae6ff', text: '#403294' };
-      case 'TODO':
-      default:
-        return { label: 'To Do', bg: '#f1f2f4', text: '#44546f' };
-    }
-  };
-
   const getPriorityIcon = (priority?: IssuePriority) => {
     switch (priority) {
       case 'HIGHEST':
@@ -99,7 +86,7 @@ export function TaskDetailsSidebar({
     }
   };
 
-  const statusBadge = getStatusBadgeProps(issue.status);
+  const statusBadge = getStatusBadgeStyle(issue.status);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -121,7 +108,7 @@ export function TaskDetailsSidebar({
                 justifyContent: 'space-between',
                 padding: '7px 12px',
                 backgroundColor: statusBadge.bg,
-                color: statusBadge.text,
+                color: statusBadge.color,
                 border: 'none',
                 borderRadius: 4,
                 fontWeight: 600,
@@ -150,7 +137,7 @@ export function TaskDetailsSidebar({
                 }}
               >
                 {(['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'] as IssueStatus[]).map((st) => {
-                  const badge = getStatusBadgeProps(st);
+                  const badge = getStatusBadgeStyle(st);
                   return (
                     <button
                       key={st}
@@ -167,7 +154,7 @@ export function TaskDetailsSidebar({
                         border: 'none',
                         cursor: 'pointer',
                         fontSize: '0.8125rem',
-                        color: badge.text,
+                        color: badge.color,
                         fontWeight: issue.status === st ? 600 : 500,
                         display: 'flex',
                         alignItems: 'center',

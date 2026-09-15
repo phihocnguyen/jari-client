@@ -120,7 +120,7 @@ export function TaskSubtasks({
                     color: isDone ? '#006644' : '#44546f',
                   }}
                 >
-                  {isDone ? 'DONE' : 'TO DO'}
+                  {isDone ? 'Done' : 'To Do'}
                 </span>
               </div>
             );

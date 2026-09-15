@@ -30,6 +30,7 @@ interface IssueListQuickCreateProps {
   }) => Promise<void>;
   members: ProjectMember[];
   isSubmitting: boolean;
+  isSubtask?: boolean;
 }
 
 export function IssueListQuickCreate({
@@ -38,9 +39,10 @@ export function IssueListQuickCreate({
   onSubmit,
   members,
   isSubmitting,
+  isSubtask,
 }: IssueListQuickCreateProps) {
   const [title, setTitle] = useState('');
-  const [type, setType] = useState<IssueType>('TASK');
+  const [type, setType] = useState<IssueType>(isSubtask ? 'SUBTASK' : 'TASK');
   const [priority, setPriority] = useState<IssuePriority>('MEDIUM');
   const [assigneeId, setAssigneeId] = useState<string>('');
   const [typeMenuOpen, setTypeMenuOpen] = useState(false);
@@ -52,11 +54,11 @@ export function IssueListQuickCreate({
       setTimeout(() => inputRef.current?.focus(), 50);
     } else {
       setTitle('');
-      setType('TASK');
+      setType(isSubtask ? 'SUBTASK' : 'TASK');
       setPriority('MEDIUM');
       setAssigneeId('');
     }
-  }, [isOpen]);
+  }, [isOpen, isSubtask]);
 
   if (!isOpen) return null;
 
@@ -112,12 +114,17 @@ export function IssueListQuickCreate({
       </td>
 
       {/* Work Column: Type Selector + Input */}
-      <td style={{ padding: '8px 12px' }}>
+      <td style={{ padding: '8px 12px', paddingLeft: isSubtask ? 32 : 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
-          {/* Issue Type Dropdown Button */}
-          <button
-            type="button"
-            onClick={() => setTypeMenuOpen(!typeMenuOpen)}
+          {isSubtask ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-text-secondary)' }}>
+              <CornerDownLeft size={14} />
+              {renderTypeIcon('SUBTASK')}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setTypeMenuOpen(!typeMenuOpen)}
             title="Select issue type"
             style={{
               display: 'inline-flex',
@@ -133,8 +140,9 @@ export function IssueListQuickCreate({
             {renderTypeIcon(type)}
             <ChevronDown size={11} color="var(--color-text-secondary)" />
           </button>
+          )}
 
-          {typeMenuOpen && (
+          {typeMenuOpen && !isSubtask && (
             <div
               style={{
                 position: 'absolute',
@@ -149,27 +157,33 @@ export function IssueListQuickCreate({
                 padding: '4px 0',
               }}
             >
-              {(['TASK', 'EPIC', 'BUG', 'STORY', 'SUBTASK'] as IssueType[]).map((t) => (
-                <div
-                  key={t}
+              {/* Type Options */}
+              {(['TASK', 'STORY', 'BUG', 'EPIC'] as IssueType[]).map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
                   onClick={() => {
-                    setType(t);
+                    setType(opt);
                     setTypeMenuOpen(false);
                   }}
                   style={{
-                    padding: '6px 12px',
-                    fontSize: '0.8125rem',
-                    cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: 8,
+                    width: '100%',
+                    padding: '6px 12px',
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    textAlign: 'left',
+                    fontSize: '0.8125rem',
+                    cursor: 'pointer',
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                 >
-                  {renderTypeIcon(t)}
-                  <span>{t.charAt(0) + t.slice(1).toLowerCase()}</span>
-                </div>
+                  {renderTypeIcon(opt)}
+                  <span>{opt.charAt(0) + opt.slice(1).toLowerCase()}</span>
+                </button>
               ))}
             </div>
           )}

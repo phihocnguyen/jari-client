@@ -27,6 +27,7 @@ interface IssueListTableProps {
   onUpdateAssignee: (id: string, assigneeId: string | null) => void;
   onUpdatePriority: (id: string, priority: IssuePriority) => void;
   inlineCreateOpen: boolean;
+  inlineCreateParentId?: string | 'ROOT' | null;
   onCloseInlineCreate: () => void;
   onOpenInlineCreate: () => void;
   onSubmitInlineCreate: (data: {
@@ -55,6 +56,7 @@ export function IssueListTable({
   onUpdateAssignee,
   onUpdatePriority,
   inlineCreateOpen,
+  inlineCreateParentId,
   onCloseInlineCreate,
   onOpenInlineCreate,
   onSubmitInlineCreate,
@@ -186,20 +188,32 @@ export function IssueListTable({
           <tbody>
             {issues.length > 0 ? (
               issues.map((issue) => (
-                <IssueListRow
-                  key={issue.id}
-                  issue={issue}
-                  isSelected={selectedIds.has(issue.id)}
-                  onToggleSelect={onToggleSelect}
-                  onOpenDetail={onOpenDetail}
-                  onDelete={onDelete}
-                  onUpdateStatus={onUpdateStatus}
-                  onUpdateAssignee={onUpdateAssignee}
-                  onUpdatePriority={onUpdatePriority}
-                  onAddChild={onAddChild}
-                  members={members}
-                  isActiveIssue={selectedIssueId === issue.id}
-                />
+                <React.Fragment key={issue.id}>
+                  <IssueListRow
+                    issue={issue}
+                    isSelected={selectedIds.has(issue.id)}
+                    onToggleSelect={onToggleSelect}
+                    onOpenDetail={onOpenDetail}
+                    onDelete={onDelete}
+                    onUpdateStatus={onUpdateStatus}
+                    onUpdateAssignee={onUpdateAssignee}
+                    onUpdatePriority={onUpdatePriority}
+                    onAddChild={onAddChild}
+                    members={members}
+                    isActiveIssue={selectedIssueId === issue.id}
+                  />
+                  {/* Render Quick Create directly below this parent if matched */}
+                  {inlineCreateParentId === issue.id && (
+                    <IssueListQuickCreate
+                      isOpen={true}
+                      onClose={onCloseInlineCreate}
+                      onSubmit={onSubmitInlineCreate}
+                      members={members}
+                      isSubmitting={isSubmittingCreate}
+                      isSubtask={true}
+                    />
+                  )}
+                </React.Fragment>
               ))
             ) : (
               <tr>
@@ -217,14 +231,17 @@ export function IssueListTable({
               </tr>
             )}
 
-            {/* Inline Quick Create Row */}
-            <IssueListQuickCreate
-              isOpen={inlineCreateOpen}
-              onClose={onCloseInlineCreate}
-              onSubmit={onSubmitInlineCreate}
-              members={members}
-              isSubmitting={isSubmittingCreate}
-            />
+            {/* Inline Quick Create Row at the bottom for ROOT */}
+            {inlineCreateParentId === 'ROOT' && (
+              <IssueListQuickCreate
+                isOpen={true}
+                onClose={onCloseInlineCreate}
+                onSubmit={onSubmitInlineCreate}
+                members={members}
+                isSubmitting={isSubmittingCreate}
+                isSubtask={false}
+              />
+            )}
           </tbody>
         </table>
       </div>

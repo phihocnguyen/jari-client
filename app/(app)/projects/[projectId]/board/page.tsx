@@ -88,9 +88,10 @@ export default function BoardPage({ params }: PageProps) {
       }
       toast.error('Failed to update status');
     },
-    onSettled: () => {
+    onSettled: (_, _error, variables) => {
       qc.invalidateQueries({ queryKey: ['issues', projectId], refetchType: 'none' });
       qc.invalidateQueries({ queryKey: ['board', projectId], refetchType: 'none' });
+      qc.invalidateQueries({ queryKey: ['issue', variables.issueId], refetchType: 'none' });
     },
   });
 

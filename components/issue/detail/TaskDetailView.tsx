@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { issueApi } from '@/lib/api/issue';
 import { projectApi } from '@/lib/api/project';
+import { refApi } from '@/lib/api/ref';
 import { toast } from '@/components/ui/Toast';
 import type { Issue, IssuePriority, IssueStatus } from '@/types/issue';
 
@@ -62,6 +63,25 @@ export function TaskDetailView({
     enabled: Boolean(issueId),
   });
 
+  // 4. Fetch Reference Data for Subtask Creation
+  const { data: issueTypesRes } = useQuery({
+    queryKey: ['ref', 'issue-types'],
+    queryFn: () => refApi.getIssueTypes(),
+    staleTime: 1000 * 60 * 30,
+  });
+
+  const { data: statusesRes } = useQuery({
+    queryKey: ['ref', 'statuses'],
+    queryFn: () => refApi.getStatuses(),
+    staleTime: 1000 * 60 * 30,
+  });
+
+  const { data: prioritiesRes } = useQuery({
+    queryKey: ['ref', 'priorities'],
+    queryFn: () => refApi.getPriorities(),
+    staleTime: 1000 * 60 * 30,
+  });
+
   // Update Mutation (generic fields)
   const updateMutation = useMutation({
     mutationFn: (data: Record<string, any>) => issueApi.update(issueId, data),
@@ -107,13 +127,25 @@ export function TaskDetailView({
 
   // Create Subtask Mutation
   const createSubtaskMutation = useMutation({
-    mutationFn: (title: string) =>
-      issueApi.create(projectId, {
+    mutationFn: (title: string) => {
+      const issueTypes = issueTypesRes?.data || [];
+      const statuses = statusesRes?.data || [];
+      const priorities = prioritiesRes?.data || [];
+
+      const subtaskType = issueTypes.find((t: any) => t.name.toUpperCase() === 'SUBTASK');
+      const todoStatus = statuses.find((s: any) => s.name.toUpperCase() === 'TO DO' || s.extra === 'TODO');
+      const medPrio = priorities.find((p: any) => p.name.toUpperCase() === 'MEDIUM');
+
+      return issueApi.create(projectId, {
         title,
         type: 'SUBTASK',
         parentId: issueId,
         priority: 'MEDIUM',
-      }),
+        issueTypeId: subtaskType?.id,
+        statusId: todoStatus?.id,
+        priorityId: medPrio?.id,
+      });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['issue', issueId] });
       qc.invalidateQueries({ queryKey: ['issues', projectId] });

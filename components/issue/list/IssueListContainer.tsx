@@ -32,7 +32,7 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
   const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
   const [fullCreateModalOpen, setFullCreateModalOpen] = useState(false);
   const [parentForCreate, setParentForCreate] = useState<Issue | null>(null);
-  const [inlineCreateOpen, setInlineCreateOpen] = useState(false);
+  const [inlineCreateParentId, setInlineCreateParentId] = useState<string | 'ROOT' | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // 1. Fetch Issues
@@ -95,8 +95,9 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
   const updateStatusMutation = useMutation({
     mutationFn: ({ issueId, status }: { issueId: string; status: IssueStatus }) =>
       issueApi.updateStatus(issueId, status),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ['issues', projectId] });
+      qc.invalidateQueries({ queryKey: ['issue', variables.issueId] });
       toast.success('Status updated');
     },
     onError: () => toast.error('Failed to update status'),
@@ -105,8 +106,9 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
   const updateAssigneeMutation = useMutation({
     mutationFn: ({ issueId, assigneeId }: { issueId: string; assigneeId: string | null }) =>
       issueApi.updateAssignee(issueId, assigneeId),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ['issues', projectId] });
+      qc.invalidateQueries({ queryKey: ['issue', variables.issueId] });
       toast.success('Assignee updated');
     },
     onError: () => toast.error('Failed to update assignee'),
@@ -115,8 +117,9 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
   const updatePriorityMutation = useMutation({
     mutationFn: ({ issueId, priority }: { issueId: string; priority: IssuePriority }) =>
       issueApi.update(issueId, { priority }),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ['issues', projectId] });
+      qc.invalidateQueries({ queryKey: ['issue', variables.issueId] });
       toast.success('Priority updated');
     },
     onError: () => toast.error('Failed to update priority'),
@@ -218,7 +221,9 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
       statusId: matchedStatus?.id,
       priorityId: matchedPriority?.id,
       assigneeId: data.assigneeId,
+      parentId: inlineCreateParentId !== 'ROOT' ? inlineCreateParentId || undefined : undefined,
     });
+    setInlineCreateParentId(null);
   };
 
   return (
@@ -369,13 +374,13 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
           onUpdateStatus={(id, st) => updateStatusMutation.mutate({ issueId: id, status: st })}
           onUpdateAssignee={(id, aid) => updateAssigneeMutation.mutate({ issueId: id, assigneeId: aid })}
           onUpdatePriority={(id, pr) => updatePriorityMutation.mutate({ issueId: id, priority: pr })}
-          inlineCreateOpen={inlineCreateOpen}
-          onCloseInlineCreate={() => setInlineCreateOpen(false)}
-          onOpenInlineCreate={() => setInlineCreateOpen(true)}
+          inlineCreateOpen={inlineCreateParentId !== null}
+          inlineCreateParentId={inlineCreateParentId}
+          onCloseInlineCreate={() => setInlineCreateParentId(null)}
+          onOpenInlineCreate={() => setInlineCreateParentId('ROOT')}
           onSubmitInlineCreate={handleSubmitInlineCreate}
           onAddChild={(parent) => {
-            setParentForCreate(parent);
-            setFullCreateModalOpen(true);
+            setInlineCreateParentId(parent.id);
           }}
           members={members}
           isSubmittingCreate={inlineCreateMutation.isPending}

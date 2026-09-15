@@ -18,7 +18,7 @@ export function normalizeIssue(item: any): Issue {
 
   // Map backend status representation ("TO DO", "IN PROGRESS", etc.)
   let mappedStatus: IssueStatus = 'TODO';
-  const rawStatus = (item.statusCategory || item.status || '').toUpperCase().trim();
+  const rawStatus = (item.status || item.statusCategory || '').toUpperCase().trim();
   if (rawStatus === 'DONE' || rawStatus === 'CANCELLED') {
     mappedStatus = 'DONE';
   } else if (rawStatus === 'IN_PROGRESS' || rawStatus === 'IN PROGRESS') {
