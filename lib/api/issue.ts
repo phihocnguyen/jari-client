@@ -187,6 +187,12 @@ export const issueApi = {
       data: normalizeIssue(r.data.data),
     })),
 
+  setRelease: (issueId: string, releaseId: string | null) =>
+    apiClient.patch<ApiResponse<Issue>>(`/issues/${issueId}/release`, { releaseId }).then((r) => ({
+      ...r.data,
+      data: normalizeIssue(r.data.data),
+    })),
+
   setLabels: (issueId: string, labelIds: string[]) =>
     apiClient.put<ApiResponse<Issue>>(`/issues/${issueId}/labels`, { labelIds }).then((r) => ({
       ...r.data,
