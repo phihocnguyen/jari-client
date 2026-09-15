@@ -77,7 +77,7 @@ const DEMO_SPRINTS = [
 
 import type { Issue } from '@/types/issue';
 
-const DEMO_ISSUES: Issue[] = [
+let DEMO_ISSUES: Issue[] = [
   {
     id: 'issue-demo-1',
     key: 'TIS-101',
@@ -320,23 +320,59 @@ export function getDemoResponse(config: InternalAxiosRequestConfig): AxiosRespon
     }
   } else {
     // POST / PUT / PATCH / DELETE mutations in demo mode
-    if (url.includes('/issues')) {
-      responseData = {
-        success: true,
-        data: {
-          id: 'issue-demo-' + Date.now(),
-          key: 'JARI-999',
-          title: 'New Demo Issue',
-          type: 'TASK',
-          status: 'TODO',
-          priority: 'MEDIUM',
-          projectId: 'proj-demo-1',
-          sprintId: 'sprint-demo-1',
-          reporter: ADMIN_USER,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
+    let payload: any = {};
+    if (typeof config.data === 'string') {
+      try { payload = JSON.parse(config.data); } catch { payload = {}; }
+    } else if (config.data) {
+      payload = config.data;
+    }
+
+    if (method === 'DELETE' && url.includes('/issues/')) {
+      const id = url.split('/').pop();
+      DEMO_ISSUES = DEMO_ISSUES.filter((i) => i.id !== id);
+      responseData = { success: true, data: 'Issue deleted' };
+    } else if (method === 'PATCH' && url.includes('/issues/') && url.endsWith('/status')) {
+      const parts = url.split('/');
+      const id = parts[parts.length - 2];
+      const found = DEMO_ISSUES.find((i) => i.id === id);
+      if (found && payload.status) {
+        found.status = payload.status;
+        found.updatedAt = new Date().toISOString();
+      }
+      responseData = { success: true, data: found };
+    } else if (method === 'PATCH' && url.includes('/issues/') && url.endsWith('/assignee')) {
+      const parts = url.split('/');
+      const id = parts[parts.length - 2];
+      const found = DEMO_ISSUES.find((i) => i.id === id);
+      if (found) {
+        found.assignee = payload.assigneeId ? ADMIN_USER : undefined;
+        found.updatedAt = new Date().toISOString();
+      }
+      responseData = { success: true, data: found };
+    } else if (method === 'POST' && url.includes('/issues')) {
+      const newIssue: Issue = {
+        id: 'issue-demo-' + Date.now(),
+        key: 'TIS-' + (DEMO_ISSUES.length + 101),
+        title: payload.title || 'New Demo Issue',
+        type: payload.type || 'TASK',
+        status: payload.status || 'TODO',
+        priority: payload.priority || 'MEDIUM',
+        projectId: payload.projectId || 'proj-demo-1',
+        sprintId: 'sprint-demo-1',
+        reporter: ADMIN_USER,
+        assignee: payload.assigneeId ? ADMIN_USER : undefined,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
+      DEMO_ISSUES.push(newIssue);
+      responseData = { success: true, data: newIssue };
+    } else if (method === 'PUT' && url.includes('/issues/')) {
+      const id = url.split('/').pop();
+      const found = DEMO_ISSUES.find((i) => i.id === id);
+      if (found) {
+        Object.assign(found, payload, { updatedAt: new Date().toISOString() });
+      }
+      responseData = { success: true, data: found };
     } else if (url.includes('/sprints')) {
       responseData = {
         success: true,
