@@ -175,10 +175,22 @@ export function CreateIssueModal({
         dueDate: data.dueDate || undefined,
       });
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['issues', projectId] });
-      qc.invalidateQueries({ queryKey: ['board', projectId] });
-      qc.invalidateQueries({ queryKey: ['sprints', projectId] });
+    onSuccess: (res) => {
+      const createdIssue = res?.data;
+      if (createdIssue) {
+        qc.setQueryData(['issues', projectId], (old: any) => {
+          if (!old || !Array.isArray(old.data)) return old;
+          if (old.data.some((i: any) => i.id === createdIssue.id)) return old;
+          return {
+            ...old,
+            data: [createdIssue, ...old.data],
+            total: (old.total ?? old.data.length) + 1,
+          };
+        });
+      }
+      qc.invalidateQueries({ queryKey: ['issues', projectId], refetchType: 'none' });
+      qc.invalidateQueries({ queryKey: ['board', projectId], refetchType: 'none' });
+      qc.invalidateQueries({ queryKey: ['sprints', projectId], refetchType: 'none' });
       toast.success('Issue created successfully!');
 
       if (createAnother) {

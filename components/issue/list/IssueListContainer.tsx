@@ -150,8 +150,20 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
 
   const inlineCreateMutation = useMutation({
     mutationFn: (req: CreateIssueRequest) => issueApi.create(projectId, req),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['issues', projectId] });
+    onSuccess: (res) => {
+      const createdIssue = res?.data;
+      if (createdIssue) {
+        qc.setQueryData(['issues', projectId], (old: any) => {
+          if (!old || !Array.isArray(old.data)) return old;
+          if (old.data.some((i: any) => i.id === createdIssue.id)) return old;
+          return {
+            ...old,
+            data: [createdIssue, ...old.data],
+            total: (old.total ?? old.data.length) + 1,
+          };
+        });
+      }
+      qc.invalidateQueries({ queryKey: ['issues', projectId], refetchType: 'none' });
       toast.success('Issue created');
     },
     onError: () => toast.error('Failed to create issue'),

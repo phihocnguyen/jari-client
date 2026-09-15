@@ -292,7 +292,16 @@ export default function BoardPage({ params }: PageProps) {
                 )}
 
                 {/* Cards List */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px',
+                  flex: 1,
+                  maxHeight: '580px',
+                  overflowY: 'auto',
+                  paddingRight: '4px',
+                  scrollbarWidth: 'thin',
+                }}>
                   {columnIssues.map((issue) => {
                     const isDragging = draggedIssueId === issue.id;
 
