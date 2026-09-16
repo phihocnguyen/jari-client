@@ -46,20 +46,21 @@ function StatusPillGroup({ issues }: { issues: Issue[] }) {
   });
 
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
       <span
         title={`${todo} To Do`}
         style={{
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
-          minWidth: 20,
+          minWidth: 22,
           height: 20,
           padding: '0 6px',
-          borderRadius: 10,
+          borderRadius: 4,
           backgroundColor: '#DFE1E6',
-          color: '#42526E',
-          fontSize: '0.72rem',
+          color: '#172B4D',
+          border: '1px solid #C1C7D0',
+          fontSize: '0.75rem',
           fontWeight: 700,
         }}
       >
@@ -71,13 +72,14 @@ function StatusPillGroup({ issues }: { issues: Issue[] }) {
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
-          minWidth: 20,
+          minWidth: 22,
           height: 20,
           padding: '0 6px',
-          borderRadius: 10,
-          backgroundColor: '#DEEBFF',
-          color: '#0052CC',
-          fontSize: '0.72rem',
+          borderRadius: 4,
+          backgroundColor: '#B3D4FF',
+          color: '#0747A6',
+          border: '1px solid #79B0FF',
+          fontSize: '0.75rem',
           fontWeight: 700,
         }}
       >
@@ -89,13 +91,14 @@ function StatusPillGroup({ issues }: { issues: Issue[] }) {
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
-          minWidth: 20,
+          minWidth: 22,
           height: 20,
           padding: '0 6px',
-          borderRadius: 10,
-          backgroundColor: '#E3FCEF',
+          borderRadius: 4,
+          backgroundColor: '#ABF5D1',
           color: '#006644',
-          fontSize: '0.72rem',
+          border: '1px solid #57D9A3',
+          fontSize: '0.75rem',
           fontWeight: 700,
         }}
       >
@@ -236,9 +239,9 @@ export default function BacklogPage({ params }: PageProps) {
           <div
             key={sprint.id}
             style={{
-              backgroundColor: 'var(--color-surface-white)',
-              borderRadius: '8px',
-              border: '1px solid rgba(0,0,0,0.08)',
+              backgroundColor: '#FFFFFF',
+              borderRadius: '6px',
+              border: '1px solid #DFE1E6',
               overflow: 'visible',
             }}
           >
@@ -246,12 +249,12 @@ export default function BacklogPage({ params }: PageProps) {
             <div
               style={{
                 padding: '10px 16px',
-                backgroundColor: sprint.status === 'ACTIVE' ? 'rgba(0, 98, 65, 0.03)' : '#F7F8F9',
+                backgroundColor: sprint.status === 'ACTIVE' ? '#EBF3FB' : '#F1F2F4',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                borderBottom: isCollapsed ? 'none' : '1px solid rgba(0,0,0,0.06)',
-                borderRadius: isCollapsed ? '8px' : '8px 8px 0 0',
+                borderBottom: isCollapsed ? 'none' : '1px solid #DFE1E6',
+                borderRadius: isCollapsed ? '6px' : '6px 6px 0 0',
                 userSelect: 'none',
               }}
             >
@@ -440,11 +443,12 @@ export default function BacklogPage({ params }: PageProps) {
                 ) : (
                   <div
                     style={{
-                      border: '1.5px dashed rgba(0,0,0,0.12)',
-                      borderRadius: 6,
+                      border: '1.5px dashed #C1C7D0',
+                      borderRadius: 4,
                       padding: '24px 16px',
                       textAlign: 'center',
                       color: 'var(--color-text-secondary)',
+                      backgroundColor: '#FAFBFC',
                       fontSize: '0.84rem',
                       margin: '6px 0',
                     }}
@@ -484,9 +488,9 @@ export default function BacklogPage({ params }: PageProps) {
       {/* Backlog Section (Always present below Sprints) */}
       <div
         style={{
-          backgroundColor: 'var(--color-surface-white)',
-          borderRadius: '8px',
-          border: '1px solid rgba(0,0,0,0.08)',
+          backgroundColor: '#FFFFFF',
+          borderRadius: '6px',
+          border: '1px solid #DFE1E6',
           overflow: 'visible',
           marginTop: displaySprints.length > 0 ? '0.5rem' : '0',
         }}
@@ -495,12 +499,12 @@ export default function BacklogPage({ params }: PageProps) {
         <div
           style={{
             padding: '10px 16px',
-            backgroundColor: '#F7F8F9',
+            backgroundColor: '#F1F2F4',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            borderBottom: backlogCollapsed ? 'none' : '1px solid rgba(0,0,0,0.06)',
-            borderRadius: backlogCollapsed ? '8px' : '8px 8px 0 0',
+            borderBottom: backlogCollapsed ? 'none' : '1px solid #DFE1E6',
+            borderRadius: backlogCollapsed ? '6px' : '6px 6px 0 0',
             userSelect: 'none',
           }}
         >
@@ -574,11 +578,12 @@ export default function BacklogPage({ params }: PageProps) {
             ) : (
               <div
                 style={{
-                  border: '1.5px dashed rgba(0,0,0,0.15)',
-                  borderRadius: 6,
+                  border: '1.5px dashed #C1C7D0',
+                  borderRadius: 4,
                   padding: '24px 16px',
                   textAlign: 'center',
                   color: 'var(--color-text-secondary)',
+                  backgroundColor: '#FAFBFC',
                   fontSize: '0.84rem',
                   margin: '6px 0',
                 }}
