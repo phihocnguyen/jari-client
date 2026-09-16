@@ -1,12 +1,32 @@
-import Link from 'next/link';
+'use client';
 
-// ─── Server Component (SSR) ────────────────────────────────────────
+import Link from 'next/link';
+import type { StatusCount } from '@/types/summary';
+
+// Colors for statuses (up to 8 statuses)
+const STATUS_COLORS = ['#00754A', '#0284C7', '#7C3AED', '#EA580C', '#DB2777', '#1E3A8A', '#94A3B8', '#22C55E'];
+
 interface StatusOverviewWidgetProps {
   projectId: string;
+  statusBreakdown?: StatusCount[];
+  isLoading?: boolean;
 }
 
-export function StatusOverviewWidget({ projectId }: StatusOverviewWidgetProps) {
-  const pId = projectId || '00000000-0000-0000-0000-000000000003';
+export function StatusOverviewWidget({ projectId, statusBreakdown, isLoading }: StatusOverviewWidgetProps) {
+  const pId = projectId || '';
+  const items = statusBreakdown ?? [];
+  const total = items.reduce((s, i) => s + i.count, 0);
+
+  // Build SVG donut segments (circumference of r=38 circle ≈ 238.76)
+  const CIRC = 2 * Math.PI * 38; // ~238.76
+  let offset = 0;
+  const segments = items.map((item, idx) => {
+    const pct = total > 0 ? item.count / total : 0;
+    const dash = pct * CIRC;
+    const seg = { color: STATUS_COLORS[idx % STATUS_COLORS.length], dash, offset: -offset, item };
+    offset += dash;
+    return seg;
+  });
 
   return (
     <div className="card" style={{ padding: '1.5rem' }}>
@@ -20,40 +40,56 @@ export function StatusOverviewWidget({ projectId }: StatusOverviewWidgetProps) {
         Get a snapshot of the status of your issues.
       </p>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-        {/* SVG Donut Chart */}
-        <div style={{ position: 'relative', width: 170, height: 170, flexShrink: 0 }}>
-          <svg width="170" height="170" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#0284C7" strokeWidth="14" strokeDasharray="100 140" strokeDashoffset="0" />
-            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#7C3AED" strokeWidth="14" strokeDasharray="50 190" strokeDashoffset="-100" />
-            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#EA580C" strokeWidth="14" strokeDasharray="30 210" strokeDashoffset="-150" />
-            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#DB2777" strokeWidth="14" strokeDasharray="32 208" strokeDashoffset="-180" />
-            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#1E3A8A" strokeWidth="14" strokeDasharray="19 221" strokeDashoffset="-212" />
-            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#94A3B8" strokeWidth="14" strokeDasharray="8 232" strokeDashoffset="-231" />
-          </svg>
-          {/* Donut Center Label */}
-          <div style={{
-            position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            textAlign: 'center',
-          }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 700, lineHeight: 1.1 }}>248</div>
-            <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-secondary)', maxWidth: 70 }}>
-              Total issue count
+      {isLoading || items.length === 0 ? (
+        <div style={{ textAlign: 'center', color: 'var(--color-text-secondary)', padding: '2rem 0', fontSize: '0.875rem' }}>
+          {isLoading ? 'Loading...' : 'No issues yet.'}
+        </div>
+      ) : (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+          {/* Dynamic SVG Donut Chart */}
+          <div style={{ position: 'relative', width: 170, height: 170, flexShrink: 0 }}>
+            <svg width="170" height="170" viewBox="0 0 100 100">
+              {/* Background circle */}
+              <circle cx="50" cy="50" r="38" fill="transparent" stroke="#f1f2f4" strokeWidth="14" />
+              {segments.map((seg, i) => (
+                <circle
+                  key={i}
+                  cx="50" cy="50" r="38"
+                  fill="transparent"
+                  stroke={seg.color}
+                  strokeWidth="14"
+                  strokeDasharray={`${seg.dash} ${CIRC - seg.dash}`}
+                  strokeDashoffset={seg.offset}
+                  style={{ transform: 'rotate(-90deg)', transformOrigin: '50px 50px' }}
+                />
+              ))}
+            </svg>
+            {/* Center Label */}
+            <div style={{
+              position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, lineHeight: 1.1 }}>{total}</div>
+              <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-secondary)', maxWidth: 70 }}>
+                Total issue count
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Status Legend List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
-          <LegendRow color="#0284C7" label="Deprioritized" count={100} />
-          <LegendRow color="#7C3AED" label="To do" count={50} />
-          <LegendRow color="#EA580C" label="Boulders" count={30} />
-          <LegendRow color="#DB2777" label="In design review" count={32} />
-          <LegendRow color="#1E3A8A" label="In eng development" count={19} />
-          <LegendRow color="#94A3B8" label="In progress" count={8} />
+          {/* Status Legend */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+            {items.map((item, idx) => (
+              <LegendRow
+                key={item.status}
+                color={STATUS_COLORS[idx % STATUS_COLORS.length]}
+                label={item.status}
+                count={item.count}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -69,3 +105,4 @@ function LegendRow({ color, label, count }: { color: string; label: string; coun
     </div>
   );
 }
+

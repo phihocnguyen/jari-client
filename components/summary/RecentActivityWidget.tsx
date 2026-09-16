@@ -1,7 +1,39 @@
-import { Avatar } from '@/components/ui/Avatar';
+'use client';
 
-// ─── Server Component (SSR) ────────────────────────────────────────
-export function RecentActivityWidget() {
+import { Avatar } from '@/components/ui/Avatar';
+import type { ActivityItem } from '@/types/summary';
+
+interface RecentActivityWidgetProps {
+  recentActivity?: ActivityItem[];
+  isLoading?: boolean;
+}
+
+function formatRelativeTime(dateStr?: string): string {
+  if (!dateStr) return '';
+  try {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    if (diffMs < 0) return 'Just now';
+
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    if (diffMinutes < 1) return 'Just now';
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `${diffDays}d ago`;
+
+    return date.toLocaleDateString();
+  } catch {
+    return dateStr;
+  }
+}
+
+// ─── Recent Activity Widget ─────────────────────────────────────────
+export function RecentActivityWidget({ recentActivity, isLoading }: RecentActivityWidgetProps) {
   return (
     <div className="card" style={{ padding: '1.5rem' }}>
       <div style={{ marginBottom: 4 }}>
@@ -11,65 +43,45 @@ export function RecentActivityWidget() {
         Stay up to date with what&apos;s happening across the project.
       </p>
 
-      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-secondary)', marginBottom: 10 }}>
-        Today
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-        {/* Activity Item 1 */}
-        <div style={{ display: 'flex', gap: 12 }}>
-          <Avatar name="Jane Rotanson" size={32} />
-          <div style={{ fontSize: '0.8125rem', lineHeight: 1.45 }}>
-            <div>
-              <span style={{ fontWeight: 600 }}>Jane Rotanson</span> changed status to <span style={{ fontWeight: 600 }}>Done</span> on{' '}
-              <span style={{ color: 'var(--color-green-accent)', fontWeight: 600 }}>TIC-186 Team 24 design support</span>
+      {isLoading ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {[1, 2, 3].map((i) => (
+            <div key={i} style={{ display: 'flex', gap: 12 }}>
+              <div style={{ width: 32, height: 32, borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.06)' }} />
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ width: '80%', height: 14, backgroundColor: 'rgba(0,0,0,0.06)', borderRadius: 4 }} />
+                <div style={{ width: '30%', height: 12, backgroundColor: 'rgba(0,0,0,0.06)', borderRadius: 4 }} />
+              </div>
             </div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginTop: 2 }}>Just now</div>
-          </div>
+          ))}
         </div>
-
-        {/* Activity Item 2 */}
-        <div style={{ display: 'flex', gap: 12 }}>
-          <Avatar name="Peter Andre" size={32} />
-          <div style={{ fontSize: '0.8125rem', lineHeight: 1.45 }}>
-            <div>
-              <span style={{ fontWeight: 600 }}>Peter Andre</span> made 2 updates on{' '}
-              <span style={{ color: 'var(--color-green-accent)', fontWeight: 600 }}>TIC-249 Approvals to software</span>
-            </div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginTop: 2 }}>about 15 hours ago</div>
-          </div>
+      ) : !recentActivity || recentActivity.length === 0 ? (
+        <div style={{ padding: '2rem 0', textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
+          No recent activity found.
         </div>
-
-        {/* Activity Item 3 with Quote Box */}
-        <div style={{ display: 'flex', gap: 12 }}>
-          <Avatar name="Lucy Peters" size={32} />
-          <div style={{ fontSize: '0.8125rem', lineHeight: 1.45, flex: 1 }}>
-            <div>
-              <span style={{ fontWeight: 600 }}>Lucy Peters</span> updated the description of{' '}
-              <span style={{ color: 'var(--color-green-accent)', fontWeight: 600 }}>TIC-200 Budget tools</span>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {recentActivity.map((act, index) => (
+            <div key={`${act.issueKey}-${index}`} style={{ display: 'flex', gap: 12 }}>
+              <Avatar name={act.actorName || 'User'} size={32} />
+              <div style={{ fontSize: '0.8125rem', lineHeight: 1.45, flex: 1 }}>
+                <div>
+                  <span style={{ fontWeight: 600 }}>{act.actorName || 'Someone'}</span>{' '}
+                  <span style={{ color: 'var(--color-text-secondary)' }}>{act.action}</span>{' '}
+                  <span style={{ color: 'var(--color-green-accent)', fontWeight: 600 }}>
+                    {act.issueKey ? `${act.issueKey} ` : ''}
+                    {act.issueTitle}
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginTop: 2 }}>
+                  {formatRelativeTime(act.occurredAt)}
+                </div>
+              </div>
             </div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginTop: 2, marginBottom: 8 }}>
-              about 20 hours ago
-            </div>
-
-            {/* Quoted Box Snippet */}
-            <div style={{
-              backgroundColor: '#FAF9F6',
-              border: '1px solid rgba(0,0,0,0.08)',
-              borderRadius: 8,
-              padding: '10px 12px',
-              fontSize: '0.78125rem',
-              color: 'var(--color-text-secondary)',
-              lineHeight: 1.4,
-            }}>
-              Request for design support to mock a potential future experience to make a case for public forms. Mocks included for the design within the file in{' '}
-              <span style={{ color: 'var(--color-green-accent)', textDecoration: 'underline', wordBreak: 'break-all' }}>
-                https://hello.atlassian.net/wiki/spaces/Spork/pageid7580671230
-              </span>
-            </div>
-          </div>
+          ))}
         </div>
-      </div>
+      )}
     </div>
   );
 }
+
