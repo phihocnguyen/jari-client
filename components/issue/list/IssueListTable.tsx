@@ -26,6 +26,7 @@ interface IssueListTableProps {
   onUpdateStatus: (id: string, status: IssueStatus) => void;
   onUpdateAssignee: (id: string, assigneeId: string | null) => void;
   onUpdatePriority: (id: string, priority: IssuePriority) => void;
+  onUpdateDueDate?: (id: string, dueDate: string | null) => void;
   inlineCreateOpen: boolean;
   inlineCreateParentId?: string | 'ROOT' | null;
   onCloseInlineCreate: () => void;
@@ -34,7 +35,7 @@ interface IssueListTableProps {
     title: string;
     type: IssueType;
     priority: IssuePriority;
-    assigneeId?: string;
+    dueDate?: string;
   }) => Promise<void>;
   onAddChild?: (issue: Issue) => void;
   members: ProjectMember[];
@@ -58,6 +59,7 @@ export function IssueListTable(props: IssueListTableProps) {
     onUpdateStatus,
     onUpdateAssignee,
     onUpdatePriority,
+    onUpdateDueDate,
     inlineCreateOpen,
     inlineCreateParentId,
     onCloseInlineCreate,
@@ -188,7 +190,10 @@ export function IssueListTable(props: IssueListTableProps) {
               <th style={{ padding: '10px 12px', minWidth: 130 }}>Status</th>
 
               {/* Resolution */}
-              <th style={{ padding: '10px 12px', minWidth: 110 }}>Resolution</th>
+              <th style={{ padding: '10px 12px', minWidth: 100 }}>Resolution</th>
+
+              {/* Due Date */}
+              <th style={{ padding: '10px 12px', minWidth: 120 }}>Due Date</th>
 
               {/* Created */}
               <th style={{ padding: '10px 12px', minWidth: 150 }}>Created</th>
@@ -241,6 +246,7 @@ export function IssueListTable(props: IssueListTableProps) {
                       onUpdateStatus={onUpdateStatus}
                       onUpdateAssignee={onUpdateAssignee}
                       onUpdatePriority={onUpdatePriority}
+                      onUpdateDueDate={onUpdateDueDate}
                       onAddChild={onAddChild}
                       members={members}
                       isActiveIssue={selectedIssueId === root.id}
@@ -263,6 +269,7 @@ export function IssueListTable(props: IssueListTableProps) {
                           onUpdateStatus={onUpdateStatus}
                           onUpdateAssignee={onUpdateAssignee}
                           onUpdatePriority={onUpdatePriority}
+                          onUpdateDueDate={onUpdateDueDate}
                           onAddChild={onAddChild}
                           members={members}
                           isActiveIssue={selectedIssueId === subtask.id}
@@ -288,7 +295,7 @@ export function IssueListTable(props: IssueListTableProps) {
             ) : (
               <tr>
                 <td
-                  colSpan={10}
+                  colSpan={11}
                   style={{
                     padding: '3rem 1rem',
                     textAlign: 'center',

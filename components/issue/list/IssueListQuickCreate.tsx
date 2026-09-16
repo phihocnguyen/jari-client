@@ -11,6 +11,7 @@ import {
   CornerDownLeft,
   X,
   Plus,
+  Calendar,
 } from 'lucide-react';
 import type { IssueType, IssuePriority } from '@/types/issue';
 
@@ -26,9 +27,9 @@ interface IssueListQuickCreateProps {
     title: string;
     type: IssueType;
     priority: IssuePriority;
-    assigneeId?: string;
+    dueDate?: string;
   }) => Promise<void>;
-  members: ProjectMember[];
+  members?: ProjectMember[];
   isSubmitting: boolean;
   isSubtask?: boolean;
 }
@@ -37,17 +38,19 @@ export function IssueListQuickCreate({
   isOpen,
   onClose,
   onSubmit,
-  members,
   isSubmitting,
   isSubtask,
 }: IssueListQuickCreateProps) {
   const [title, setTitle] = useState('');
   const [type, setType] = useState<IssueType>(isSubtask ? 'SUBTASK' : 'TASK');
   const [priority, setPriority] = useState<IssuePriority>('MEDIUM');
-  const [assigneeId, setAssigneeId] = useState<string>('');
+  const [dueDate, setDueDate] = useState<string>('');
   const [typeMenuOpen, setTypeMenuOpen] = useState(false);
+  const [openUpwards, setOpenUpwards] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const typeMenuRef = useRef<HTMLDivElement>(null);
+  const typeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -56,9 +59,27 @@ export function IssueListQuickCreate({
       setTitle('');
       setType(isSubtask ? 'SUBTASK' : 'TASK');
       setPriority('MEDIUM');
-      setAssigneeId('');
+      setDueDate('');
+      setTypeMenuOpen(false);
     }
   }, [isOpen, isSubtask]);
+
+  // Close type menu when clicking outside
+  useEffect(() => {
+    if (!typeMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        typeMenuRef.current &&
+        !typeMenuRef.current.contains(e.target as Node) &&
+        typeButtonRef.current &&
+        !typeButtonRef.current.contains(e.target as Node)
+      ) {
+        setTypeMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [typeMenuOpen]);
 
   if (!isOpen) return null;
 
@@ -78,6 +99,12 @@ export function IssueListQuickCreate({
     }
   };
 
+  const handleToggleTypeMenu = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setOpenUpwards(window.innerHeight - rect.bottom < 180 || isSubtask === false);
+    setTypeMenuOpen((v) => !v);
+  };
+
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!title.trim() || isSubmitting) return;
@@ -86,9 +113,10 @@ export function IssueListQuickCreate({
       title: title.trim(),
       type,
       priority,
-      assigneeId: assigneeId || undefined,
+      dueDate: dueDate || undefined,
     });
     setTitle('');
+    setDueDate('');
     inputRef.current?.focus();
   };
 
@@ -98,7 +126,11 @@ export function IssueListQuickCreate({
       handleSubmit();
     } else if (e.key === 'Escape') {
       e.preventDefault();
-      onClose();
+      if (typeMenuOpen) {
+        setTypeMenuOpen(false);
+      } else {
+        onClose();
+      }
     }
   };
 
@@ -109,12 +141,13 @@ export function IssueListQuickCreate({
         borderBottom: '2px solid var(--color-green-brand)',
       }}
     >
+      {/* 1. Icon column */}
       <td style={{ width: 40, textAlign: 'center', padding: '8px 10px' }}>
         <Plus size={16} color="var(--color-green-brand)" />
       </td>
 
-      {/* Work Column: Type Selector + Input */}
-      <td style={{ padding: '8px 12px', paddingLeft: isSubtask ? 32 : 12 }}>
+      {/* 2. Work Column (covers Work, Assignee, Reporter) */}
+      <td colSpan={3} style={{ padding: '8px 12px', paddingLeft: isSubtask ? 32 : 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
           {isSubtask ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-text-secondary)' }}>
@@ -123,41 +156,43 @@ export function IssueListQuickCreate({
             </div>
           ) : (
             <button
+              ref={typeButtonRef}
               type="button"
-              onClick={() => setTypeMenuOpen(!typeMenuOpen)}
-            title="Select issue type"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 4,
-              padding: '4px 6px',
-              border: '1px solid rgba(0,0,0,0.12)',
-              borderRadius: 4,
-              backgroundColor: '#fff',
-              cursor: 'pointer',
-            }}
-          >
-            {renderTypeIcon(type)}
-            <ChevronDown size={11} color="var(--color-text-secondary)" />
-          </button>
+              onClick={handleToggleTypeMenu}
+              title="Select issue type"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: '4px 6px',
+                border: '1px solid rgba(0,0,0,0.12)',
+                borderRadius: 4,
+                backgroundColor: '#fff',
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+            >
+              {renderTypeIcon(type)}
+              <ChevronDown size={11} color="var(--color-text-secondary)" />
+            </button>
           )}
 
           {typeMenuOpen && !isSubtask && (
             <div
+              ref={typeMenuRef}
               style={{
                 position: 'absolute',
-                top: '100%',
+                ...(openUpwards ? { bottom: 'calc(100% + 6px)' } : { top: 'calc(100% + 6px)' }),
                 left: 0,
-                zIndex: 60,
+                zIndex: 100,
                 backgroundColor: '#ffffff',
                 border: '1px solid rgba(0,0,0,0.15)',
                 borderRadius: 6,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
                 minWidth: 140,
                 padding: '4px 0',
               }}
             >
-              {/* Type Options */}
               {(['TASK', 'STORY', 'BUG', 'EPIC'] as IssueType[]).map((opt) => (
                 <button
                   key={opt}
@@ -211,38 +246,7 @@ export function IssueListQuickCreate({
         </div>
       </td>
 
-      {/* Assignee Column */}
-      <td style={{ padding: '8px 12px' }}>
-        <select
-          value={assigneeId}
-          onChange={(e) => setAssigneeId(e.target.value)}
-          disabled={isSubmitting}
-          style={{
-            height: 30,
-            fontSize: '0.8125rem',
-            border: '1px solid rgba(0,0,0,0.15)',
-            borderRadius: 4,
-            padding: '0 6px',
-            backgroundColor: '#fff',
-            cursor: 'pointer',
-            maxWidth: 140,
-          }}
-        >
-          <option value="">Unassigned</option>
-          {members.map((m) => (
-            <option key={m.userId} value={m.userId}>
-              {m.fullName}
-            </option>
-          ))}
-        </select>
-      </td>
-
-      {/* Reporter: Current user placeholder */}
-      <td style={{ padding: '8px 12px', fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
-        You
-      </td>
-
-      {/* Priority Column */}
+      {/* 3. Priority Column */}
       <td style={{ padding: '8px 12px' }}>
         <select
           value={priority}
@@ -266,37 +270,39 @@ export function IssueListQuickCreate({
         </select>
       </td>
 
-      {/* Status: Default To Do */}
+      {/* 4. Status & Resolution: Empty spanning cells (Status defaults to To Do, Resolution is Unresolved) */}
+      <td colSpan={2} style={{ padding: '8px 12px' }} />
+
+      {/* 5. Due Date Column */}
       <td style={{ padding: '8px 12px' }}>
-        <span
-          style={{
-            padding: '2px 8px',
-            backgroundColor: '#f1f2f4',
-            color: '#44546f',
-            border: '1px solid #dcdfe4',
-            borderRadius: 4,
-            fontSize: '0.75rem',
-            fontWeight: 700,
-          }}
-        >
-          To Do
-        </span>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <Calendar size={13} color="var(--color-text-secondary)" />
+          <input
+            type="date"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+            disabled={isSubmitting}
+            title="Select due date (optional)"
+            style={{
+              height: 28,
+              fontSize: '0.78rem',
+              border: '1px solid rgba(0,0,0,0.15)',
+              borderRadius: 4,
+              padding: '0 6px',
+              backgroundColor: '#fff',
+              cursor: 'pointer',
+              maxWidth: 125,
+              fontFamily: 'inherit',
+              color: dueDate ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+            }}
+          />
+        </div>
       </td>
 
-      {/* Resolution */}
-      <td style={{ padding: '8px 12px', fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
-        Unresolved
-      </td>
+      {/* 6. Created & Updated: Empty spanning cells */}
+      <td colSpan={2} style={{ padding: '8px 12px' }} />
 
-      {/* Created & Updated placeholders */}
-      <td style={{ padding: '8px 12px', fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
-        Just now
-      </td>
-      <td style={{ padding: '8px 12px', fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
-        Just now
-      </td>
-
-      {/* Actions */}
+      {/* 7. Actions */}
       <td style={{ padding: '8px 10px', textAlign: 'right', whiteSpace: 'nowrap' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           <button

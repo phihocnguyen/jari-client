@@ -8,6 +8,7 @@ import {
   ChevronDown,
   ChevronRight,
   User as UserIcon,
+  Calendar,
 } from 'lucide-react';
 import type { Issue, IssueType, IssuePriority, IssueStatus } from '@/types/issue';
 import { getStatusBadgeStyle } from '@/utils/issue-status';
@@ -34,6 +35,7 @@ interface IssueListRowProps {
   onUpdateStatus: (id: string, status: IssueStatus) => void;
   onUpdateAssignee: (id: string, assigneeId: string | null) => void;
   onUpdatePriority: (id: string, priority: IssuePriority) => void;
+  onUpdateDueDate?: (id: string, dueDate: string | null) => void;
   onAddChild?: (issue: Issue) => void;
   members: ProjectMember[];
   isActiveIssue?: boolean;
@@ -52,6 +54,7 @@ export function IssueListRow({
   onUpdateStatus,
   onUpdateAssignee,
   onUpdatePriority,
+  onUpdateDueDate,
   onAddChild,
   members,
   isActiveIssue = false,
@@ -527,13 +530,55 @@ export function IssueListRow({
           verticalAlign: 'middle',
           color: issue.status === 'DONE' ? '#006644' : 'var(--color-text-secondary)',
           fontSize: '0.8125rem',
-          minWidth: 110,
+          minWidth: 100,
         }}
       >
         {issue.status === 'DONE' ? 'Done' : 'Unresolved'}
       </td>
 
-      {/* 8. Created Column */}
+      {/* 8. Due Date Column */}
+      <td
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          padding: '8px 12px',
+          verticalAlign: 'middle',
+          minWidth: 120,
+        }}
+      >
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '3px 6px',
+            borderRadius: 4,
+            transition: 'background-color 0.12s ease',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.05)')}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+        >
+          <Calendar size={13} color="var(--color-text-secondary)" />
+          <input
+            type="date"
+            value={issue.dueDate ? issue.dueDate.split('T')[0] : ''}
+            onChange={(e) => onUpdateDueDate?.(issue.id, e.target.value || null)}
+            style={{
+              border: 'none',
+              backgroundColor: 'transparent',
+              fontSize: '0.8125rem',
+              color: issue.dueDate ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              padding: 0,
+              outline: 'none',
+              maxWidth: 115,
+            }}
+            title={issue.dueDate ? `Due date: ${formatDate(issue.dueDate)}` : 'Set due date'}
+          />
+        </div>
+      </td>
+
+      {/* 9. Created Column */}
       <td
         style={{
           padding: '8px 12px',

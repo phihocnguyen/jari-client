@@ -169,6 +169,17 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
     onError: () => toast.error('Failed to update priority'),
   });
 
+  const updateDueDateMutation = useMutation({
+    mutationFn: ({ issueId, dueDate }: { issueId: string; dueDate: string | null }) =>
+      issueApi.update(issueId, { dueDate: dueDate || undefined }),
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: ['issues', projectId] });
+      qc.invalidateQueries({ queryKey: ['issue', variables.issueId] });
+      toast.success('Due date updated');
+    },
+    onError: () => toast.error('Failed to update due date'),
+  });
+
   const deleteSingleMutation = useMutation({
     mutationFn: (issueId: string) => issueApi.delete(issueId),
     onSuccess: (_, deletedId) => {
@@ -244,6 +255,7 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
     title: string;
     type: IssueType;
     priority: IssuePriority;
+    dueDate?: string;
     assigneeId?: string;
   }) => {
     const matchedType = issueTypes.find(
@@ -261,6 +273,7 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
       type: data.type,
       priority: data.priority,
       status: 'TODO',
+      dueDate: data.dueDate || undefined,
       issueTypeId: matchedType?.id,
       statusId: matchedStatus?.id,
       priorityId: matchedPriority?.id,
@@ -418,6 +431,7 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
           onUpdateStatus={(id, st) => updateStatusMutation.mutate({ issueId: id, status: st })}
           onUpdateAssignee={(id, aid) => updateAssigneeMutation.mutate({ issueId: id, assigneeId: aid })}
           onUpdatePriority={(id, pr) => updatePriorityMutation.mutate({ issueId: id, priority: pr })}
+          onUpdateDueDate={(id, date) => updateDueDateMutation.mutate({ issueId: id, dueDate: date })}
           inlineCreateOpen={inlineCreateParentId !== null}
           inlineCreateParentId={inlineCreateParentId}
           onCloseInlineCreate={() => setInlineCreateParentId(null)}
