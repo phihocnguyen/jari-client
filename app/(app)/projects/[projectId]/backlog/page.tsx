@@ -251,6 +251,7 @@ export default function BacklogPage({ params }: PageProps) {
         const isCollapsed = collapsedSprints[sprint.id];
         const sprintIssues = allIssues.filter((i: Issue) => i.sprintId === sprint.id);
         const dateRangeStr = formatSprintDates(sprint.startDate, sprint.endDate);
+        const isActive = sprint.status === 'ACTIVE';
 
         return (
           <div
@@ -258,19 +259,22 @@ export default function BacklogPage({ params }: PageProps) {
             style={{
               backgroundColor: '#FFFFFF',
               borderRadius: '6px',
-              border: '1px solid #DFE1E6',
+              border: isActive ? '1px solid #4C9AFF' : '1px solid #DFE1E6',
+              borderLeft: isActive ? '4px solid #0052CC' : '1px solid #DFE1E6',
+              boxShadow: isActive ? '0 2px 8px rgba(0, 82, 204, 0.12)' : 'none',
               overflow: 'visible',
+              transition: 'border-color 0.2s, box-shadow 0.2s',
             }}
           >
             {/* Sprint Header Row */}
             <div
               style={{
                 padding: '10px 16px',
-                backgroundColor: sprint.status === 'ACTIVE' ? '#EBF3FB' : '#F1F2F4',
+                backgroundColor: isActive ? '#EBF3FB' : '#F1F2F4',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                borderBottom: isCollapsed ? 'none' : '1px solid #DFE1E6',
+                borderBottom: isCollapsed ? 'none' : isActive ? '1px solid #B3D4FF' : '1px solid #DFE1E6',
                 borderRadius: isCollapsed ? '6px' : '6px 6px 0 0',
                 userSelect: 'none',
               }}
@@ -289,13 +293,49 @@ export default function BacklogPage({ params }: PageProps) {
                   {isCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
                 </div>
 
-                <span style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--color-text-primary)' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.92rem', color: isActive ? '#0747A6' : 'var(--color-text-primary)' }}>
                   {sprint.name}
                 </span>
+
+                {isActive && (
+                  <span
+                    style={{
+                      backgroundColor: '#0052CC',
+                      color: '#FFFFFF',
+                      fontSize: '0.6875rem',
+                      fontWeight: 700,
+                      padding: '2px 7px',
+                      borderRadius: 4,
+                      letterSpacing: '0.04em',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    ACTIVE
+                  </span>
+                )}
 
                 {dateRangeStr && (
                   <span style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginLeft: '4px' }}>
                     {dateRangeStr}
+                  </span>
+                )}
+
+                {sprint.goal && (
+                  <span
+                    style={{
+                      fontSize: '0.8125rem',
+                      color: 'var(--color-text-secondary)',
+                      fontStyle: 'italic',
+                      maxWidth: 240,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                    title={sprint.goal}
+                  >
+                    • {sprint.goal}
                   </span>
                 )}
 
@@ -308,7 +348,7 @@ export default function BacklogPage({ params }: PageProps) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }} onClick={(e) => e.stopPropagation()}>
                 <StatusPillGroup issues={sprintIssues} />
 
-                {sprint.status === 'ACTIVE' ? (
+                {isActive ? (
                   <button
                     onClick={() => completeSprintMutation.mutate(sprint.id)}
                     disabled={completeSprintMutation.isPending}
@@ -316,19 +356,25 @@ export default function BacklogPage({ params }: PageProps) {
                       height: 28,
                       padding: '0 12px',
                       borderRadius: 4,
-                      border: '1px solid #DFE1E6',
-                      backgroundColor: '#FFFFFF',
-                      color: '#172B4D',
+                      border: '1px solid #0052CC',
+                      backgroundColor: '#0052CC',
+                      color: '#FFFFFF',
                       fontSize: '0.8125rem',
                       fontWeight: 600,
                       cursor: 'pointer',
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      transition: 'background-color 0.15s',
+                      transition: 'background-color 0.15s, border-color 0.15s',
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#EBECF0')}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#0747A6';
+                      e.currentTarget.style.borderColor = '#0747A6';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#0052CC';
+                      e.currentTarget.style.borderColor = '#0052CC';
+                    }}
                   >
                     Complete sprint
                   </button>
