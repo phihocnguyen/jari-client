@@ -29,23 +29,26 @@ export function StatusOverviewWidget({ projectId, statusBreakdown, isLoading }: 
   });
 
   return (
-    <div className="card" style={{ padding: '1.5rem' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-        <h2 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Status overview</h2>
-        <Link href={`/projects/${pId}/list`} style={{ fontSize: '0.8125rem', color: 'var(--color-green-accent)', fontWeight: 500 }}>
-          View all issues
-        </Link>
-      </div>
-      <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginBottom: '1.5rem' }}>
-        Get a snapshot of the status of your issues.
-      </p>
-
-      {isLoading || items.length === 0 ? (
-        <div style={{ textAlign: 'center', color: 'var(--color-text-secondary)', padding: '2rem 0', fontSize: '0.875rem' }}>
-          {isLoading ? 'Loading...' : 'No issues yet.'}
+    <div className="card" style={{ padding: '1.5rem', height: '380px', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Status overview</h2>
+          <Link href={`/projects/${pId}/list`} style={{ fontSize: '0.8125rem', color: 'var(--color-green-accent)', fontWeight: 500 }}>
+            View all issues
+          </Link>
         </div>
-      ) : (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+        <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginBottom: '1.25rem' }}>
+          Get a snapshot of the status of your issues.
+        </p>
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', paddingRight: 4 }}>
+        {isLoading || items.length === 0 ? (
+          <div style={{ textAlign: 'center', color: 'var(--color-text-secondary)', padding: '2rem 0', fontSize: '0.875rem' }}>
+            {isLoading ? 'Loading...' : 'No issues yet.'}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
           {/* Dynamic SVG Donut Chart */}
           <div style={{ position: 'relative', width: 170, height: 170, flexShrink: 0 }}>
             <svg width="170" height="170" viewBox="0 0 100 100">
@@ -91,7 +94,8 @@ export function StatusOverviewWidget({ projectId, statusBreakdown, isLoading }: 
         </div>
       )}
     </div>
-  );
+  </div>
+);
 }
 
 function LegendRow({ color, label, count }: { color: string; label: string; count: number }) {

@@ -27,49 +27,53 @@ export function TypesOfWorkWidget({ typeBreakdown, isLoading }: TypesOfWorkWidge
   const total = (typeBreakdown ?? []).reduce((acc, curr) => acc + curr.count, 0);
 
   return (
-    <div className="card" style={{ padding: '1.5rem' }}>
-      <div style={{ marginBottom: 4 }}>
-        <h2 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Types of work</h2>
+    <div className="card" style={{ padding: '1.5rem', height: '380px', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flexShrink: 0 }}>
+        <div style={{ marginBottom: 4 }}>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Types of work</h2>
+        </div>
+        <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginBottom: '1.25rem' }}>
+          Get a breakdown of issues by their types.
+        </p>
       </div>
-      <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginBottom: '1.25rem' }}>
-        Get a breakdown of issues by their types.
-      </p>
 
-      {isLoading ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-          {[1, 2, 3].map((i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 90, height: 18, backgroundColor: 'rgba(0,0,0,0.06)', borderRadius: 4 }} />
-              <div style={{ flex: 1, height: 18, backgroundColor: 'rgba(0,0,0,0.06)', borderRadius: 4 }} />
-            </div>
-          ))}
-        </div>
-      ) : !typeBreakdown || typeBreakdown.length === 0 ? (
-        <div style={{ padding: '2rem 0', textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
-          No issues found in this project.
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-          {typeBreakdown.map((item) => {
-            const normalizedKey = item.type.toUpperCase();
-            const meta = TYPE_ICONS[normalizedKey] || {
-              icon: <CheckSquare size={16} color="#64748B" />,
-              color: '#64748B',
-            };
-            const percent = total > 0 ? Math.round((item.count / total) * 100) : 0;
+      <div style={{ flex: 1, overflowY: 'auto', paddingRight: 4 }}>
+        {isLoading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+            {[1, 2, 3].map((i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 90, height: 18, backgroundColor: 'rgba(0,0,0,0.06)', borderRadius: 4 }} />
+                <div style={{ flex: 1, height: 18, backgroundColor: 'rgba(0,0,0,0.06)', borderRadius: 4 }} />
+              </div>
+            ))}
+          </div>
+        ) : !typeBreakdown || typeBreakdown.length === 0 ? (
+          <div style={{ padding: '2rem 0', textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
+            No issues found in this project.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+            {typeBreakdown.map((item) => {
+              const normalizedKey = item.type.toUpperCase();
+              const meta = TYPE_ICONS[normalizedKey] || {
+                icon: <CheckSquare size={16} color="#64748B" />,
+                color: '#64748B',
+              };
+              const percent = total > 0 ? Math.round((item.count / total) * 100) : 0;
 
-            return (
-              <TypeProgressRow
-                key={item.type}
-                icon={meta.icon}
-                label={formatTypeLabel(item.type)}
-                percent={percent}
-                count={item.count}
-              />
-            );
-          })}
-        </div>
-      )}
+              return (
+                <TypeProgressRow
+                  key={item.type}
+                  icon={meta.icon}
+                  label={formatTypeLabel(item.type)}
+                  percent={percent}
+                  count={item.count}
+                />
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

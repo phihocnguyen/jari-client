@@ -35,26 +35,19 @@ export default function ProjectSummaryPage() {
       {/* 1. Metric Badges */}
       <MetricCardsRow metrics={data?.metrics} isLoading={isLoading} />
 
-      {/* 2. Main 2-Column Dashboard Grid */}
+      {/* 2. Main 2-Column Dashboard Grid with Equal Layout */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(480px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))',
         gap: '1.5rem',
-        alignItems: 'start',
+        alignItems: 'stretch',
       }}>
-        {/* LEFT COLUMN */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <StatusOverviewWidget projectId={projectId} statusBreakdown={data?.statusBreakdown} isLoading={isLoading} />
-          <PriorityBreakdownWidget priorityBreakdown={data?.priorityBreakdown} isLoading={isLoading} />
-          <TeamWorkloadWidget teamWorkload={data?.teamWorkload} isLoading={isLoading} />
-        </div>
-
-        {/* RIGHT COLUMN */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <RecentActivityWidget recentActivity={data?.recentActivity} isLoading={isLoading} />
-          <TypesOfWorkWidget typeBreakdown={data?.typeBreakdown} isLoading={isLoading} />
-          <EpicProgressWidget epicProgress={data?.epicProgress} isLoading={isLoading} />
-        </div>
+        <StatusOverviewWidget projectId={projectId} statusBreakdown={data?.statusBreakdown} isLoading={isLoading} />
+        <RecentActivityWidget recentActivity={data?.recentActivity} isLoading={isLoading} />
+        <PriorityBreakdownWidget priorityBreakdown={data?.priorityBreakdown} isLoading={isLoading} />
+        <TypesOfWorkWidget typeBreakdown={data?.typeBreakdown} isLoading={isLoading} />
+        <TeamWorkloadWidget teamWorkload={data?.teamWorkload} isLoading={isLoading} />
+        <EpicProgressWidget epicProgress={data?.epicProgress} isLoading={isLoading} />
       </div>
     </div>
   );
