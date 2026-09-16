@@ -19,7 +19,7 @@ export function IssueListFooter({
   totalCount,
   filteredCount,
   currentPage = 1,
-  pageSize = 12,
+  pageSize = 10,
   totalPages = 1,
   onPageChange,
   onCreateClick,
