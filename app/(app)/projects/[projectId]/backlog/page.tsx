@@ -19,6 +19,7 @@ import { IssueRow } from '@/components/issue/IssueRow';
 import { CreateIssueModal } from '@/components/issue/CreateIssueModal';
 import { IssueDetailModal } from '@/components/issue/IssueDetailModal';
 import { EditSprintModal } from '@/components/sprint/EditSprintModal';
+import { StartSprintModal } from '@/components/sprint/StartSprintModal';
 import { Button } from '@/components/ui/Button';
 import { toast } from '@/components/ui/Toast';
 import type { Issue, IssueFilter } from '@/types/issue';
@@ -122,6 +123,7 @@ export default function BacklogPage({ params }: PageProps) {
 
   const [createIssueOpen, setCreateIssueOpen] = useState(false);
   const [editingSprint, setEditingSprint] = useState<Sprint | null>(null);
+  const [startingSprint, setStartingSprint] = useState<Sprint | null>(null);
   const [activeSprintMenuId, setActiveSprintMenuId] = useState<string | null>(null);
   const [targetSprintId, setTargetSprintId] = useState<string | undefined>(undefined);
 
@@ -332,8 +334,7 @@ export default function BacklogPage({ params }: PageProps) {
                   </button>
                 ) : (
                   <button
-                    onClick={() => startSprintMutation.mutate(sprint.id)}
-                    disabled={startSprintMutation.isPending}
+                    onClick={() => setStartingSprint(sprint)}
                     style={{
                       height: 28,
                       padding: '0 12px',
@@ -648,6 +649,15 @@ export default function BacklogPage({ params }: PageProps) {
         onClose={() => setEditingSprint(null)}
         projectId={projectId}
         sprint={editingSprint}
+      />
+
+      <StartSprintModal
+        open={Boolean(startingSprint)}
+        onClose={() => setStartingSprint(null)}
+        projectId={projectId}
+        sprint={startingSprint}
+        issuesCount={allIssues.filter((i: Issue) => i.sprintId === startingSprint?.id).length}
+        hasActiveSprint={activeSprints.length > 0}
       />
 
       <IssueDetailModal
