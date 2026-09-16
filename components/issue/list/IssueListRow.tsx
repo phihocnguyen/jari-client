@@ -536,7 +536,35 @@ export function IssueListRow({
         {issue.status === 'DONE' ? 'Done' : 'Unresolved'}
       </td>
 
-      {/* 8. Due Date Column */}
+      {/* 8. Created Column */}
+      <td
+        style={{
+          padding: '8px 12px',
+          verticalAlign: 'middle',
+          color: 'var(--color-text-secondary)',
+          fontSize: '0.8125rem',
+          whiteSpace: 'nowrap',
+          minWidth: 140,
+        }}
+      >
+        {formatDate(issue.createdAt)}
+      </td>
+
+      {/* 9. Updated Column */}
+      <td
+        style={{
+          padding: '8px 12px',
+          verticalAlign: 'middle',
+          color: 'var(--color-text-secondary)',
+          fontSize: '0.8125rem',
+          whiteSpace: 'nowrap',
+          minWidth: 140,
+        }}
+      >
+        {formatDate(issue.updatedAt || issue.createdAt)}
+      </td>
+
+      {/* 10. Due Date Column */}
       <td
         onClick={(e) => e.stopPropagation()}
         style={{
@@ -576,34 +604,6 @@ export function IssueListRow({
             title={issue.dueDate ? `Due date: ${formatDate(issue.dueDate)}` : 'Set due date'}
           />
         </div>
-      </td>
-
-      {/* 9. Created Column */}
-      <td
-        style={{
-          padding: '8px 12px',
-          verticalAlign: 'middle',
-          color: 'var(--color-text-secondary)',
-          fontSize: '0.8125rem',
-          whiteSpace: 'nowrap',
-          minWidth: 150,
-        }}
-      >
-        {formatDate(issue.createdAt)}
-      </td>
-
-      {/* 9. Updated Column */}
-      <td
-        style={{
-          padding: '8px 12px',
-          verticalAlign: 'middle',
-          color: 'var(--color-text-secondary)',
-          fontSize: '0.8125rem',
-          whiteSpace: 'nowrap',
-          minWidth: 150,
-        }}
-      >
-        {formatDate(issue.updatedAt || issue.createdAt)}
       </td>
 
       {/* 10. Column settings empty placeholder for alignment */}

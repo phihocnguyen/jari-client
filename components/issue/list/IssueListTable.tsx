@@ -192,14 +192,14 @@ export function IssueListTable(props: IssueListTableProps) {
               {/* Resolution */}
               <th style={{ padding: '10px 12px', minWidth: 100 }}>Resolution</th>
 
-              {/* Due Date */}
-              <th style={{ padding: '10px 12px', minWidth: 120 }}>Due Date</th>
-
               {/* Created */}
-              <th style={{ padding: '10px 12px', minWidth: 150 }}>Created</th>
+              <th style={{ padding: '10px 12px', minWidth: 140 }}>Created</th>
 
               {/* Update */}
-              <th style={{ padding: '10px 12px', minWidth: 150 }}>Update</th>
+              <th style={{ padding: '10px 12px', minWidth: 140 }}>Update</th>
+
+              {/* Due Date */}
+              <th style={{ padding: '10px 12px', minWidth: 120 }}>Due Date</th>
 
               {/* Settings Icon */}
               <th style={{ width: 36, padding: '10px 8px', textAlign: 'center' }}>

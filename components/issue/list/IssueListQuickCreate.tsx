@@ -2,18 +2,16 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  CheckSquare,
-  Bookmark,
-  AlertCircle,
-  Zap,
-  GitFork,
-  ChevronDown,
   CornerDownLeft,
   X,
   Plus,
   Calendar,
+  ChevronDown,
 } from 'lucide-react';
 import type { IssueType, IssuePriority } from '@/types/issue';
+import { Select } from '@/components/ui/Select';
+import { renderPriorityIcon } from '@/utils/issue-priority';
+import { renderTypeIcon } from '@/utils/issue-type';
 
 interface ProjectMember {
   userId: string;
@@ -45,12 +43,8 @@ export function IssueListQuickCreate({
   const [type, setType] = useState<IssueType>(isSubtask ? 'SUBTASK' : 'TASK');
   const [priority, setPriority] = useState<IssuePriority>('MEDIUM');
   const [dueDate, setDueDate] = useState<string>('');
-  const [typeMenuOpen, setTypeMenuOpen] = useState(false);
-  const [openUpwards, setOpenUpwards] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
-  const typeMenuRef = useRef<HTMLDivElement>(null);
-  const typeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -60,50 +54,10 @@ export function IssueListQuickCreate({
       setType(isSubtask ? 'SUBTASK' : 'TASK');
       setPriority('MEDIUM');
       setDueDate('');
-      setTypeMenuOpen(false);
     }
   }, [isOpen, isSubtask]);
 
-  // Close type menu when clicking outside
-  useEffect(() => {
-    if (!typeMenuOpen) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        typeMenuRef.current &&
-        !typeMenuRef.current.contains(e.target as Node) &&
-        typeButtonRef.current &&
-        !typeButtonRef.current.contains(e.target as Node)
-      ) {
-        setTypeMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [typeMenuOpen]);
-
   if (!isOpen) return null;
-
-  const renderTypeIcon = (t: IssueType) => {
-    switch (t) {
-      case 'EPIC':
-        return <Zap size={15} color="#9333ea" fill="#9333ea" />;
-      case 'STORY':
-        return <Bookmark size={15} color="#16a34a" fill="#16a34a" />;
-      case 'BUG':
-        return <AlertCircle size={15} color="#dc2626" />;
-      case 'SUBTASK':
-        return <GitFork size={15} color="#0284c7" />;
-      case 'TASK':
-      default:
-        return <CheckSquare size={15} color="#2563eb" />;
-    }
-  };
-
-  const handleToggleTypeMenu = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    setOpenUpwards(window.innerHeight - rect.bottom < 180 || isSubtask === false);
-    setTypeMenuOpen((v) => !v);
-  };
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -126,11 +80,7 @@ export function IssueListQuickCreate({
       handleSubmit();
     } else if (e.key === 'Escape') {
       e.preventDefault();
-      if (typeMenuOpen) {
-        setTypeMenuOpen(false);
-      } else {
-        onClose();
-      }
+      onClose();
     }
   };
 
@@ -141,12 +91,12 @@ export function IssueListQuickCreate({
         borderBottom: '2px solid var(--color-green-brand)',
       }}
     >
-      {/* 1. Icon column */}
+      {/* 1. Icon column (aligns with Checkbox) */}
       <td style={{ width: 40, textAlign: 'center', padding: '8px 10px' }}>
         <Plus size={16} color="var(--color-green-brand)" />
       </td>
 
-      {/* 2. Work Column (covers Work, Assignee, Reporter) */}
+      {/* 2. Work Column: Type Selector + Input (covers Work, Assignee, Reporter) */}
       <td colSpan={3} style={{ padding: '8px 12px', paddingLeft: isSubtask ? 32 : 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
           {isSubtask ? (
@@ -155,72 +105,35 @@ export function IssueListQuickCreate({
               {renderTypeIcon('SUBTASK')}
             </div>
           ) : (
-            <button
-              ref={typeButtonRef}
-              type="button"
-              onClick={handleToggleTypeMenu}
-              title="Select issue type"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                padding: '4px 6px',
-                border: '1px solid rgba(0,0,0,0.12)',
-                borderRadius: 4,
-                backgroundColor: '#fff',
-                cursor: 'pointer',
-                flexShrink: 0,
-              }}
-            >
-              {renderTypeIcon(type)}
-              <ChevronDown size={11} color="var(--color-text-secondary)" />
-            </button>
-          )}
-
-          {typeMenuOpen && !isSubtask && (
-            <div
-              ref={typeMenuRef}
-              style={{
-                position: 'absolute',
-                ...(openUpwards ? { bottom: 'calc(100% + 6px)' } : { top: 'calc(100% + 6px)' }),
-                left: 0,
-                zIndex: 100,
-                backgroundColor: '#ffffff',
-                border: '1px solid rgba(0,0,0,0.15)',
-                borderRadius: 6,
-                boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
-                minWidth: 140,
-                padding: '4px 0',
-              }}
-            >
-              {(['TASK', 'STORY', 'BUG', 'EPIC'] as IssueType[]).map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => {
-                    setType(opt);
-                    setTypeMenuOpen(false);
-                  }}
+            <Select<IssueType>
+              value={type}
+              onChange={(t) => setType(t)}
+              minWidth={140}
+              options={(['TASK', 'STORY', 'BUG', 'EPIC'] as IssueType[]).map((opt) => ({
+                value: opt,
+                label: opt.charAt(0) + opt.slice(1).toLowerCase(),
+                icon: renderTypeIcon(opt),
+              }))}
+              renderTrigger={() => (
+                <div
+                  title="Select issue type"
                   style={{
-                    display: 'flex',
+                    display: 'inline-flex',
                     alignItems: 'center',
-                    gap: 8,
-                    width: '100%',
-                    padding: '6px 12px',
-                    backgroundColor: 'transparent',
-                    border: 'none',
-                    textAlign: 'left',
-                    fontSize: '0.8125rem',
+                    gap: 4,
+                    padding: '4px 6px',
+                    border: '1px solid rgba(0,0,0,0.12)',
+                    borderRadius: 4,
+                    backgroundColor: '#fff',
                     cursor: 'pointer',
+                    flexShrink: 0,
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                 >
-                  {renderTypeIcon(opt)}
-                  <span>{opt.charAt(0) + opt.slice(1).toLowerCase()}</span>
-                </button>
-              ))}
-            </div>
+                  {renderTypeIcon(type)}
+                  <ChevronDown size={11} color="var(--color-text-secondary)" />
+                </div>
+              )}
+            />
           )}
 
           {/* Quick Issue Title Input */}
@@ -246,34 +159,54 @@ export function IssueListQuickCreate({
         </div>
       </td>
 
-      {/* 3. Priority Column */}
+      {/* 3. Priority Column (uses shared Select component) */}
       <td style={{ padding: '8px 12px' }}>
-        <select
+        <Select<IssuePriority>
           value={priority}
-          onChange={(e) => setPriority(e.target.value as IssuePriority)}
-          disabled={isSubmitting}
-          style={{
-            height: 30,
-            fontSize: '0.8125rem',
-            border: '1px solid rgba(0,0,0,0.15)',
-            borderRadius: 4,
-            padding: '0 6px',
-            backgroundColor: '#fff',
-            cursor: 'pointer',
-          }}
-        >
-          <option value="HIGHEST">Highest</option>
-          <option value="HIGH">High</option>
-          <option value="MEDIUM">Medium</option>
-          <option value="LOW">Low</option>
-          <option value="LOWEST">Lowest</option>
-        </select>
+          onChange={(pr) => setPriority(pr)}
+          minWidth={140}
+          options={(['HIGHEST', 'HIGH', 'MEDIUM', 'LOW', 'LOWEST'] as IssuePriority[]).map((pr) => ({
+            value: pr,
+            label: pr.charAt(0) + pr.slice(1).toLowerCase(),
+            icon: renderPriorityIcon(pr),
+          }))}
+          renderTrigger={() => (
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '4px 6px',
+                borderRadius: 4,
+                cursor: 'pointer',
+                transition: 'background-color 0.12s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+            >
+              {renderPriorityIcon(priority)}
+              <span
+                style={{
+                  fontSize: '0.8125rem',
+                  fontWeight: priority === 'HIGH' || priority === 'HIGHEST' ? 600 : 400,
+                  color:
+                    priority === 'HIGH' || priority === 'HIGHEST'
+                      ? '#dc2626'
+                      : 'var(--color-text-primary)',
+                }}
+              >
+                {priority.charAt(0) + priority.slice(1).toLowerCase()}
+              </span>
+              <ChevronDown size={12} style={{ color: 'var(--color-text-secondary)', opacity: 0.7 }} />
+            </div>
+          )}
+        />
       </td>
 
-      {/* 4. Status & Resolution: Empty spanning cells (Status defaults to To Do, Resolution is Unresolved) */}
-      <td colSpan={2} style={{ padding: '8px 12px' }} />
+      {/* 4. Status, Resolution, Created, Updated: Empty spanning cells (cols 6, 7, 8, 9) */}
+      <td colSpan={4} style={{ padding: '8px 12px' }} />
 
-      {/* 5. Due Date Column */}
+      {/* 5. Due Date Column (col 10, right after Created and Updated) */}
       <td style={{ padding: '8px 12px' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           <Calendar size={13} color="var(--color-text-secondary)" />
@@ -299,10 +232,7 @@ export function IssueListQuickCreate({
         </div>
       </td>
 
-      {/* 6. Created & Updated: Empty spanning cells */}
-      <td colSpan={2} style={{ padding: '8px 12px' }} />
-
-      {/* 7. Actions */}
+      {/* 6. Actions (col 11) */}
       <td style={{ padding: '8px 10px', textAlign: 'right', whiteSpace: 'nowrap' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           <button
