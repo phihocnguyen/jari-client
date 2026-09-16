@@ -7,9 +7,20 @@ import type { Issue, IssueType, IssuePriority, IssueStatus } from '@/types/issue
 interface IssueRowProps {
   issue: Issue;
   onClick?: () => void;
+  draggable?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
+  isDragging?: boolean;
 }
 
-export function IssueRow({ issue, onClick }: IssueRowProps) {
+export function IssueRow({
+  issue,
+  onClick,
+  draggable = false,
+  onDragStart,
+  onDragEnd,
+  isDragging = false,
+}: IssueRowProps) {
   const getTypeIcon = (type: IssueType) => {
     switch (type) {
       case 'EPIC':
@@ -55,6 +66,9 @@ export function IssueRow({ issue, onClick }: IssueRowProps) {
   return (
     <div
       onClick={onClick}
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -64,8 +78,11 @@ export function IssueRow({ issue, onClick }: IssueRowProps) {
         border: '1px solid rgba(0, 0, 0, 0.08)',
         borderRadius: 'var(--radius-md)',
         marginBottom: '6px',
-        cursor: 'pointer',
+        cursor: draggable ? 'grab' : 'pointer',
+        opacity: isDragging ? 0.35 : 1,
+        transform: isDragging ? 'scale(0.98)' : 'none',
         transition: 'var(--transition-fast)',
+        userSelect: 'none',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = 'var(--color-green-accent)';
