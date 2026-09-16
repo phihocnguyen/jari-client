@@ -131,22 +131,28 @@ export function IssueListTable(props: IssueListTableProps) {
     e.preventDefault();
     e.stopPropagation();
     const startX = e.clientX;
-    const startWidth = columnWidths[colId] || 120;
+    const thElement = (e.currentTarget.closest('th') as HTMLElement);
+    const startWidth = thElement ? thElement.offsetWidth : (columnWidths[colId] || DEFAULT_COLUMN_WIDTHS[colId] || 120);
     setResizingCol(colId);
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
+      moveEvent.preventDefault();
       const delta = moveEvent.clientX - startX;
-      const minW = DEFAULT_COLUMN_DEFINITIONS.find((c) => c.id === colId)?.minWidth || 80;
-      const newWidth = Math.max(minW, startWidth + delta);
-      setColumnWidths((prev) => ({ ...prev, [colId]: newWidth }));
+      const colDef = DEFAULT_COLUMN_DEFINITIONS.find((c) => c.id === colId);
+      const minW = colDef?.minWidth || 60;
+      const newWidth = Math.max(minW, Math.round(startWidth + delta));
+      setColumnWidths((prev) => {
+        if (prev[colId] === newWidth) return prev;
+        return { ...prev, [colId]: newWidth };
+      });
     };
 
     const handleMouseUp = () => {
       setResizingCol(null);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = 'default';
-      document.body.style.userSelect = 'auto';
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
     };
 
     document.body.style.cursor = 'col-resize';
@@ -154,6 +160,14 @@ export function IssueListTable(props: IssueListTableProps) {
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
   };
+
+  // Total table width calculated from column widths
+  const totalTableWidth = useMemo(() => {
+    const colsSum = visibleColumns.reduce((sum, id) => {
+      return sum + (columnWidths[id] || DEFAULT_COLUMN_WIDTHS[id] || 120);
+    }, 0);
+    return 40 + colsSum + 36; // 40 for checkbox, 36 for config column
+  }, [visibleColumns, columnWidths]);
 
   // Toggle column options menu
   const handleOpenColMenu = (colId: ColumnId, e: React.MouseEvent<HTMLButtonElement>) => {
@@ -361,17 +375,30 @@ export function IssueListTable(props: IssueListTableProps) {
       >
         <table
           style={{
-            width: '100%',
+            width: totalTableWidth,
+            tableLayout: 'fixed',
             borderCollapse: 'collapse',
             textAlign: 'left',
           }}
         >
+          {/* Explicit col widths for smooth, unconstrained resizing */}
+          <colgroup>
+            <col style={{ width: 40 }} />
+            {visibleColumns.map((colId) => (
+              <col
+                key={colId}
+                style={{ width: columnWidths[colId] || DEFAULT_COLUMN_WIDTHS[colId] || 120 }}
+              />
+            ))}
+            <col style={{ width: 36 }} />
+          </colgroup>
+
           {/* Table Header */}
           <thead>
             <tr
               style={{
                 backgroundColor: '#ffffff',
-                borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                borderBottom: '1px solid #e2e8f0',
                 color: 'var(--color-text-secondary)',
                 fontSize: '0.75rem',
                 fontWeight: 600,
@@ -386,6 +413,9 @@ export function IssueListTable(props: IssueListTableProps) {
                   textAlign: 'center',
                   padding: '10px 10px',
                   verticalAlign: 'middle',
+                  borderRight: '1px solid #e2e8f0',
+                  borderBottom: '1px solid #e2e8f0',
+                  boxSizing: 'border-box',
                 }}
               >
                 <input
@@ -418,9 +448,11 @@ export function IssueListTable(props: IssueListTableProps) {
                     style={{
                       padding: '8px 10px',
                       width,
-                      minWidth: colDef?.minWidth || 80,
                       position: 'relative',
                       verticalAlign: 'middle',
+                      borderRight: '1px solid #e2e8f0',
+                      borderBottom: '1px solid #e2e8f0',
+                      boxSizing: 'border-box',
                     }}
                   >
                     <div
@@ -501,13 +533,13 @@ export function IssueListTable(props: IssueListTableProps) {
                       onClick={(e) => e.stopPropagation()}
                       style={{
                         position: 'absolute',
-                        right: 0,
+                        right: -4,
                         top: 0,
                         bottom: 0,
-                        width: 8,
+                        width: 9,
                         cursor: 'col-resize',
                         userSelect: 'none',
-                        zIndex: 20,
+                        zIndex: 30,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -517,14 +549,15 @@ export function IssueListTable(props: IssueListTableProps) {
                       <div
                         style={{
                           width: 2,
-                          height: '60%',
+                          height: '100%',
                           backgroundColor: resizingCol === colId ? '#0c66e4' : 'transparent',
-                          borderRadius: 1,
                           transition: 'background-color 0.15s ease',
                         }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#0c66e4')}
+                        onMouseEnter={(e) => {
+                          if (resizingCol !== colId) (e.currentTarget as HTMLElement).style.backgroundColor = '#0c66e4';
+                        }}
                         onMouseLeave={(e) => {
-                          if (resizingCol !== colId) e.currentTarget.style.backgroundColor = 'transparent';
+                          if (resizingCol !== colId) (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
                         }}
                       />
                     </div>
@@ -533,7 +566,15 @@ export function IssueListTable(props: IssueListTableProps) {
               })}
 
               {/* Settings / Configure columns icon */}
-              <th style={{ width: 36, padding: '10px 8px', textAlign: 'center' }}>
+              <th
+                style={{
+                  width: 36,
+                  padding: '10px 8px',
+                  textAlign: 'center',
+                  borderBottom: '1px solid #e2e8f0',
+                  boxSizing: 'border-box',
+                }}
+              >
                 <button
                   ref={configBtnRef}
                   type="button"
