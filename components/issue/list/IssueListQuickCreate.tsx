@@ -12,6 +12,8 @@ import type { IssueType, IssuePriority } from '@/types/issue';
 import { Select } from '@/components/ui/Select';
 import { renderPriorityIcon } from '@/utils/issue-priority';
 import { renderTypeIcon } from '@/utils/issue-type';
+import type { ColumnId } from './column-types';
+import { DEFAULT_COLUMN_ORDER } from './column-types';
 
 interface ProjectMember {
   userId: string;
@@ -30,6 +32,8 @@ interface IssueListQuickCreateProps {
   members?: ProjectMember[];
   isSubmitting: boolean;
   isSubtask?: boolean;
+  visibleColumns?: ColumnId[];
+  columnWidths?: Record<ColumnId, number>;
 }
 
 export function IssueListQuickCreate({
@@ -38,6 +42,8 @@ export function IssueListQuickCreate({
   onSubmit,
   isSubmitting,
   isSubtask,
+  visibleColumns = DEFAULT_COLUMN_ORDER,
+  columnWidths,
 }: IssueListQuickCreateProps) {
   const [title, setTitle] = useState('');
   const [type, setType] = useState<IssueType>(isSubtask ? 'SUBTASK' : 'TASK');
@@ -84,6 +90,163 @@ export function IssueListQuickCreate({
     }
   };
 
+  const renderCell = (colId: ColumnId) => {
+    const width = columnWidths ? columnWidths[colId] : undefined;
+
+    switch (colId) {
+      case 'work':
+        return (
+          <td
+            key="work"
+            style={{
+              padding: '8px 12px',
+              paddingLeft: isSubtask ? 32 : 12,
+              width,
+              minWidth: 160,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
+              {isSubtask ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-text-secondary)' }}>
+                  <CornerDownLeft size={14} />
+                  {renderTypeIcon('SUBTASK')}
+                </div>
+              ) : (
+                <Select<IssueType>
+                  value={type}
+                  onChange={(t) => setType(t)}
+                  minWidth={140}
+                  options={(['TASK', 'STORY', 'BUG', 'EPIC'] as IssueType[]).map((opt) => ({
+                    value: opt,
+                    label: opt.charAt(0) + opt.slice(1).toLowerCase(),
+                    icon: renderTypeIcon(opt),
+                  }))}
+                  renderTrigger={() => (
+                    <div
+                      title="Select issue type"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: '4px 6px',
+                        border: '1px solid rgba(0,0,0,0.12)',
+                        borderRadius: 4,
+                        backgroundColor: '#fff',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {renderTypeIcon(type)}
+                      <ChevronDown size={11} color="var(--color-text-secondary)" />
+                    </div>
+                  )}
+                />
+              )}
+
+              {/* Quick Issue Title Input */}
+              <input
+                ref={inputRef}
+                type="text"
+                placeholder="What needs to be done? (Press Enter to create)"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onKeyDown={handleKeyDown}
+                disabled={isSubmitting}
+                style={{
+                  flex: 1,
+                  height: 32,
+                  padding: '0 10px',
+                  fontSize: '0.84rem',
+                  border: '1px solid #94a3b8',
+                  borderRadius: 4,
+                  outline: 'none',
+                  backgroundColor: '#ffffff',
+                }}
+              />
+            </div>
+          </td>
+        );
+
+      case 'priority':
+        return (
+          <td key="priority" style={{ padding: '8px 12px', width, minWidth: 90 }}>
+            <Select<IssuePriority>
+              value={priority}
+              onChange={(pr) => setPriority(pr)}
+              minWidth={140}
+              options={(['HIGHEST', 'HIGH', 'MEDIUM', 'LOW', 'LOWEST'] as IssuePriority[]).map((pr) => ({
+                value: pr,
+                label: pr.charAt(0) + pr.slice(1).toLowerCase(),
+                icon: renderPriorityIcon(pr),
+              }))}
+              renderTrigger={() => (
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '4px 6px',
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                    transition: 'background-color 0.12s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                >
+                  {renderPriorityIcon(priority)}
+                  <span
+                    style={{
+                      fontSize: '0.8125rem',
+                      fontWeight: priority === 'HIGH' || priority === 'HIGHEST' ? 600 : 400,
+                      color:
+                        priority === 'HIGH' || priority === 'HIGHEST'
+                          ? '#dc2626'
+                          : 'var(--color-text-primary)',
+                    }}
+                  >
+                    {priority.charAt(0) + priority.slice(1).toLowerCase()}
+                  </span>
+                  <ChevronDown size={12} style={{ color: 'var(--color-text-secondary)', opacity: 0.7 }} />
+                </div>
+              )}
+            />
+          </td>
+        );
+
+      case 'dueDate':
+        return (
+          <td key="dueDate" style={{ padding: '8px 12px', width, minWidth: 100 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <Calendar size={13} color="var(--color-text-secondary)" />
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                disabled={isSubmitting}
+                title="Select due date (optional)"
+                style={{
+                  height: 28,
+                  fontSize: '0.78rem',
+                  border: '1px solid rgba(0,0,0,0.15)',
+                  borderRadius: 4,
+                  padding: '0 6px',
+                  backgroundColor: '#fff',
+                  cursor: 'pointer',
+                  maxWidth: 125,
+                  fontFamily: 'inherit',
+                  color: dueDate ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+                }}
+              />
+            </div>
+          </td>
+        );
+
+      default:
+        // Empty cells for unassigned columns like Assignee, Reporter, Status, Resolution, Created, Updated
+        return <td key={colId} style={{ padding: '8px 12px', width }} />;
+    }
+  };
+
   return (
     <tr
       style={{
@@ -92,148 +255,15 @@ export function IssueListQuickCreate({
       }}
     >
       {/* 1. Icon column (aligns with Checkbox) */}
-      <td style={{ width: 40, textAlign: 'center', padding: '8px 10px' }}>
+      <td style={{ width: 40, textAlign: 'center', padding: '8px 10px', verticalAlign: 'middle' }}>
         <Plus size={16} color="var(--color-green-brand)" />
       </td>
 
-      {/* 2. Work Column: Type Selector + Input (covers Work, Assignee, Reporter) */}
-      <td colSpan={3} style={{ padding: '8px 12px', paddingLeft: isSubtask ? 32 : 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
-          {isSubtask ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-text-secondary)' }}>
-              <CornerDownLeft size={14} />
-              {renderTypeIcon('SUBTASK')}
-            </div>
-          ) : (
-            <Select<IssueType>
-              value={type}
-              onChange={(t) => setType(t)}
-              minWidth={140}
-              options={(['TASK', 'STORY', 'BUG', 'EPIC'] as IssueType[]).map((opt) => ({
-                value: opt,
-                label: opt.charAt(0) + opt.slice(1).toLowerCase(),
-                icon: renderTypeIcon(opt),
-              }))}
-              renderTrigger={() => (
-                <div
-                  title="Select issue type"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 4,
-                    padding: '4px 6px',
-                    border: '1px solid rgba(0,0,0,0.12)',
-                    borderRadius: 4,
-                    backgroundColor: '#fff',
-                    cursor: 'pointer',
-                    flexShrink: 0,
-                  }}
-                >
-                  {renderTypeIcon(type)}
-                  <ChevronDown size={11} color="var(--color-text-secondary)" />
-                </div>
-              )}
-            />
-          )}
+      {/* Dynamic columns matching header order */}
+      {visibleColumns.map((colId) => renderCell(colId))}
 
-          {/* Quick Issue Title Input */}
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder="What needs to be done? (Press Enter to create)"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={isSubmitting}
-            style={{
-              flex: 1,
-              height: 32,
-              padding: '0 10px',
-              fontSize: '0.84rem',
-              border: '1px solid #94a3b8',
-              borderRadius: 4,
-              outline: 'none',
-              backgroundColor: '#ffffff',
-            }}
-          />
-        </div>
-      </td>
-
-      {/* 3. Priority Column (uses shared Select component) */}
-      <td style={{ padding: '8px 12px' }}>
-        <Select<IssuePriority>
-          value={priority}
-          onChange={(pr) => setPriority(pr)}
-          minWidth={140}
-          options={(['HIGHEST', 'HIGH', 'MEDIUM', 'LOW', 'LOWEST'] as IssuePriority[]).map((pr) => ({
-            value: pr,
-            label: pr.charAt(0) + pr.slice(1).toLowerCase(),
-            icon: renderPriorityIcon(pr),
-          }))}
-          renderTrigger={() => (
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '4px 6px',
-                borderRadius: 4,
-                cursor: 'pointer',
-                transition: 'background-color 0.12s ease',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-            >
-              {renderPriorityIcon(priority)}
-              <span
-                style={{
-                  fontSize: '0.8125rem',
-                  fontWeight: priority === 'HIGH' || priority === 'HIGHEST' ? 600 : 400,
-                  color:
-                    priority === 'HIGH' || priority === 'HIGHEST'
-                      ? '#dc2626'
-                      : 'var(--color-text-primary)',
-                }}
-              >
-                {priority.charAt(0) + priority.slice(1).toLowerCase()}
-              </span>
-              <ChevronDown size={12} style={{ color: 'var(--color-text-secondary)', opacity: 0.7 }} />
-            </div>
-          )}
-        />
-      </td>
-
-      {/* 4. Status, Resolution, Created, Updated: Empty spanning cells (cols 6, 7, 8, 9) */}
-      <td colSpan={4} style={{ padding: '8px 12px' }} />
-
-      {/* 5. Due Date Column (col 10, right after Created and Updated) */}
-      <td style={{ padding: '8px 12px' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          <Calendar size={13} color="var(--color-text-secondary)" />
-          <input
-            type="date"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-            disabled={isSubmitting}
-            title="Select due date (optional)"
-            style={{
-              height: 28,
-              fontSize: '0.78rem',
-              border: '1px solid rgba(0,0,0,0.15)',
-              borderRadius: 4,
-              padding: '0 6px',
-              backgroundColor: '#fff',
-              cursor: 'pointer',
-              maxWidth: 125,
-              fontFamily: 'inherit',
-              color: dueDate ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-            }}
-          />
-        </div>
-      </td>
-
-      {/* 6. Actions (col 11) */}
-      <td style={{ padding: '8px 10px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+      {/* Actions (aligns with Settings column) */}
+      <td style={{ padding: '8px 10px', textAlign: 'right', whiteSpace: 'nowrap', width: 36 }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           <button
             type="button"

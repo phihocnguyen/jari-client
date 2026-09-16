@@ -28,8 +28,8 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
   const [typeFilter, setTypeFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
 
-  // Pagination State (Max 12 items per page)
-  const pageSize = 12;
+  // Pagination State (Max 10 items per page)
+  const pageSize = 10;
   const [currentPage, setCurrentPage] = useState(1);
 
   // Selection state for multi-delete
