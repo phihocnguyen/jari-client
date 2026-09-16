@@ -89,10 +89,9 @@ export function IssueListRow({
             style={{
               padding: '8px 12px',
               verticalAlign: 'middle',
-              width,
-              minWidth: 160,
-              maxWidth: width,
+              borderRight: '1px solid #e2e8f0',
               overflow: 'hidden',
+              boxSizing: 'border-box',
             }}
           >
             <div
@@ -292,8 +291,9 @@ export function IssueListRow({
             style={{
               padding: '8px 12px',
               verticalAlign: 'middle',
-              width,
-              minWidth: 100,
+              borderRight: '1px solid #e2e8f0',
+              overflow: 'hidden',
+              boxSizing: 'border-box',
             }}
           >
             <Select
@@ -393,8 +393,9 @@ export function IssueListRow({
             style={{
               padding: '8px 12px',
               verticalAlign: 'middle',
-              width,
-              minWidth: 100,
+              borderRight: '1px solid #e2e8f0',
+              overflow: 'hidden',
+              boxSizing: 'border-box',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -420,8 +421,9 @@ export function IssueListRow({
             style={{
               padding: '8px 12px',
               verticalAlign: 'middle',
-              width,
-              minWidth: 90,
+              borderRight: '1px solid #e2e8f0',
+              overflow: 'hidden',
+              boxSizing: 'border-box',
             }}
           >
             <Select<IssuePriority>
@@ -475,8 +477,9 @@ export function IssueListRow({
             style={{
               padding: '8px 12px',
               verticalAlign: 'middle',
-              width,
-              minWidth: 100,
+              borderRight: '1px solid #e2e8f0',
+              overflow: 'hidden',
+              boxSizing: 'border-box',
             }}
           >
             <Select<IssueStatus>
@@ -524,8 +527,9 @@ export function IssueListRow({
               verticalAlign: 'middle',
               color: issue.status === 'DONE' ? '#006644' : 'var(--color-text-secondary)',
               fontSize: '0.8125rem',
-              width,
-              minWidth: 90,
+              borderRight: '1px solid #e2e8f0',
+              overflow: 'hidden',
+              boxSizing: 'border-box',
             }}
           >
             {issue.status === 'DONE' ? 'Done' : 'Unresolved'}
@@ -542,8 +546,9 @@ export function IssueListRow({
               color: 'var(--color-text-secondary)',
               fontSize: '0.8125rem',
               whiteSpace: 'nowrap',
-              width,
-              minWidth: 110,
+              borderRight: '1px solid #e2e8f0',
+              overflow: 'hidden',
+              boxSizing: 'border-box',
             }}
           >
             {formatDate(issue.createdAt)}
@@ -560,8 +565,9 @@ export function IssueListRow({
               color: 'var(--color-text-secondary)',
               fontSize: '0.8125rem',
               whiteSpace: 'nowrap',
-              width,
-              minWidth: 110,
+              borderRight: '1px solid #e2e8f0',
+              overflow: 'hidden',
+              boxSizing: 'border-box',
             }}
           >
             {formatDate(issue.updatedAt || issue.createdAt)}
@@ -576,8 +582,9 @@ export function IssueListRow({
             style={{
               padding: '8px 12px',
               verticalAlign: 'middle',
-              width,
-              minWidth: 100,
+              borderRight: '1px solid #e2e8f0',
+              overflow: 'hidden',
+              boxSizing: 'border-box',
             }}
           >
             <div
@@ -641,6 +648,8 @@ export function IssueListRow({
           textAlign: 'center',
           padding: '8px 10px',
           verticalAlign: 'middle',
+          borderRight: '1px solid #e2e8f0',
+          boxSizing: 'border-box',
         }}
       >
         <input
@@ -661,7 +670,7 @@ export function IssueListRow({
       {visibleColumns.map((colId) => renderCell(colId))}
 
       {/* Settings Column placeholder */}
-      <td style={{ width: 36, padding: '8px 4px', textAlign: 'center' }} />
+      <td style={{ width: 36, padding: '8px 4px', textAlign: 'center', boxSizing: 'border-box' }} />
     </tr>
   );
 }

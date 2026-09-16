@@ -91,8 +91,6 @@ export function IssueListQuickCreate({
   };
 
   const renderCell = (colId: ColumnId) => {
-    const width = columnWidths ? columnWidths[colId] : undefined;
-
     switch (colId) {
       case 'work':
         return (
@@ -101,8 +99,9 @@ export function IssueListQuickCreate({
             style={{
               padding: '8px 12px',
               paddingLeft: isSubtask ? 32 : 12,
-              width,
-              minWidth: 160,
+              borderRight: '1px solid #e2e8f0',
+              overflow: 'hidden',
+              boxSizing: 'border-box',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
@@ -154,6 +153,7 @@ export function IssueListQuickCreate({
                 disabled={isSubmitting}
                 style={{
                   flex: 1,
+                  minWidth: 0,
                   height: 32,
                   padding: '0 10px',
                   fontSize: '0.84rem',
@@ -169,7 +169,15 @@ export function IssueListQuickCreate({
 
       case 'priority':
         return (
-          <td key="priority" style={{ padding: '8px 12px', width, minWidth: 90 }}>
+          <td
+            key="priority"
+            style={{
+              padding: '8px 12px',
+              borderRight: '1px solid #e2e8f0',
+              overflow: 'hidden',
+              boxSizing: 'border-box',
+            }}
+          >
             <Select<IssuePriority>
               value={priority}
               onChange={(pr) => setPriority(pr)}
@@ -215,7 +223,15 @@ export function IssueListQuickCreate({
 
       case 'dueDate':
         return (
-          <td key="dueDate" style={{ padding: '8px 12px', width, minWidth: 100 }}>
+          <td
+            key="dueDate"
+            style={{
+              padding: '8px 12px',
+              borderRight: '1px solid #e2e8f0',
+              overflow: 'hidden',
+              boxSizing: 'border-box',
+            }}
+          >
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               <Calendar size={13} color="var(--color-text-secondary)" />
               <input
@@ -243,7 +259,17 @@ export function IssueListQuickCreate({
 
       default:
         // Empty cells for unassigned columns like Assignee, Reporter, Status, Resolution, Created, Updated
-        return <td key={colId} style={{ padding: '8px 12px', width }} />;
+        return (
+          <td
+            key={colId}
+            style={{
+              padding: '8px 12px',
+              borderRight: '1px solid #e2e8f0',
+              overflow: 'hidden',
+              boxSizing: 'border-box',
+            }}
+          />
+        );
     }
   };
 
@@ -255,7 +281,16 @@ export function IssueListQuickCreate({
       }}
     >
       {/* 1. Icon column (aligns with Checkbox) */}
-      <td style={{ width: 40, textAlign: 'center', padding: '8px 10px', verticalAlign: 'middle' }}>
+      <td
+        style={{
+          width: 40,
+          textAlign: 'center',
+          padding: '8px 10px',
+          verticalAlign: 'middle',
+          borderRight: '1px solid #e2e8f0',
+          boxSizing: 'border-box',
+        }}
+      >
         <Plus size={16} color="var(--color-green-brand)" />
       </td>
 
@@ -263,7 +298,7 @@ export function IssueListQuickCreate({
       {visibleColumns.map((colId) => renderCell(colId))}
 
       {/* Actions (aligns with Settings column) */}
-      <td style={{ padding: '8px 10px', textAlign: 'right', whiteSpace: 'nowrap', width: 36 }}>
+      <td style={{ padding: '8px 10px', textAlign: 'right', whiteSpace: 'nowrap', width: 36, boxSizing: 'border-box' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           <button
             type="button"
