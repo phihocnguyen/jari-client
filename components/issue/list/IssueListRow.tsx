@@ -6,6 +6,7 @@ import {
   Plus,
   Trash2,
   ChevronDown,
+  ChevronRight,
   User as UserIcon,
 } from 'lucide-react';
 import type { Issue, IssueType, IssuePriority, IssueStatus } from '@/types/issue';
@@ -36,6 +37,10 @@ interface IssueListRowProps {
   onAddChild?: (issue: Issue) => void;
   members: ProjectMember[];
   isActiveIssue?: boolean;
+  isSubtask?: boolean;
+  hasChildren?: boolean;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
 }
 
 export function IssueListRow({
@@ -50,6 +55,10 @@ export function IssueListRow({
   onAddChild,
   members,
   isActiveIssue = false,
+  isSubtask = false,
+  hasChildren = false,
+  isExpanded = true,
+  onToggleExpand,
 }: IssueListRowProps) {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -125,11 +134,43 @@ export function IssueListRow({
               flex: 1,
             }}
           >
+            {/* Indentation for subtask or Chevron toggle for parent */}
+            {isSubtask ? (
+              <span style={{ width: 28, flexShrink: 0 }} />
+            ) : hasChildren ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleExpand?.();
+                }}
+                title={isExpanded ? 'Collapse subtasks' : 'Expand subtasks'}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: '2px',
+                  borderRadius: 3,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#626f86',
+                  flexShrink: 0,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+              >
+                {isExpanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+              </button>
+            ) : (
+              <span style={{ width: 19, flexShrink: 0 }} />
+            )}
+
             <span
-              title={`Type: ${issue.type}`}
-              style={{ display: 'inline-flex', alignItems: 'center' }}
+              title={`Type: ${isSubtask ? 'SUBTASK' : issue.type}`}
+              style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}
             >
-              {renderTypeIcon(issue.type)}
+              {renderTypeIcon(isSubtask ? 'SUBTASK' : issue.type)}
             </span>
 
             <button
@@ -205,35 +246,36 @@ export function IssueListRow({
               <PanelRight size={14} />
             </button>
 
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onAddChild) onAddChild(issue);
-                else onOpenDetail(issue.id);
-              }}
-              title="Add child issue"
-              style={{
-                background: 'transparent',
-                border: 'none',
-                padding: '4px',
-                borderRadius: 4,
-                cursor: 'pointer',
-                color: 'var(--color-text-secondary)',
-                display: 'inline-flex',
-                alignItems: 'center',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)';
-                e.currentTarget.style.color = '#0c66e4';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = 'var(--color-text-secondary)';
-              }}
-            >
-              <Plus size={14} />
-            </button>
+            {!isSubtask && onAddChild && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddChild(issue);
+                }}
+                title="Add child issue"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  padding: '4px',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                  color: 'var(--color-text-secondary)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)';
+                  e.currentTarget.style.color = '#0c66e4';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = 'var(--color-text-secondary)';
+                }}
+              >
+                <Plus size={14} />
+              </button>
+            )}
 
             <button
               type="button"
