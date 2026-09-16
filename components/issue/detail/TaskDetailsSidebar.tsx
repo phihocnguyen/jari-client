@@ -693,25 +693,19 @@ export function TaskDetailsSidebar({
             {/* Start Date */}
             <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center' }}>
               <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Start date</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Calendar size={14} color="#626f86" />
-                <IssueDateInput
-                  value={issue.startDate}
-                  onChange={(iso) => onUpdateStartDate(iso)}
-                />
-              </div>
+              <IssueDateInput
+                value={issue.startDate}
+                onChange={(iso) => onUpdateStartDate(iso)}
+              />
             </div>
 
             {/* Due Date */}
             <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center' }}>
               <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Due date</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Calendar size={14} color="#626f86" />
-                <IssueDateInput
-                  value={issue.dueDate}
-                  onChange={(iso) => onUpdateDueDate(iso)}
-                />
-              </div>
+              <IssueDateInput
+                value={issue.dueDate}
+                onChange={(iso) => onUpdateDueDate(iso)}
+              />
             </div>
 
             {/* Fix Versions */}
@@ -1028,8 +1022,49 @@ function IssueDateInput({
     }
   };
 
+  const openPicker = () => {
+    const el = pickerRef.current;
+    if (el) {
+      try {
+        (el as any).showPicker?.();
+      } catch {
+        el.click();
+      }
+    }
+  };
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+    <div
+      style={{
+        position: 'relative',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 4,
+        padding: '2px 4px',
+        borderRadius: 4,
+        border: '1px solid transparent',
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
+      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+    >
+      <button
+        type="button"
+        title="Open calendar"
+        onClick={openPicker}
+        style={{
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          padding: 2,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#626f86',
+        }}
+      >
+        <Calendar size={14} color="#626f86" />
+      </button>
+
       <input
         type="text"
         value={text}
@@ -1040,19 +1075,18 @@ function IssueDateInput({
         }}
         placeholder="dd/MM/yyyy"
         style={{
-          width: 82,
+          width: 86,
           border: 'none',
           background: 'transparent',
           color: '#172b4d',
           fontSize: '0.8125rem',
           outline: 'none',
-          padding: '2px 4px',
-          borderRadius: 4,
+          padding: '1px 2px',
           cursor: 'text',
         }}
-        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
-        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
       />
+
+      {/* Hidden date input anchored with real dimensions so showPicker() positions popup directly under it */}
       <input
         ref={pickerRef}
         type="date"
@@ -1061,22 +1095,20 @@ function IssueDateInput({
           onChange(e.target.value || null);
           setText(formatDisplayDateDMY(e.target.value) || formatDisplayDateDMY(todayISO()));
         }}
-        style={{ position: 'absolute', width: 0, height: 0, opacity: 0, border: 'none', padding: 0 }}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          opacity: 0,
+          pointerEvents: 'none',
+          border: 'none',
+          padding: 0,
+          margin: 0,
+        }}
         tabIndex={-1}
       />
-      <button
-        type="button"
-        title="Open calendar"
-        onClick={() => {
-          const el = pickerRef.current;
-          if (el) {
-            (el as any).showPicker?.() ?? el.click();
-          }
-        }}
-        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex' }}
-      >
-        <Calendar size={13} color="#626f86" />
-      </button>
     </div>
   );
 }
