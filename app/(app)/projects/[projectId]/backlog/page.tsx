@@ -29,6 +29,50 @@ interface PageProps {
   params: Promise<{ projectId: string }>;
 }
 
+function StatBadge({
+  count,
+  label,
+  bg,
+  color,
+  border,
+}: {
+  count: number;
+  label: string;
+  bg: string;
+  color: string;
+  border: string;
+}) {
+  const isMultiDigit = count >= 10;
+  return (
+    <span
+      title={`${count} ${label}`}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+        width: isMultiDigit ? 'auto' : 20,
+        minWidth: 20,
+        height: 20,
+        padding: isMultiDigit ? '0 5px' : 0,
+        borderRadius: 4,
+        backgroundColor: bg,
+        color: color,
+        border: `1px solid ${border}`,
+        fontSize: '0.75rem',
+        fontWeight: 700,
+        fontVariantNumeric: 'tabular-nums',
+        fontFeatureSettings: '"tnum"',
+        lineHeight: 1,
+        boxSizing: 'border-box',
+        userSelect: 'none',
+      }}
+    >
+      {count}
+    </span>
+  );
+}
+
 function StatusPillGroup({ issues }: { issues: Issue[] }) {
   let todo = 0;
   let inProgress = 0;
@@ -47,63 +91,9 @@ function StatusPillGroup({ issues }: { issues: Issue[] }) {
 
   return (
     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-      <span
-        title={`${todo} To Do`}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minWidth: 22,
-          height: 20,
-          padding: '0 6px',
-          borderRadius: 4,
-          backgroundColor: '#DFE1E6',
-          color: '#172B4D',
-          border: '1px solid #C1C7D0',
-          fontSize: '0.75rem',
-          fontWeight: 700,
-        }}
-      >
-        {todo}
-      </span>
-      <span
-        title={`${inProgress} In Progress`}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minWidth: 22,
-          height: 20,
-          padding: '0 6px',
-          borderRadius: 4,
-          backgroundColor: '#B3D4FF',
-          color: '#0747A6',
-          border: '1px solid #79B0FF',
-          fontSize: '0.75rem',
-          fontWeight: 700,
-        }}
-      >
-        {inProgress}
-      </span>
-      <span
-        title={`${done} Done`}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minWidth: 22,
-          height: 20,
-          padding: '0 6px',
-          borderRadius: 4,
-          backgroundColor: '#ABF5D1',
-          color: '#006644',
-          border: '1px solid #57D9A3',
-          fontSize: '0.75rem',
-          fontWeight: 700,
-        }}
-      >
-        {done}
-      </span>
+      <StatBadge count={todo} label="To Do" bg="#DFE1E6" color="#172B4D" border="#C1C7D0" />
+      <StatBadge count={inProgress} label="In Progress" bg="#B3D4FF" color="#0747A6" border="#79B0FF" />
+      <StatBadge count={done} label="Done" bg="#ABF5D1" color="#006644" border="#57D9A3" />
     </div>
   );
 }
