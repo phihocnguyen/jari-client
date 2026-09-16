@@ -181,32 +181,6 @@ export function CreateIssueForm({
         </div>
       </div>
 
-      {/* Row 5: Parent Issue / Epic */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-        <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-          Parent Issue / Epic
-        </label>
-        <select
-          {...register('parentId')}
-          className="input"
-          style={{
-            height: 36,
-            padding: '0 10px',
-            fontSize: '0.84rem',
-            cursor: 'pointer',
-            backgroundColor: '#ffffff',
-          }}
-        >
-          <option value="">None (Top level issue)</option>
-          {existingIssues
-            .filter((iss) => iss.id !== initialParentId)
-            .map((iss) => (
-              <option key={iss.id} value={iss.id}>
-                [{iss.key}] {iss.title.length > 35 ? iss.title.slice(0, 35) + '...' : iss.title}
-              </option>
-            ))}
-        </select>
-      </div>
 
       {/* Row 6: Due Date */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>

@@ -34,7 +34,6 @@ const DEFAULT_TYPES: { id: string; name: string }[] = [
   { id: 'TASK', name: 'Task' },
   { id: 'BUG', name: 'Bug' },
   { id: 'EPIC', name: 'Epic' },
-  { id: 'SUBTASK', name: 'Subtask' },
 ];
 
 export function IssueTypeSelect({
@@ -46,9 +45,10 @@ export function IssueTypeSelect({
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const availableTypes = issueTypes && issueTypes.length > 0
+  const availableTypes = (issueTypes && issueTypes.length > 0
     ? issueTypes.map(t => ({ id: t.id, name: t.name.charAt(0) + t.name.slice(1).toLowerCase(), rawName: t.name }))
-    : DEFAULT_TYPES.map(t => ({ id: t.id, name: t.name, rawName: t.id }));
+    : DEFAULT_TYPES.map(t => ({ id: t.id, name: t.name, rawName: t.id })))
+    .filter(t => t.rawName.toUpperCase() !== 'SUBTASK');
 
   const currentType = availableTypes.find(
     t => t.rawName.toUpperCase() === (selectedType || '').toUpperCase()
