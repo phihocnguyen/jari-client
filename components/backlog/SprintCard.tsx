@@ -92,7 +92,17 @@ export function SprintCard({
       style={{
         backgroundColor: isDragOver ? '#F4F8FD' : '#FFFFFF',
         borderRadius: '6px',
-        border: isDragOver
+        borderTop: isDragOver
+          ? '2px dashed #0052CC'
+          : isActive
+          ? '1px solid #4C9AFF'
+          : '1px solid #DFE1E6',
+        borderRight: isDragOver
+          ? '2px dashed #0052CC'
+          : isActive
+          ? '1px solid #4C9AFF'
+          : '1px solid #DFE1E6',
+        borderBottom: isDragOver
           ? '2px dashed #0052CC'
           : isActive
           ? '1px solid #4C9AFF'
