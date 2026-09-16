@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Search, ChevronDown, MoreHorizontal, CheckCircle2, Bookmark,
-  ChevronsUp, ArrowUp, Target, Plus,
+  ChevronsUp, ArrowUp, Target, Plus, Kanban, ArrowRight, Calendar,
 } from 'lucide-react';
 import { sprintApi } from '@/lib/api/sprint';
 import { issueApi } from '@/lib/api/issue';
@@ -15,6 +16,7 @@ import { toast } from '@/components/ui/Toast';
 import { CreateIssueModal } from '@/components/issue/CreateIssueModal';
 import { IssueDetailModal } from '@/components/issue/IssueDetailModal';
 import type { Issue, IssueStatus } from '@/types/issue';
+import type { Sprint } from '@/types/sprint';
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -27,6 +29,23 @@ const BOARD_COLUMNS: { id: IssueStatus; title: string; color: string }[] = [
   { id: 'DONE', title: 'Done', color: '#22C55E' },
 ];
 
+function formatSprintDates(start?: string, end?: string) {
+  if (!start && !end) return '';
+  const fmt = (dStr: string) => {
+    try {
+      const d = new Date(dStr);
+      return isNaN(d.getTime())
+        ? dStr
+        : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    } catch {
+      return dStr;
+    }
+  };
+  if (start && end) return `${fmt(start)} – ${fmt(end)}`;
+  if (start) return `Starts ${fmt(start)}`;
+  return `Ends ${fmt(end!)}`;
+}
+
 export default function BoardPage({ params }: PageProps) {
   const qc = useQueryClient();
   const [resolvedParams, setResolvedParams] = useState<{ projectId: string } | null>(null);
@@ -37,30 +56,51 @@ export default function BoardPage({ params }: PageProps) {
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 
   useEffect(() => {
-    params.then(p => setResolvedParams(p));
+    params.then((p) => setResolvedParams(p));
   }, [params]);
 
   const projectId = resolvedParams?.projectId ?? '';
 
   const { data: project } = useQuery({
     queryKey: ['project', projectId],
-    queryFn: () => (projectId ? projectApi.get(projectId).then(r => r.data) : null),
+    queryFn: () => (projectId ? projectApi.get(projectId).then((r) => r.data) : null),
     enabled: Boolean(projectId),
   });
+
+  const { data: sprints = [], isLoading: loadingSprints } = useQuery({
+    queryKey: ['sprints', projectId],
+    queryFn: () => (projectId ? sprintApi.list(projectId).then((r) => r.data) : []),
+    enabled: Boolean(projectId),
+  });
+
+  const activeSprint = sprints.find((s: Sprint) => s.status === 'ACTIVE');
 
   const { data: boardData, isLoading: loadingBoard } = useQuery({
     queryKey: ['board', projectId],
-    queryFn: () => (projectId ? sprintApi.getBoard(projectId).then(r => r.data) : null),
-    enabled: Boolean(projectId),
+    queryFn: () => (projectId && activeSprint ? sprintApi.getBoard(projectId).then((r) => r.data) : null),
+    enabled: Boolean(projectId && activeSprint),
   });
 
-  const { data: issuesPage } = useQuery({
+  const { data: issuesPage, isLoading: loadingIssues } = useQuery({
     queryKey: ['issues', projectId],
     queryFn: () => (projectId ? issueApi.list(projectId) : null),
     enabled: Boolean(projectId),
   });
 
   const allIssues: Issue[] = issuesPage?.data ?? [];
+
+  // Issues belonging to the active sprint
+  const boardIssues = Array.isArray(boardData)
+    ? boardData.flatMap((col: any) => col.issues || [])
+    : [];
+
+  const sprintIssues = allIssues.filter((i) => i.sprintId === activeSprint?.id);
+
+  const activeIssues = sprintIssues.length > 0
+    ? sprintIssues
+    : boardIssues.length > 0
+    ? boardIssues
+    : [];
 
   const updateStatusMutation = useMutation({
     mutationFn: ({ issueId, status }: { issueId: string; status: IssueStatus }) =>
@@ -95,6 +135,19 @@ export default function BoardPage({ params }: PageProps) {
     },
   });
 
+  const completeSprintMutation = useMutation({
+    mutationFn: (sprintId: string) => sprintApi.complete(sprintId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['sprints', projectId] });
+      qc.invalidateQueries({ queryKey: ['board', projectId] });
+      qc.invalidateQueries({ queryKey: ['issues', projectId] });
+      toast.success('Sprint completed successfully!');
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Failed to complete sprint');
+    },
+  });
+
   if (!projectId) return null;
 
   // Filter issues by search query
@@ -102,7 +155,10 @@ export default function BoardPage({ params }: PageProps) {
     if (!query.trim()) return issues;
     const q = query.toLowerCase();
     return issues.filter(
-      (i) => i.title.toLowerCase().includes(q) || i.key.toLowerCase().includes(q) || i.tags?.some(t => t.toLowerCase().includes(q))
+      (i) =>
+        i.title.toLowerCase().includes(q) ||
+        i.key.toLowerCase().includes(q) ||
+        i.tags?.some((t) => t.toLowerCase().includes(q))
     );
   };
 
@@ -156,35 +212,269 @@ export default function BoardPage({ params }: PageProps) {
     }
   };
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      {/* Top Header */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        marginBottom: '0.25rem',
-      }}>
+  // If sprints are still loading
+  if (loadingSprints) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         <h1 style={{ fontSize: '1.625rem', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.02em' }}>
           Board
         </h1>
+        <div style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: '0.9375rem' }}>
+          Loading active sprint...
+        </div>
+      </div>
+    );
+  }
+
+  // If there is NO active sprint, render empty state with Backlog redirect button
+  if (!activeSprint) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%' }}>
+        {/* Top Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h1 style={{ fontSize: '1.625rem', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.02em' }}>
+            Board
+          </h1>
+          <Link
+            href={`/projects/${projectId}/backlog`}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: '0.875rem',
+              color: '#0052CC',
+              fontWeight: 600,
+              textDecoration: 'none',
+              padding: '6px 12px',
+              borderRadius: 4,
+            }}
+          >
+            Backlog <ArrowRight size={14} />
+          </Link>
+        </div>
+
+        {/* Jira-style Empty State Card */}
+        <div
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '12px',
+            border: '1px solid #DFE1E6',
+            padding: '5rem 2rem',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            boxShadow: '0 1px 4px rgba(9, 30, 66, 0.05)',
+            marginTop: '0.5rem',
+          }}
+        >
+          <div
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: '50%',
+              backgroundColor: '#EBF3FB',
+              border: '2px solid #B3D4FF',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '1.5rem',
+            }}
+          >
+            <Kanban size={38} color="#0052CC" />
+          </div>
+
+          <h2
+            style={{
+              fontSize: '1.5rem',
+              fontWeight: 700,
+              color: '#172B4D',
+              marginBottom: '0.75rem',
+              letterSpacing: '-0.01em',
+            }}
+          >
+            You haven&apos;t started a sprint
+          </h2>
+
+          <p
+            style={{
+              fontSize: '0.9375rem',
+              color: '#5E6C84',
+              maxWidth: 480,
+              lineHeight: 1.6,
+              marginBottom: '2rem',
+            }}
+          >
+            You can&apos;t do any work on the board until you start a sprint. Go to your backlog to plan work items and start a sprint. Once started, active tasks will show up on this board.
+          </p>
+
+          <Link
+            href={`/projects/${projectId}/backlog`}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 24px',
+              backgroundColor: '#0052CC',
+              color: '#FFFFFF',
+              fontSize: '0.9375rem',
+              fontWeight: 600,
+              borderRadius: '6px',
+              textDecoration: 'none',
+              boxShadow: '0 2px 6px rgba(0, 82, 204, 0.25)',
+              transition: 'background-color 0.15s, transform 0.15s, box-shadow 0.15s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#0747A6';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 82, 204, 0.35)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#0052CC';
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 82, 204, 0.25)';
+            }}
+          >
+            Go to backlog <ArrowRight size={18} />
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Active Sprint is present -> Full Board Operations
+  const sprintDateRange = formatSprintDates(activeSprint.startDate, activeSprint.endDate);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      {/* Top Header with Active Sprint Info & Complete Button */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '1rem',
+          paddingBottom: '0.75rem',
+          borderBottom: '1px solid #DFE1E6',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.02em', margin: 0 }}>
+            {activeSprint.name}
+          </h1>
+
+          <span
+            style={{
+              backgroundColor: '#0052CC',
+              color: '#FFFFFF',
+              fontSize: '0.6875rem',
+              fontWeight: 700,
+              padding: '3px 8px',
+              borderRadius: 4,
+              letterSpacing: '0.04em',
+              display: 'inline-flex',
+              alignItems: 'center',
+            }}
+          >
+            ACTIVE SPRINT
+          </span>
+
+          {sprintDateRange && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--color-text-secondary)', fontSize: '0.8125rem' }}>
+              <Calendar size={14} />
+              <span>{sprintDateRange}</span>
+            </div>
+          )}
+
+          <span style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
+            ({activeIssues.length} {activeIssues.length === 1 ? 'work item' : 'work items'})
+          </span>
+
+          {activeSprint.goal && (
+            <span
+              style={{
+                fontSize: '0.8125rem',
+                color: 'var(--color-text-secondary)',
+                fontStyle: 'italic',
+                maxWidth: 280,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+              title={activeSprint.goal}
+            >
+              • {activeSprint.goal}
+            </span>
+          )}
+        </div>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <Button variant="outlined" style={{ borderRadius: 'var(--radius-pill)', borderColor: 'rgba(0,0,0,0.15)' }}>
-            Release
-          </Button>
-          <button className="btn btn-ghost btn-icon" aria-label="More options">
-            <MoreHorizontal size={20} color="var(--color-text-secondary)" />
+          <button
+            onClick={() => completeSprintMutation.mutate(activeSprint.id)}
+            disabled={completeSprintMutation.isPending}
+            style={{
+              height: 32,
+              padding: '0 14px',
+              borderRadius: 4,
+              border: '1px solid #0052CC',
+              backgroundColor: '#0052CC',
+              color: '#FFFFFF',
+              fontSize: '0.8125rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'background-color 0.15s, border-color 0.15s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#0747A6';
+              e.currentTarget.style.borderColor = '#0747A6';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#0052CC';
+              e.currentTarget.style.borderColor = '#0052CC';
+            }}
+          >
+            {completeSprintMutation.isPending ? 'Completing...' : 'Complete sprint'}
           </button>
+
+          <Link
+            href={`/projects/${projectId}/backlog`}
+            style={{
+              height: 32,
+              padding: '0 12px',
+              borderRadius: 4,
+              border: '1px solid #DFE1E6',
+              backgroundColor: '#FFFFFF',
+              color: '#172B4D',
+              fontSize: '0.8125rem',
+              fontWeight: 600,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textDecoration: 'none',
+              transition: 'background-color 0.15s',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#EBECF0')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
+          >
+            Backlog
+          </Link>
         </div>
       </div>
 
       {/* Filter / Search Bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
         <div style={{ position: 'relative', width: 260 }}>
           <span style={{ position: 'absolute', left: 12, top: 10, color: 'var(--color-text-secondary)' }}>
             <Search size={16} />
           </span>
           <input
             type="text"
-            placeholder="Search"
+            placeholder="Search active sprint"
             className="input"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -195,8 +485,11 @@ export default function BoardPage({ params }: PageProps) {
         <button
           className="btn btn-ghost btn-sm"
           style={{
-            height: 38, padding: '0 14px', borderRadius: 'var(--radius-pill)',
-            border: '1px solid rgba(0,0,0,0.12)', color: 'var(--color-text-secondary)',
+            height: 38,
+            padding: '0 14px',
+            borderRadius: 'var(--radius-pill)',
+            border: '1px solid rgba(0,0,0,0.12)',
+            color: 'var(--color-text-secondary)',
           }}
         >
           Quick Filters <ChevronDown size={14} style={{ marginLeft: 4 }} />
@@ -204,21 +497,23 @@ export default function BoardPage({ params }: PageProps) {
       </div>
 
       {/* Board Columns Grid */}
-      {loadingBoard ? (
+      {loadingBoard && loadingIssues ? (
         <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-secondary)' }}>
           Loading Board...
         </div>
       ) : (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, minmax(280px, 1fr))',
-          gap: '1.25rem',
-          alignItems: 'start',
-          overflowX: 'auto',
-          paddingBottom: '1.5rem',
-        }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, minmax(280px, 1fr))',
+            gap: '1.25rem',
+            alignItems: 'start',
+            overflowX: 'auto',
+            paddingBottom: '1.5rem',
+          }}
+        >
           {BOARD_COLUMNS.map((col) => {
-            const columnIssues = filterIssues(allIssues.filter((i) => i.status === col.id));
+            const columnIssues = filterIssues(activeIssues.filter((i) => i.status === col.id));
             const isHovered = dragOverColumn === col.id;
 
             return (
@@ -239,23 +534,30 @@ export default function BoardPage({ params }: PageProps) {
                 }}
               >
                 {/* Column Header */}
-                <div style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  marginBottom: '1rem', padding: '0 4px',
-                }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '1rem',
+                    padding: '0 4px',
+                  }}
+                >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: col.color }} />
                     <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#1e293b' }}>
                       {col.title}
                     </span>
-                    <span style={{
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                      color: '#64748b',
-                      backgroundColor: '#e2e8f0',
-                      padding: '2px 8px',
-                      borderRadius: '12px',
-                    }}>
+                    <span
+                      style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        color: '#64748b',
+                        backgroundColor: '#e2e8f0',
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                      }}
+                    >
                       {columnIssues.length}
                     </span>
                   </div>
@@ -289,16 +591,18 @@ export default function BoardPage({ params }: PageProps) {
                 )}
 
                 {/* Cards List */}
-                <div style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '12px',
-                  flex: 1,
-                  maxHeight: '580px',
-                  overflowY: 'auto',
-                  paddingRight: '4px',
-                  scrollbarWidth: 'thin',
-                }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                    flex: 1,
+                    maxHeight: '580px',
+                    overflowY: 'auto',
+                    paddingRight: '4px',
+                    scrollbarWidth: 'thin',
+                  }}
+                >
                   {columnIssues.map((issue) => {
                     const isDragging = draggedIssueId === issue.id;
 
@@ -307,7 +611,10 @@ export default function BoardPage({ params }: PageProps) {
                         key={issue.id}
                         draggable
                         onDragStart={(e) => handleDragStart(e, issue.id)}
-                        onDragEnd={() => { setDraggedIssueId(null); setDragOverColumn(null); }}
+                        onDragEnd={() => {
+                          setDraggedIssueId(null);
+                          setDragOverColumn(null);
+                        }}
                         onClick={() => setSelectedIssueId(issue.id)}
                         style={{
                           backgroundColor: '#ffffff',
@@ -361,41 +668,65 @@ export default function BoardPage({ params }: PageProps) {
                           })}
 
                           {/* Crosshair target icon */}
-                          <div style={{
-                            width: 20, height: 20, borderRadius: '50%',
-                            border: '1px dashed rgba(0,0,0,0.3)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            color: 'var(--color-text-secondary)',
-                          }}>
+                          <div
+                            style={{
+                              width: 20,
+                              height: 20,
+                              borderRadius: '50%',
+                              border: '1px dashed rgba(0,0,0,0.3)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'var(--color-text-secondary)',
+                            }}
+                          >
                             <Target size={12} />
                           </div>
                         </div>
 
                         {/* Issue Title */}
-                        <div style={{
-                          fontSize: '0.875rem',
-                          fontWeight: 600,
-                          color: 'var(--color-text-primary)',
-                          marginBottom: '10px',
-                          lineHeight: 1.45,
-                        }}>
+                        <div
+                          style={{
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            color: 'var(--color-text-primary)',
+                            marginBottom: '10px',
+                            lineHeight: 1.45,
+                          }}
+                        >
                           {issue.title}
                         </div>
 
                         {/* Subtext / Progress Line */}
                         <div style={{ marginBottom: '12px' }}>
                           <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', fontWeight: 500, marginBottom: 4 }}>
-                            {issue.subtext ?? (issue.status === 'TODO' ? 'Not started yet' : issue.status === 'DONE' ? 'Task finished' : 'In Progress')}
+                            {issue.subtext ??
+                              (issue.status === 'TODO'
+                                ? 'Not started yet'
+                                : issue.status === 'DONE'
+                                ? 'Task finished'
+                                : 'In Progress')}
                           </div>
 
                           {/* Progress Line */}
                           <div style={{ width: '100%', height: 3, borderRadius: 2, backgroundColor: 'rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-                            <div style={{
-                              width: `${issue.progressPercent ?? (issue.status === 'DONE' ? 100 : issue.status === 'IN_REVIEW' ? 85 : issue.status === 'IN_PROGRESS' ? 50 : 0)}%`,
-                              height: '100%',
-                              backgroundColor: col.color,
-                              transition: 'width 0.3s ease',
-                            }} />
+                            <div
+                              style={{
+                                width: `${
+                                  issue.progressPercent ??
+                                  (issue.status === 'DONE'
+                                    ? 100
+                                    : issue.status === 'IN_REVIEW'
+                                    ? 85
+                                    : issue.status === 'IN_PROGRESS'
+                                    ? 50
+                                    : 0)
+                                }%`,
+                                height: '100%',
+                                backgroundColor: col.color,
+                                transition: 'width 0.3s ease',
+                              }}
+                            />
                           </div>
                         </div>
 
@@ -416,11 +747,11 @@ export default function BoardPage({ params }: PageProps) {
                           {/* Right Assignee Display matching display name */}
                           <div
                             style={{ display: 'flex', alignItems: 'center', gap: 6 }}
-                            title={issue.assignee?.fullName ?? 'Học Nguyễn'}
+                            title={issue.assignee?.fullName ?? 'Assignee'}
                           >
-                            <Avatar name={issue.assignee?.fullName ?? 'Học Nguyễn'} size={24} />
+                            <Avatar name={issue.assignee?.fullName ?? 'Assignee'} size={24} />
                             <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569' }}>
-                              {issue.assignee?.fullName ?? 'Học Nguyễn'}
+                              {issue.assignee?.fullName ?? 'Assignee'}
                             </span>
                           </div>
                         </div>
@@ -439,13 +770,14 @@ export default function BoardPage({ params }: PageProps) {
         open={createIssueOpen}
         onClose={() => setCreateIssueOpen(false)}
         projectId={projectId}
+        initialSprintId={activeSprint?.id}
       />
 
       <IssueDetailModal
         issueId={selectedIssueId}
         projectId={projectId}
         onClose={() => setSelectedIssueId(null)}
-        issues={allIssues}
+        issues={activeIssues}
         onNavigateIssue={(id) => setSelectedIssueId(id)}
       />
     </div>
