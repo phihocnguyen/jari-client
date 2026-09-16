@@ -11,6 +11,9 @@ import { IssueDetailModal } from '@/components/issue/IssueDetailModal';
 import { CreateIssueModal } from '@/components/issue/CreateIssueModal';
 import { IssueListTable } from './IssueListTable';
 import { IssueListBulkBar } from './IssueListBulkBar';
+import { Select } from '@/components/ui/Select';
+import { renderTypeIcon } from '@/utils/issue-type';
+import { getStatusBadgeStyle } from '@/utils/issue-status';
 import type { Issue, IssueStatus, IssuePriority, IssueType, CreateIssueRequest } from '@/types/issue';
 
 interface IssueListContainerProps {
@@ -24,6 +27,10 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+
+  // Pagination State (Max 12 items per page)
+  const pageSize = 12;
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Selection state for multi-delete
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -134,6 +141,48 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
 
     return allIssues.filter((i) => includedIds.has(i.id));
   }, [allIssues, query, typeFilter, statusFilter]);
+
+  // Group root issues and calculate pagination (max 12 per page)
+  const { rootIssues, childrenMap } = useMemo(() => {
+    const issueIdSet = new Set(filteredIssues.map((i) => i.id));
+    const roots: Issue[] = [];
+    const children = new Map<string, Issue[]>();
+
+    filteredIssues.forEach((issue) => {
+      if (issue.parentId && issueIdSet.has(issue.parentId)) {
+        const list = children.get(issue.parentId) || [];
+        list.push(issue);
+        children.set(issue.parentId, list);
+      } else {
+        roots.push(issue);
+      }
+    });
+
+    return { rootIssues: roots, childrenMap: children };
+  }, [filteredIssues]);
+
+  const totalRootIssues = rootIssues.length;
+  const totalPages = Math.max(1, Math.ceil(totalRootIssues / pageSize));
+
+  // Current page's root issues (max 12 per page)
+  const paginatedIssues = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    const currentRoots = rootIssues.slice(start, start + pageSize);
+    const result: Issue[] = [];
+    currentRoots.forEach((root) => {
+      result.push(root);
+      const subtasks = childrenMap.get(root.id) || [];
+      subtasks.forEach((sub) => result.push(sub));
+    });
+    return result;
+  }, [rootIssues, childrenMap, currentPage, pageSize]);
+
+  // Auto-clamp page if items shrink
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   // Mutations
   const updateStatusMutation = useMutation({
@@ -314,7 +363,10 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
               type="text"
               placeholder="Search work, key, assignee..."
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setCurrentPage(1);
+              }}
               style={{
                 width: '100%',
                 height: 34,
@@ -329,50 +381,40 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
             />
           </div>
 
-          {/* Type Filter */}
-          <select
+          {/* Type Filter (using shared Select component) */}
+          <Select<string>
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            style={{
-              height: 34,
-              fontSize: '0.8125rem',
-              fontWeight: 500,
-              padding: '0 8px',
-              border: '1px solid rgba(0,0,0,0.14)',
-              borderRadius: '6px',
-              backgroundColor: 'var(--color-surface-white)',
-              cursor: 'pointer',
+            onChange={(val) => {
+              setTypeFilter(val);
+              setCurrentPage(1);
             }}
-          >
-            <option value="ALL">All Types</option>
-            <option value="TASK">Tasks</option>
-            <option value="EPIC">Epics</option>
-            <option value="BUG">Bugs</option>
-            <option value="STORY">Stories</option>
-            <option value="SUBTASK">Subtasks</option>
-          </select>
+            minWidth={150}
+            options={[
+              { value: 'ALL', label: 'All Types' },
+              { value: 'TASK', label: 'Tasks', icon: renderTypeIcon('TASK') },
+              { value: 'STORY', label: 'Stories', icon: renderTypeIcon('STORY') },
+              { value: 'BUG', label: 'Bugs', icon: renderTypeIcon('BUG') },
+              { value: 'EPIC', label: 'Epics', icon: renderTypeIcon('EPIC') },
+              { value: 'SUBTASK', label: 'Subtasks', icon: renderTypeIcon('SUBTASK') },
+            ]}
+          />
 
-          {/* Status Filter */}
-          <select
+          {/* Status Filter (using shared Select component) */}
+          <Select<string>
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={{
-              height: 34,
-              fontSize: '0.8125rem',
-              fontWeight: 500,
-              padding: '0 8px',
-              border: '1px solid rgba(0,0,0,0.14)',
-              borderRadius: '6px',
-              backgroundColor: 'var(--color-surface-white)',
-              cursor: 'pointer',
+            onChange={(val) => {
+              setStatusFilter(val);
+              setCurrentPage(1);
             }}
-          >
-            <option value="ALL">All Statuses</option>
-            <option value="TODO">To Do</option>
-            <option value="IN_PROGRESS">In Progress</option>
-            <option value="IN_REVIEW">In Review</option>
-            <option value="DONE">Done</option>
-          </select>
+            minWidth={150}
+            options={[
+              { value: 'ALL', label: 'All Statuses' },
+              { value: 'TODO', label: 'To Do', badgeStyle: getStatusBadgeStyle('TODO') },
+              { value: 'IN_PROGRESS', label: 'In Progress', badgeStyle: getStatusBadgeStyle('IN_PROGRESS') },
+              { value: 'IN_REVIEW', label: 'In Review', badgeStyle: getStatusBadgeStyle('IN_REVIEW') },
+              { value: 'DONE', label: 'Done', badgeStyle: getStatusBadgeStyle('DONE') },
+            ]}
+          />
         </div>
 
         {/* Action Button to open Modal creation */}
@@ -420,8 +462,12 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
         </div>
       ) : (
         <IssueListTable
-          issues={filteredIssues}
-          allIssuesCount={allIssues.length}
+          issues={paginatedIssues}
+          allIssuesCount={totalRootIssues}
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
           selectedIds={selectedIds}
           selectedIssueId={selectedIssueId}
           onToggleSelect={handleToggleSelect}

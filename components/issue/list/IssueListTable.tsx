@@ -37,6 +37,10 @@ interface IssueListTableProps {
     priority: IssuePriority;
     dueDate?: string;
   }) => Promise<void>;
+  currentPage?: number;
+  pageSize?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
   onAddChild?: (issue: Issue) => void;
   members: ProjectMember[];
   isSubmittingCreate: boolean;
@@ -327,6 +331,10 @@ export function IssueListTable(props: IssueListTableProps) {
       <IssueListFooter
         totalCount={allIssuesCount}
         filteredCount={issues.length}
+        currentPage={props.currentPage}
+        pageSize={props.pageSize}
+        totalPages={props.totalPages}
+        onPageChange={props.onPageChange}
         onCreateClick={onOpenInlineCreate}
         onRefresh={onRefresh}
         isRefreshing={isRefreshing}
