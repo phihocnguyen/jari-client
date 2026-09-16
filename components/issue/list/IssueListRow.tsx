@@ -87,116 +87,121 @@ export function IssueListRow({
           <td
             key="work"
             style={{
-              padding: '8px 12px',
+              padding: '8px 10px',
               verticalAlign: 'middle',
               borderRight: '1px solid #dcdfe4',
               overflow: 'hidden',
               boxSizing: 'border-box',
+              position: 'relative',
             }}
           >
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 10,
+                gap: 8,
+                minWidth: 0,
+                width: '100%',
               }}
             >
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  minWidth: 0,
-                  flex: 1,
-                }}
-              >
-                {/* Indentation for subtask or Chevron toggle for parent */}
-                {isSubtask ? (
-                  <span style={{ width: 28, flexShrink: 0 }} />
-                ) : hasChildren ? (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onToggleExpand?.();
-                    }}
-                    title={isExpanded ? 'Collapse subtasks' : 'Expand subtasks'}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      padding: '2px',
-                      borderRadius: 3,
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#626f86',
-                      flexShrink: 0,
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                  >
-                    {isExpanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
-                  </button>
-                ) : (
-                  <span style={{ width: 19, flexShrink: 0 }} />
-                )}
-
-                <span
-                  title={`Type: ${isSubtask ? 'SUBTASK' : issue.type}`}
-                  style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}
-                >
-                  {renderTypeIcon(isSubtask ? 'SUBTASK' : issue.type)}
-                </span>
-
+              {/* Indentation for subtask or Chevron toggle for parent */}
+              {isSubtask ? (
+                <span style={{ width: 28, flexShrink: 0 }} />
+              ) : hasChildren ? (
                 <button
                   type="button"
-                  onClick={() => onOpenDetail(issue.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleExpand?.();
+                  }}
+                  title={isExpanded ? 'Collapse subtasks' : 'Expand subtasks'}
                   style={{
-                    fontSize: '0.8125rem',
-                    fontWeight: 600,
-                    color: '#0c66e4',
-                    textDecoration: 'none',
                     background: 'none',
                     border: 'none',
-                    padding: 0,
+                    padding: '2px',
+                    borderRadius: 3,
                     cursor: 'pointer',
-                    whiteSpace: 'nowrap',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#626f86',
                     flexShrink: 0,
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
-                  onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                 >
-                  {issue.key}
+                  {isExpanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
                 </button>
+              ) : (
+                <span style={{ width: 19, flexShrink: 0 }} />
+              )}
 
-                <span
-                  title={issue.title}
-                  onClick={() => onOpenDetail(issue.id)}
-                  style={{
-                    color: 'var(--color-text-primary)',
-                    fontWeight: 500,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    cursor: 'pointer',
-                    flex: 1,
-                  }}
-                >
-                  {issue.title}
-                </span>
-              </div>
+              <span
+                title={`Type: ${isSubtask ? 'SUBTASK' : issue.type}`}
+                style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}
+              >
+                {renderTypeIcon(isSubtask ? 'SUBTASK' : issue.type)}
+              </span>
 
-              {/* Hover Action Icons (Side peek + quick subtask + delete) */}
+              <button
+                type="button"
+                onClick={() => onOpenDetail(issue.id)}
+                style={{
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  color: '#0c66e4',
+                  textDecoration: 'none',
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+              >
+                {issue.key}
+              </button>
+
+              <span
+                title={issue.title}
+                onClick={() => onOpenDetail(issue.id)}
+                style={{
+                  color: 'var(--color-text-primary)',
+                  fontWeight: 500,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  cursor: 'pointer',
+                  flex: 1,
+                  minWidth: 0,
+                }}
+              >
+                {issue.title}
+              </span>
+            </div>
+
+            {/* Hover Action Icons (Side peek + quick subtask + delete) overlay */}
+            {isHovered && (
               <div
                 style={{
+                  position: 'absolute',
+                  right: 4,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 4,
-                  opacity: isHovered ? 1 : 0,
-                  transition: 'opacity 0.15s ease',
-                  flexShrink: 0,
+                  gap: 3,
+                  backgroundColor: isActiveIssue
+                    ? '#e9f2ff'
+                    : isRowHighlighted
+                      ? '#f4f8fe'
+                      : '#ffffff',
+                  padding: '2px 4px',
+                  borderRadius: 4,
+                  boxShadow: '-6px 0 8px rgba(255, 255, 255, 0.95), 0 1px 3px rgba(0, 0, 0, 0.08)',
+                  zIndex: 5,
                 }}
               >
                 <button
@@ -281,7 +286,7 @@ export function IssueListRow({
                   <Trash2 size={14} />
                 </button>
               </div>
-            </div>
+            )}
           </td>
         );
 
@@ -291,10 +296,11 @@ export function IssueListRow({
             key="assignee"
             onClick={(e) => e.stopPropagation()}
             style={{
-              padding: '8px 12px',
+              padding: '6px 10px',
               verticalAlign: 'middle',
               borderRight: '1px solid #dcdfe4',
               boxSizing: 'border-box',
+              overflow: 'hidden',
             }}
           >
             <Select
@@ -344,6 +350,8 @@ export function IssueListRow({
                       padding: '4px 6px',
                       borderRadius: 4,
                       cursor: 'pointer',
+                      maxWidth: '100%',
+                      overflow: 'hidden',
                       transition: 'background-color 0.12s ease',
                     }}
                     onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
@@ -375,11 +383,15 @@ export function IssueListRow({
                         color: issue.assignee ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
                         fontWeight: 400,
                         whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        minWidth: 0,
+                        flex: 1,
                       }}
                     >
                       {selected?.label || assigneeName}
                     </span>
-                    <ChevronDown size={12} style={{ color: 'var(--color-text-secondary)', opacity: 0.7 }} />
+                    <ChevronDown size={12} style={{ color: 'var(--color-text-secondary)', opacity: 0.7, flexShrink: 0 }} />
                   </div>
                 );
               }}
@@ -392,19 +404,24 @@ export function IssueListRow({
           <td
             key="reporter"
             style={{
-              padding: '8px 12px',
+              padding: '6px 10px',
               verticalAlign: 'middle',
               borderRight: '1px solid #dcdfe4',
               boxSizing: 'border-box',
+              overflow: 'hidden',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, overflow: 'hidden' }}>
               <Avatar name={getUserDisplayName(issue.reporter, 'Học Nguyễn')} size={24} />
               <span
                 style={{
                   fontSize: '0.8125rem',
                   color: 'var(--color-text-primary)',
                   whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  minWidth: 0,
+                  flex: 1,
                 }}
               >
                 {getUserDisplayName(issue.reporter, 'Học Nguyễn')}
@@ -419,10 +436,11 @@ export function IssueListRow({
             key="priority"
             onClick={(e) => e.stopPropagation()}
             style={{
-              padding: '8px 12px',
+              padding: '6px 10px',
               verticalAlign: 'middle',
               borderRight: '1px solid #dcdfe4',
               boxSizing: 'border-box',
+              overflow: 'hidden',
             }}
           >
             <Select<IssuePriority>
@@ -443,6 +461,8 @@ export function IssueListRow({
                     padding: '4px 6px',
                     borderRadius: 4,
                     cursor: 'pointer',
+                    maxWidth: '100%',
+                    overflow: 'hidden',
                     transition: 'background-color 0.12s ease',
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
@@ -457,11 +477,16 @@ export function IssueListRow({
                         issue.priority === 'HIGH' || issue.priority === 'HIGHEST'
                           ? '#dc2626'
                           : 'var(--color-text-primary)',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      minWidth: 0,
+                      flex: 1,
                     }}
                   >
                     {issue.priority.charAt(0) + issue.priority.slice(1).toLowerCase()}
                   </span>
-                  <ChevronDown size={12} style={{ color: 'var(--color-text-secondary)', opacity: 0.7 }} />
+                  <ChevronDown size={12} style={{ color: 'var(--color-text-secondary)', opacity: 0.7, flexShrink: 0 }} />
                 </div>
               )}
             />
@@ -474,10 +499,11 @@ export function IssueListRow({
             key="status"
             onClick={(e) => e.stopPropagation()}
             style={{
-              padding: '8px 12px',
+              padding: '6px 10px',
               verticalAlign: 'middle',
               borderRight: '1px solid #dcdfe4',
               boxSizing: 'border-box',
+              overflow: 'hidden',
             }}
           >
             <Select<IssueStatus>
@@ -503,13 +529,19 @@ export function IssueListRow({
                     fontSize: '0.75rem',
                     fontWeight: 700,
                     cursor: 'pointer',
+                    maxWidth: '100%',
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap',
+                    textOverflow: 'ellipsis',
                     transition: 'opacity 0.15s ease',
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.85')}
                   onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
                 >
-                  <span>{statusStyle.label}</span>
-                  <ChevronDown size={12} />
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {statusStyle.label}
+                  </span>
+                  <ChevronDown size={12} style={{ flexShrink: 0 }} />
                 </div>
               )}
             />
@@ -521,7 +553,7 @@ export function IssueListRow({
           <td
             key="resolution"
             style={{
-              padding: '8px 12px',
+              padding: '6px 10px',
               verticalAlign: 'middle',
               color: issue.status === 'DONE' ? '#006644' : 'var(--color-text-secondary)',
               fontSize: '0.8125rem',
@@ -541,7 +573,7 @@ export function IssueListRow({
           <td
             key="created"
             style={{
-              padding: '8px 12px',
+              padding: '6px 10px',
               verticalAlign: 'middle',
               color: 'var(--color-text-secondary)',
               fontSize: '0.8125rem',
@@ -561,7 +593,7 @@ export function IssueListRow({
           <td
             key="updated"
             style={{
-              padding: '8px 12px',
+              padding: '6px 10px',
               verticalAlign: 'middle',
               color: 'var(--color-text-secondary)',
               fontSize: '0.8125rem',
@@ -582,10 +614,11 @@ export function IssueListRow({
             key="dueDate"
             onClick={(e) => e.stopPropagation()}
             style={{
-              padding: '8px 12px',
+              padding: '6px 10px',
               verticalAlign: 'middle',
               borderRight: '1px solid #dcdfe4',
               boxSizing: 'border-box',
+              overflow: 'hidden',
             }}
           >
             <div

@@ -87,6 +87,7 @@ export function IssueListTable(props: IssueListTableProps) {
   const [hiddenColumns, setHiddenColumns] = useState<Set<ColumnId>>(new Set());
   const [columnWidths, setColumnWidths] = useState<Record<ColumnId, number>>(DEFAULT_COLUMN_WIDTHS);
   const [resizingCol, setResizingCol] = useState<ColumnId | null>(null);
+  const [hoveredCol, setHoveredCol] = useState<ColumnId | null>(null);
 
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{ column: ColumnId; direction: 'asc' | 'desc' } | null>(null);
@@ -446,6 +447,8 @@ export function IssueListTable(props: IssueListTableProps) {
                 return (
                   <th
                     key={colId}
+                    onMouseEnter={() => setHoveredCol(colId)}
+                    onMouseLeave={() => setHoveredCol(null)}
                     style={{
                       padding: '8px 10px',
                       width,
@@ -461,8 +464,9 @@ export function IssueListTable(props: IssueListTableProps) {
                       style={{
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'space-between',
                         gap: 4,
+                        minWidth: 0,
+                        width: '100%',
                       }}
                     >
                       {/* Column Title + Sort click */}
@@ -483,38 +487,54 @@ export function IssueListTable(props: IssueListTableProps) {
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
                           flex: 1,
+                          minWidth: 0,
                         }}
                         title={`Click to sort by ${label}`}
                       >
                         {colId === 'work' && (
                           <ChevronRight size={14} style={{ color: 'var(--color-text-secondary)', flexShrink: 0 }} />
                         )}
-                        <span>{label}</span>
+                        <span
+                          style={{
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {label}
+                        </span>
                         {isSorted && (
-                          <span style={{ color: '#0c66e4', display: 'inline-flex', alignItems: 'center' }}>
+                          <span style={{ color: '#0c66e4', display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>
                             {sortConfig.direction === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />}
                           </span>
                         )}
                       </div>
+                    </div>
 
-                      {/* 3-dots Column Options Trigger */}
+                    {/* 3-dots Column Options Trigger - visible on hover or when open */}
+                    {(hoveredCol === colId || activeMenuCol === colId) && (
                       <button
                         type="button"
                         onClick={(e) => handleOpenColMenu(colId, e)}
                         title={`Options for ${label}`}
                         style={{
+                          position: 'absolute',
+                          right: 6,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
                           display: 'inline-flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          width: 22,
+                          width: 20,
                           height: 20,
                           borderRadius: 4,
-                          border: activeMenuCol === colId ? '1px solid #0c66e4' : '1px solid transparent',
-                          backgroundColor: activeMenuCol === colId ? '#e9f2ff' : 'transparent',
+                          border: activeMenuCol === colId ? '1px solid #0c66e4' : '1px solid #dcdfe4',
+                          backgroundColor: activeMenuCol === colId ? '#e9f2ff' : '#f4f5f7',
                           color: activeMenuCol === colId ? '#0c66e4' : 'var(--color-text-secondary)',
                           cursor: 'pointer',
                           padding: 0,
-                          flexShrink: 0,
+                          zIndex: 10,
+                          boxShadow: '-4px 0 6px rgba(244, 245, 247, 0.95)',
                           transition: 'all 0.15s ease',
                         }}
                         onMouseEnter={(e) => {
@@ -523,14 +543,14 @@ export function IssueListTable(props: IssueListTableProps) {
                         }}
                         onMouseLeave={(e) => {
                           if (activeMenuCol !== colId) {
-                            e.currentTarget.style.borderColor = 'transparent';
+                            e.currentTarget.style.borderColor = '#dcdfe4';
                             e.currentTarget.style.color = 'var(--color-text-secondary)';
                           }
                         }}
                       >
                         <MoreHorizontal size={13} />
                       </button>
-                    </div>
+                    )}
 
                     {/* Resizable Sizable Column Handle */}
                     <div

@@ -17,15 +17,15 @@ export interface ColumnDef {
 }
 
 export const DEFAULT_COLUMN_DEFINITIONS: ColumnDef[] = [
-  { id: 'work', label: 'Work', defaultWidth: 320, minWidth: 160 },
-  { id: 'assignee', label: 'Assignee', defaultWidth: 150, minWidth: 110 },
-  { id: 'reporter', label: 'Reporter', defaultWidth: 130, minWidth: 100 },
-  { id: 'priority', label: 'Priority', defaultWidth: 110, minWidth: 90 },
-  { id: 'status', label: 'Status', defaultWidth: 120, minWidth: 100 },
-  { id: 'resolution', label: 'Resolution', defaultWidth: 110, minWidth: 90 },
-  { id: 'created', label: 'Created', defaultWidth: 140, minWidth: 110 },
-  { id: 'updated', label: 'Update', defaultWidth: 140, minWidth: 110 },
-  { id: 'dueDate', label: 'Due Date', defaultWidth: 130, minWidth: 100 },
+  { id: 'work', label: 'Work', defaultWidth: 320, minWidth: 130 },
+  { id: 'assignee', label: 'Assignee', defaultWidth: 150, minWidth: 100 },
+  { id: 'reporter', label: 'Reporter', defaultWidth: 130, minWidth: 90 },
+  { id: 'priority', label: 'Priority', defaultWidth: 110, minWidth: 80 },
+  { id: 'status', label: 'Status', defaultWidth: 120, minWidth: 90 },
+  { id: 'resolution', label: 'Resolution', defaultWidth: 110, minWidth: 80 },
+  { id: 'created', label: 'Created', defaultWidth: 140, minWidth: 90 },
+  { id: 'updated', label: 'Update', defaultWidth: 140, minWidth: 90 },
+  { id: 'dueDate', label: 'Due Date', defaultWidth: 130, minWidth: 90 },
 ];
 
 export const DEFAULT_COLUMN_ORDER: ColumnId[] = [
