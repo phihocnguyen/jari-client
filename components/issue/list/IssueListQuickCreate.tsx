@@ -99,7 +99,7 @@ export function IssueListQuickCreate({
             style={{
               padding: '8px 12px',
               paddingLeft: isSubtask ? 32 : 12,
-              borderRight: '1px solid #e2e8f0',
+              borderRight: '1px solid #dcdfe4',
               overflow: 'hidden',
               boxSizing: 'border-box',
             }}
@@ -173,7 +173,7 @@ export function IssueListQuickCreate({
             key="priority"
             style={{
               padding: '8px 12px',
-              borderRight: '1px solid #e2e8f0',
+              borderRight: '1px solid #dcdfe4',
               overflow: 'hidden',
               boxSizing: 'border-box',
             }}
@@ -227,7 +227,7 @@ export function IssueListQuickCreate({
             key="dueDate"
             style={{
               padding: '8px 12px',
-              borderRight: '1px solid #e2e8f0',
+              borderRight: '1px solid #dcdfe4',
               overflow: 'hidden',
               boxSizing: 'border-box',
             }}
@@ -264,7 +264,7 @@ export function IssueListQuickCreate({
             key={colId}
             style={{
               padding: '8px 12px',
-              borderRight: '1px solid #e2e8f0',
+              borderRight: '1px solid #dcdfe4',
               overflow: 'hidden',
               boxSizing: 'border-box',
             }}
@@ -287,7 +287,7 @@ export function IssueListQuickCreate({
           textAlign: 'center',
           padding: '8px 10px',
           verticalAlign: 'middle',
-          borderRight: '1px solid #e2e8f0',
+          borderRight: '1px solid #dcdfe4',
           boxSizing: 'border-box',
         }}
       >

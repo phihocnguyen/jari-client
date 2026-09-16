@@ -89,7 +89,7 @@ export function IssueListRow({
             style={{
               padding: '8px 12px',
               verticalAlign: 'middle',
-              borderRight: '1px solid #e2e8f0',
+              borderRight: '1px solid #dcdfe4',
               overflow: 'hidden',
               boxSizing: 'border-box',
             }}
@@ -163,6 +163,7 @@ export function IssueListRow({
                     padding: 0,
                     cursor: 'pointer',
                     whiteSpace: 'nowrap',
+                    flexShrink: 0,
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
                   onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
@@ -180,6 +181,7 @@ export function IssueListRow({
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     cursor: 'pointer',
+                    flex: 1,
                   }}
                 >
                   {issue.title}
@@ -291,8 +293,7 @@ export function IssueListRow({
             style={{
               padding: '8px 12px',
               verticalAlign: 'middle',
-              borderRight: '1px solid #e2e8f0',
-              overflow: 'hidden',
+              borderRight: '1px solid #dcdfe4',
               boxSizing: 'border-box',
             }}
           >
@@ -393,8 +394,7 @@ export function IssueListRow({
             style={{
               padding: '8px 12px',
               verticalAlign: 'middle',
-              borderRight: '1px solid #e2e8f0',
-              overflow: 'hidden',
+              borderRight: '1px solid #dcdfe4',
               boxSizing: 'border-box',
             }}
           >
@@ -421,8 +421,7 @@ export function IssueListRow({
             style={{
               padding: '8px 12px',
               verticalAlign: 'middle',
-              borderRight: '1px solid #e2e8f0',
-              overflow: 'hidden',
+              borderRight: '1px solid #dcdfe4',
               boxSizing: 'border-box',
             }}
           >
@@ -477,8 +476,7 @@ export function IssueListRow({
             style={{
               padding: '8px 12px',
               verticalAlign: 'middle',
-              borderRight: '1px solid #e2e8f0',
-              overflow: 'hidden',
+              borderRight: '1px solid #dcdfe4',
               boxSizing: 'border-box',
             }}
           >
@@ -527,8 +525,10 @@ export function IssueListRow({
               verticalAlign: 'middle',
               color: issue.status === 'DONE' ? '#006644' : 'var(--color-text-secondary)',
               fontSize: '0.8125rem',
-              borderRight: '1px solid #e2e8f0',
+              whiteSpace: 'nowrap',
               overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              borderRight: '1px solid #dcdfe4',
               boxSizing: 'border-box',
             }}
           >
@@ -546,8 +546,9 @@ export function IssueListRow({
               color: 'var(--color-text-secondary)',
               fontSize: '0.8125rem',
               whiteSpace: 'nowrap',
-              borderRight: '1px solid #e2e8f0',
               overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              borderRight: '1px solid #dcdfe4',
               boxSizing: 'border-box',
             }}
           >
@@ -565,8 +566,9 @@ export function IssueListRow({
               color: 'var(--color-text-secondary)',
               fontSize: '0.8125rem',
               whiteSpace: 'nowrap',
-              borderRight: '1px solid #e2e8f0',
               overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              borderRight: '1px solid #dcdfe4',
               boxSizing: 'border-box',
             }}
           >
@@ -582,8 +584,7 @@ export function IssueListRow({
             style={{
               padding: '8px 12px',
               verticalAlign: 'middle',
-              borderRight: '1px solid #e2e8f0',
-              overflow: 'hidden',
+              borderRight: '1px solid #dcdfe4',
               boxSizing: 'border-box',
             }}
           >
@@ -636,7 +637,7 @@ export function IssueListRow({
           : isRowHighlighted
             ? 'rgba(12, 102, 228, 0.05)'
             : 'var(--color-surface-white)',
-        borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+        borderBottom: '1px solid #dcdfe4',
         transition: 'background-color 0.12s ease',
         fontSize: '0.84rem',
       }}
@@ -648,7 +649,7 @@ export function IssueListRow({
           textAlign: 'center',
           padding: '8px 10px',
           verticalAlign: 'middle',
-          borderRight: '1px solid #e2e8f0',
+          borderRight: '1px solid #dcdfe4',
           boxSizing: 'border-box',
         }}
       >

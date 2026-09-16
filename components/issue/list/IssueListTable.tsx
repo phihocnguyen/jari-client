@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { SlidersHorizontal, MoreHorizontal, ArrowUp, ArrowDown } from 'lucide-react';
+import { SlidersHorizontal, MoreHorizontal, ArrowUp, ArrowDown, ChevronRight } from 'lucide-react';
 import type { Issue, IssueStatus, IssuePriority, IssueType } from '@/types/issue';
 import { IssueListRow } from './IssueListRow';
 import { IssueListQuickCreate } from './IssueListQuickCreate';
@@ -357,8 +357,8 @@ export function IssueListTable(props: IssueListTableProps) {
   return (
     <div
       style={{
-        border: '1px solid rgba(0, 0, 0, 0.12)',
-        borderRadius: '8px',
+        border: '1px solid #dcdfe4',
+        borderRadius: '6px',
         backgroundColor: '#ffffff',
         overflow: 'hidden',
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
@@ -397,9 +397,9 @@ export function IssueListTable(props: IssueListTableProps) {
           <thead>
             <tr
               style={{
-                backgroundColor: '#ffffff',
-                borderBottom: '1px solid #e2e8f0',
-                color: 'var(--color-text-secondary)',
+                backgroundColor: '#f4f5f7',
+                borderBottom: '1px solid #dcdfe4',
+                color: '#44546f',
                 fontSize: '0.75rem',
                 fontWeight: 600,
                 letterSpacing: '0.02em',
@@ -413,9 +413,10 @@ export function IssueListTable(props: IssueListTableProps) {
                   textAlign: 'center',
                   padding: '10px 10px',
                   verticalAlign: 'middle',
-                  borderRight: '1px solid #e2e8f0',
-                  borderBottom: '1px solid #e2e8f0',
+                  borderRight: '1px solid #dcdfe4',
+                  borderBottom: '1px solid #dcdfe4',
                   boxSizing: 'border-box',
+                  backgroundColor: '#f4f5f7',
                 }}
               >
                 <input
@@ -450,9 +451,10 @@ export function IssueListTable(props: IssueListTableProps) {
                       width,
                       position: 'relative',
                       verticalAlign: 'middle',
-                      borderRight: '1px solid #e2e8f0',
-                      borderBottom: '1px solid #e2e8f0',
+                      borderRight: '1px solid #dcdfe4',
+                      borderBottom: '1px solid #dcdfe4',
                       boxSizing: 'border-box',
+                      backgroundColor: '#f4f5f7',
                     }}
                   >
                     <div
@@ -484,6 +486,9 @@ export function IssueListTable(props: IssueListTableProps) {
                         }}
                         title={`Click to sort by ${label}`}
                       >
+                        {colId === 'work' && (
+                          <ChevronRight size={14} style={{ color: 'var(--color-text-secondary)', flexShrink: 0 }} />
+                        )}
                         <span>{label}</span>
                         {isSorted && (
                           <span style={{ color: '#0c66e4', display: 'inline-flex', alignItems: 'center' }}>
@@ -571,8 +576,9 @@ export function IssueListTable(props: IssueListTableProps) {
                   width: 36,
                   padding: '10px 8px',
                   textAlign: 'center',
-                  borderBottom: '1px solid #e2e8f0',
+                  borderBottom: '1px solid #dcdfe4',
                   boxSizing: 'border-box',
+                  backgroundColor: '#f4f5f7',
                 }}
               >
                 <button
