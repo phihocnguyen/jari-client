@@ -53,6 +53,83 @@ export default function BacklogPage({ params }: PageProps) {
     params.then((p) => setResolvedParams(p));
   }, [params]);
 
+  // Auto-scroll when dragging near viewport top or bottom edges
+  useEffect(() => {
+    if (!draggedIssue) return;
+
+    let animId: number | null = null;
+    let scrollSpeed = 0;
+    const edgeThreshold = 150; // Trigger distance in px from viewport edge
+
+    const scrollContainer = (delta: number) => {
+      try {
+        window.scrollBy(0, delta);
+      } catch {
+        window.scrollBy({ top: delta, behavior: 'auto' });
+      }
+      if (document.documentElement) {
+        document.documentElement.scrollTop += delta;
+      }
+      if (document.body) {
+        document.body.scrollTop += delta;
+      }
+      const appContent = document.querySelector('.app-content');
+      if (appContent) appContent.scrollTop += delta;
+      const appMain = document.querySelector('.app-main');
+      if (appMain) appMain.scrollTop += delta;
+    };
+
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      const y = e.clientY;
+      const height = window.innerHeight;
+
+      if (y < edgeThreshold) {
+        // Near top edge -> smooth scroll up
+        const intensity = (edgeThreshold - Math.max(0, y)) / edgeThreshold;
+        scrollSpeed = -Math.max(5, Math.round(intensity * 28));
+      } else if (y > height - edgeThreshold) {
+        // Near bottom edge -> smooth scroll down
+        const intensity = (Math.min(height, y) - (height - edgeThreshold)) / edgeThreshold;
+        scrollSpeed = Math.max(5, Math.round(intensity * 28));
+      } else {
+        scrollSpeed = 0;
+      }
+    };
+
+    const scrollLoop = () => {
+      if (scrollSpeed !== 0) {
+        scrollContainer(scrollSpeed);
+      }
+      animId = requestAnimationFrame(scrollLoop);
+    };
+
+    animId = requestAnimationFrame(scrollLoop);
+    window.addEventListener('dragover', handleDragOver, { capture: true });
+    document.addEventListener('dragover', handleDragOver, { capture: true });
+
+    const handleDragEnd = () => {
+      scrollSpeed = 0;
+      setDraggedIssue(null);
+      setDragOverTarget(null);
+    };
+
+    window.addEventListener('dragend', handleDragEnd, { capture: true });
+    window.addEventListener('drop', handleDragEnd, { capture: true });
+    document.addEventListener('dragend', handleDragEnd, { capture: true });
+    document.addEventListener('drop', handleDragEnd, { capture: true });
+
+    return () => {
+      if (animId) cancelAnimationFrame(animId);
+      window.removeEventListener('dragover', handleDragOver, { capture: true });
+      document.removeEventListener('dragover', handleDragOver, { capture: true });
+      window.removeEventListener('dragend', handleDragEnd, { capture: true });
+      window.removeEventListener('drop', handleDragEnd, { capture: true });
+      document.removeEventListener('dragend', handleDragEnd, { capture: true });
+      document.removeEventListener('drop', handleDragEnd, { capture: true });
+    };
+  }, [draggedIssue]);
+
   const projectId = resolvedParams?.projectId ?? '';
 
   // Data Queries
