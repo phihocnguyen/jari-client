@@ -132,7 +132,22 @@ export function TaskDetailView({
   // Update Parent Mutation
   const updateParentMutation = useMutation({
     mutationFn: (parentId: string | null) => issueApi.updateParent(issueId, parentId),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      const updated = res?.data;
+      if (updated) {
+        qc.setQueryData(['issue', issueId], (old: any) =>
+          old ? { ...old, parentId: updated.parentId ?? null } : old
+        );
+        qc.setQueryData(['issues', projectId], (old: any) => {
+          if (!old) return old;
+          const list = Array.isArray(old) ? old : old.data;
+          if (!Array.isArray(list)) return old;
+          const newList = list.map((i: Issue) =>
+            i.id === issueId ? { ...i, parentId: updated.parentId ?? null } : i
+          );
+          return Array.isArray(old) ? newList : { ...old, data: newList };
+        });
+      }
       qc.invalidateQueries({ queryKey: ['issue', issueId] });
       qc.invalidateQueries({ queryKey: ['issues', projectId] });
       toast.success('Parent updated');

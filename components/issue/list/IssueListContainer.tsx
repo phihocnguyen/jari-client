@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search, Plus, Filter, CheckCircle2 } from 'lucide-react';
 import { issueApi } from '@/lib/api/issue';
@@ -74,10 +74,42 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
 
   const allIssues: Issue[] = issuesPage?.data ?? [];
 
-  // Filtered issues based on query, type, and status
+  // Expand / collapse state for parent issues in hierarchical list
+  const [expandedParentIds, setExpandedParentIds] = useState<Set<string>>(new Set());
+
+  // Auto-expand any parents that have children on data load / change
+  useEffect(() => {
+    if (!allIssues.length) return;
+    setExpandedParentIds((prev) => {
+      const next = new Set(prev);
+      allIssues.forEach((issue) => {
+        if (issue.parentId) {
+          next.add(issue.parentId);
+        }
+      });
+      return next;
+    });
+  }, [allIssues]);
+
+  const handleToggleExpand = (parentId: string) => {
+    setExpandedParentIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(parentId)) next.delete(parentId);
+      else next.add(parentId);
+      return next;
+    });
+  };
+
+  // Filtered issues based on query, type, and status, preserving parent-child relationships
   const filteredIssues = useMemo(() => {
-    return allIssues.filter((issue) => {
-      const q = query.trim().toLowerCase();
+    if (!allIssues.length) return [];
+    const q = query.trim().toLowerCase();
+    const hasFilter = Boolean(q || typeFilter !== 'ALL' || statusFilter !== 'ALL');
+    if (!hasFilter) return allIssues;
+
+    // Directly matching issue IDs
+    const directlyMatchingIds = new Set<string>();
+    allIssues.forEach((issue) => {
       const matchesQuery =
         !q ||
         issue.title.toLowerCase().includes(q) ||
@@ -87,8 +119,20 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
       const matchesType = typeFilter === 'ALL' || issue.type === typeFilter;
       const matchesStatus = statusFilter === 'ALL' || issue.status === statusFilter;
 
-      return matchesQuery && matchesType && matchesStatus;
+      if (matchesQuery && matchesType && matchesStatus) {
+        directlyMatchingIds.add(issue.id);
+      }
     });
+
+    // Also include the parents of any matching subtask
+    const includedIds = new Set<string>(directlyMatchingIds);
+    allIssues.forEach((issue) => {
+      if (directlyMatchingIds.has(issue.id) && issue.parentId) {
+        includedIds.add(issue.parentId);
+      }
+    });
+
+    return allIssues.filter((i) => includedIds.has(i.id));
   }, [allIssues, query, typeFilter, statusFilter]);
 
   // Mutations
@@ -381,11 +425,14 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
           onSubmitInlineCreate={handleSubmitInlineCreate}
           onAddChild={(parent) => {
             setInlineCreateParentId(parent.id);
+            setExpandedParentIds((prev) => new Set(prev).add(parent.id));
           }}
           members={members}
           isSubmittingCreate={inlineCreateMutation.isPending}
           onRefresh={handleRefresh}
           isRefreshing={isRefreshing}
+          expandedParentIds={expandedParentIds}
+          onToggleExpand={handleToggleExpand}
         />
       )}
 

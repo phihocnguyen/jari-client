@@ -144,11 +144,15 @@ export function TaskDetailsSidebar({
   const statusBadge = getStatusBadgeStyle(issue.status);
 
   // ── Parent helpers ──────────────────────────────────────────
-  // Hierarchy: EPIC has no parent; TASK/STORY/BUG can only be children of an
-  // EPIC; SUBTASK can only be a child of TASK/STORY/BUG.
+  // Hierarchy: EPIC has no parent; SUBTASK can only be a child of TASK/STORY/BUG.
+  // Other issues (TASK/STORY/BUG) can have an EPIC, TASK, or STORY as parent.
   const issueType = (issue.type || '').toUpperCase();
   const allowedParentTypes =
-    issueType === 'EPIC' ? [] : issueType === 'SUBTASK' ? ['TASK', 'STORY', 'BUG'] : ['EPIC'];
+    issueType === 'EPIC'
+      ? []
+      : issueType === 'SUBTASK'
+        ? ['TASK', 'STORY', 'BUG']
+        : ['EPIC', 'TASK', 'STORY', 'BUG'];
   const parentIssue = issues.find((it) => it.id === issue.parentId);
   const parentCandidates = issues.filter(
     (it) =>
@@ -518,9 +522,7 @@ export function TaskDetailsSidebar({
                       ))}
                       {parentCandidates.length === 0 && !parentIssue && (
                         <div style={{ padding: '8px 12px', color: '#626f86', fontSize: '0.8125rem' }}>
-                          {issueType === 'SUBTASK'
-                            ? 'No tasks or stories found.'
-                            : 'No epics found in this project.'}
+                          No eligible parent issues found.
                         </div>
                       )}
                     </div>

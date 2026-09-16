@@ -41,31 +41,68 @@ interface IssueListTableProps {
   isSubmittingCreate: boolean;
   onRefresh: () => void;
   isRefreshing?: boolean;
+  expandedParentIds?: Set<string>;
+  onToggleExpand?: (parentId: string) => void;
 }
 
-export function IssueListTable({
-  issues,
-  allIssuesCount,
-  selectedIds,
-  selectedIssueId,
-  onToggleSelect,
-  onToggleSelectAll,
-  onOpenDetail,
-  onDelete,
-  onUpdateStatus,
-  onUpdateAssignee,
-  onUpdatePriority,
-  inlineCreateOpen,
-  inlineCreateParentId,
-  onCloseInlineCreate,
-  onOpenInlineCreate,
-  onSubmitInlineCreate,
-  onAddChild,
-  members,
-  isSubmittingCreate,
-  onRefresh,
-  isRefreshing = false,
-}: IssueListTableProps) {
+export function IssueListTable(props: IssueListTableProps) {
+  const {
+    issues,
+    allIssuesCount,
+    selectedIds,
+    selectedIssueId,
+    onToggleSelect,
+    onToggleSelectAll,
+    onOpenDetail,
+    onDelete,
+    onUpdateStatus,
+    onUpdateAssignee,
+    onUpdatePriority,
+    inlineCreateOpen,
+    inlineCreateParentId,
+    onCloseInlineCreate,
+    onOpenInlineCreate,
+    onSubmitInlineCreate,
+    onAddChild,
+    members,
+    isSubmittingCreate,
+    onRefresh,
+    isRefreshing = false,
+  } = props;
+
+  const [localExpanded, setLocalExpanded] = React.useState<Set<string>>(new Set());
+  const expandedParentIds = props.expandedParentIds ?? localExpanded;
+  const onToggleExpand =
+    props.onToggleExpand ??
+    ((id: string) => {
+      setLocalExpanded((prev) => {
+        const next = new Set(prev);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        return next;
+      });
+    });
+
+  // Set of all issue IDs present in current list
+  const issueIdSet = React.useMemo(() => new Set(issues.map((i) => i.id)), [issues]);
+
+  // Group issues into roots and children map (by parentId)
+  const { rootIssues, childrenMap } = React.useMemo(() => {
+    const roots: Issue[] = [];
+    const children = new Map<string, Issue[]>();
+
+    issues.forEach((issue) => {
+      if (issue.parentId && issueIdSet.has(issue.parentId)) {
+        const list = children.get(issue.parentId) || [];
+        list.push(issue);
+        children.set(issue.parentId, list);
+      } else {
+        roots.push(issue);
+      }
+    });
+
+    return { rootIssues: roots, childrenMap: children };
+  }, [issues, issueIdSet]);
   const isAllSelected = issues.length > 0 && selectedIds.size === issues.length;
   const isIndeterminate = selectedIds.size > 0 && selectedIds.size < issues.length;
 
@@ -186,35 +223,68 @@ export function IssueListTable({
 
           {/* Table Body */}
           <tbody>
-            {issues.length > 0 ? (
-              issues.map((issue) => (
-                <React.Fragment key={issue.id}>
-                  <IssueListRow
-                    issue={issue}
-                    isSelected={selectedIds.has(issue.id)}
-                    onToggleSelect={onToggleSelect}
-                    onOpenDetail={onOpenDetail}
-                    onDelete={onDelete}
-                    onUpdateStatus={onUpdateStatus}
-                    onUpdateAssignee={onUpdateAssignee}
-                    onUpdatePriority={onUpdatePriority}
-                    onAddChild={onAddChild}
-                    members={members}
-                    isActiveIssue={selectedIssueId === issue.id}
-                  />
-                  {/* Render Quick Create directly below this parent if matched */}
-                  {inlineCreateParentId === issue.id && (
-                    <IssueListQuickCreate
-                      isOpen={true}
-                      onClose={onCloseInlineCreate}
-                      onSubmit={onSubmitInlineCreate}
+            {rootIssues.length > 0 ? (
+              rootIssues.map((root) => {
+                const subtasks = childrenMap.get(root.id) || [];
+                const hasChildren = subtasks.length > 0;
+                const isExpanded = expandedParentIds.has(root.id);
+
+                return (
+                  <React.Fragment key={root.id}>
+                    {/* 1. Root Parent Issue */}
+                    <IssueListRow
+                      issue={root}
+                      isSelected={selectedIds.has(root.id)}
+                      onToggleSelect={onToggleSelect}
+                      onOpenDetail={onOpenDetail}
+                      onDelete={onDelete}
+                      onUpdateStatus={onUpdateStatus}
+                      onUpdateAssignee={onUpdateAssignee}
+                      onUpdatePriority={onUpdatePriority}
+                      onAddChild={onAddChild}
                       members={members}
-                      isSubmitting={isSubmittingCreate}
-                      isSubtask={true}
+                      isActiveIssue={selectedIssueId === root.id}
+                      isSubtask={false}
+                      hasChildren={hasChildren}
+                      isExpanded={isExpanded}
+                      onToggleExpand={() => onToggleExpand(root.id)}
                     />
-                  )}
-                </React.Fragment>
-              ))
+
+                    {/* 2. Subtasks (Rendered directly under parent when expanded) */}
+                    {isExpanded &&
+                      subtasks.map((subtask) => (
+                        <IssueListRow
+                          key={subtask.id}
+                          issue={subtask}
+                          isSelected={selectedIds.has(subtask.id)}
+                          onToggleSelect={onToggleSelect}
+                          onOpenDetail={onOpenDetail}
+                          onDelete={onDelete}
+                          onUpdateStatus={onUpdateStatus}
+                          onUpdateAssignee={onUpdateAssignee}
+                          onUpdatePriority={onUpdatePriority}
+                          onAddChild={onAddChild}
+                          members={members}
+                          isActiveIssue={selectedIssueId === subtask.id}
+                          isSubtask={true}
+                          hasChildren={false}
+                        />
+                      ))}
+
+                    {/* 3. Render Quick Create directly below this parent if matched */}
+                    {inlineCreateParentId === root.id && (
+                      <IssueListQuickCreate
+                        isOpen={true}
+                        onClose={onCloseInlineCreate}
+                        onSubmit={onSubmitInlineCreate}
+                        members={members}
+                        isSubmitting={isSubmittingCreate}
+                        isSubtask={true}
+                      />
+                    )}
+                  </React.Fragment>
+                );
+              })
             ) : (
               <tr>
                 <td
