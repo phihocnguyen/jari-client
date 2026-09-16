@@ -136,7 +136,7 @@ export function IssueRow({
             fontSize: '0.8125rem',
             fontWeight: 600,
             color: '#0052cc',
-            fontFamily: 'monospace',
+            fontFamily: 'inherit',
           }}
         >
           {issue.key}

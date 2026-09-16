@@ -20,6 +20,7 @@ import {
   AlertCircle,
   Zap,
   GitFork,
+  ArrowLeft,
 } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import type { Issue, IssueType } from '@/types/issue';
@@ -99,6 +100,34 @@ export function TaskDetailHeader({
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
         {viewMode === 'full-page' ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#626f86', fontSize: '0.8125rem' }}>
+            <Link
+              href={`/projects/${projectId}/backlog`}
+              title="Back to backlog"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 30,
+                height: 30,
+                borderRadius: 4,
+                color: '#44546f',
+                textDecoration: 'none',
+                backgroundColor: 'transparent',
+                border: '1px solid rgba(0, 0, 0, 0.12)',
+                marginRight: 2,
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f1f2f4';
+                e.currentTarget.style.color = '#172b4d';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#44546f';
+              }}
+            >
+              <ArrowLeft size={16} />
+            </Link>
             <Link
               href="/projects"
               style={{ color: '#626f86', textDecoration: 'none' }}

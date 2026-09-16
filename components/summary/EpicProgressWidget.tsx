@@ -64,7 +64,7 @@ function EpicSegmentRow({ keyName, title, done, inProgress, todo }: {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8125rem', fontWeight: 600, marginBottom: 6 }}>
         <Zap size={14} color="#9333EA" />
-        <span style={{ color: 'var(--color-text-secondary)', fontFamily: 'monospace' }}>{keyName}</span>
+        <span style={{ color: 'var(--color-text-secondary)', fontFamily: 'inherit' }}>{keyName}</span>
         <span style={{ color: 'var(--color-text-primary)' }}>{title}</span>
       </div>
       <div style={{ height: 16, borderRadius: 4, overflow: 'hidden', display: 'flex', backgroundColor: 'rgba(0,0,0,0.06)' }}>

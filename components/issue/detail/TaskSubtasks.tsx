@@ -92,7 +92,7 @@ export function TaskSubtasks({
                 <GitFork size={14} color="#0284c7" />
                 <span
                   style={{
-                    fontFamily: 'monospace',
+                    fontFamily: 'inherit',
                     fontSize: '0.8125rem',
                     color: '#0c66e4',
                     fontWeight: 600,

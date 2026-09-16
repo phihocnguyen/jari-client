@@ -23,10 +23,10 @@ interface PageProps {
 }
 
 const BOARD_COLUMNS: { id: IssueStatus; title: string; color: string }[] = [
-  { id: 'TODO', title: 'To Do', color: '#6366F1' },
-  { id: 'IN_PROGRESS', title: 'In Progress', color: '#F97316' },
-  { id: 'IN_REVIEW', title: 'Review', color: '#EC4899' },
-  { id: 'DONE', title: 'Done', color: '#22C55E' },
+  { id: 'TODO', title: 'To Do', color: '#64748B' },
+  { id: 'IN_PROGRESS', title: 'In Progress', color: '#0284C7' },
+  { id: 'IN_REVIEW', title: 'Review', color: '#8B5CF6' },
+  { id: 'DONE', title: 'Done', color: '#00754A' },
 ];
 
 function formatSprintDates(start?: string, end?: string) {
@@ -242,7 +242,7 @@ export default function BoardPage({ params }: PageProps) {
               alignItems: 'center',
               gap: 6,
               fontSize: '0.875rem',
-              color: '#0052CC',
+              color: 'var(--color-green-accent)',
               fontWeight: 600,
               textDecoration: 'none',
               padding: '6px 12px',
@@ -253,7 +253,7 @@ export default function BoardPage({ params }: PageProps) {
           </Link>
         </div>
 
-        {/* Jira-style Empty State Card */}
+        {/* Empty State Card */}
         <div
           style={{
             backgroundColor: '#FFFFFF',
@@ -274,22 +274,22 @@ export default function BoardPage({ params }: PageProps) {
               width: 80,
               height: 80,
               borderRadius: '50%',
-              backgroundColor: '#EBF3FB',
-              border: '2px solid #B3D4FF',
+              backgroundColor: '#EBF5F0',
+              border: '2px solid #C5E4D4',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               marginBottom: '1.5rem',
             }}
           >
-            <Kanban size={38} color="#0052CC" />
+            <Kanban size={38} color="var(--color-green-brand)" />
           </div>
 
           <h2
             style={{
               fontSize: '1.5rem',
               fontWeight: 700,
-              color: '#172B4D',
+              color: 'var(--color-text-primary)',
               marginBottom: '0.75rem',
               letterSpacing: '-0.01em',
             }}
@@ -300,7 +300,7 @@ export default function BoardPage({ params }: PageProps) {
           <p
             style={{
               fontSize: '0.9375rem',
-              color: '#5E6C84',
+              color: 'var(--color-text-secondary)',
               maxWidth: 480,
               lineHeight: 1.6,
               marginBottom: '2rem',
@@ -316,24 +316,24 @@ export default function BoardPage({ params }: PageProps) {
               alignItems: 'center',
               gap: '8px',
               padding: '10px 24px',
-              backgroundColor: '#0052CC',
+              backgroundColor: 'var(--color-green-accent)',
               color: '#FFFFFF',
               fontSize: '0.9375rem',
               fontWeight: 600,
-              borderRadius: '6px',
+              borderRadius: 'var(--radius-pill)',
               textDecoration: 'none',
-              boxShadow: '0 2px 6px rgba(0, 82, 204, 0.25)',
+              boxShadow: '0 2px 6px rgba(0, 117, 74, 0.25)',
               transition: 'background-color 0.15s, transform 0.15s, box-shadow 0.15s',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#0747A6';
+              e.currentTarget.style.backgroundColor = 'var(--color-green-brand)';
               e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 82, 204, 0.35)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 98, 65, 0.35)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#0052CC';
+              e.currentTarget.style.backgroundColor = 'var(--color-green-accent)';
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 82, 204, 0.25)';
+              e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 117, 74, 0.25)';
             }}
           >
             Go to backlog <ArrowRight size={18} />
@@ -367,7 +367,7 @@ export default function BoardPage({ params }: PageProps) {
 
           <span
             style={{
-              backgroundColor: '#0052CC',
+              backgroundColor: 'var(--color-green-accent)',
               color: '#FFFFFF',
               fontSize: '0.6875rem',
               fontWeight: 700,
@@ -417,9 +417,9 @@ export default function BoardPage({ params }: PageProps) {
             style={{
               height: 32,
               padding: '0 14px',
-              borderRadius: 4,
-              border: '1px solid #0052CC',
-              backgroundColor: '#0052CC',
+              borderRadius: 'var(--radius-pill)',
+              border: '1px solid var(--color-green-accent)',
+              backgroundColor: 'var(--color-green-accent)',
               color: '#FFFFFF',
               fontSize: '0.8125rem',
               fontWeight: 600,
@@ -430,39 +430,16 @@ export default function BoardPage({ params }: PageProps) {
               transition: 'background-color 0.15s, border-color 0.15s',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#0747A6';
-              e.currentTarget.style.borderColor = '#0747A6';
+              e.currentTarget.style.backgroundColor = 'var(--color-green-brand)';
+              e.currentTarget.style.borderColor = 'var(--color-green-brand)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#0052CC';
-              e.currentTarget.style.borderColor = '#0052CC';
+              e.currentTarget.style.backgroundColor = 'var(--color-green-accent)';
+              e.currentTarget.style.borderColor = 'var(--color-green-accent)';
             }}
           >
             {completeSprintMutation.isPending ? 'Completing...' : 'Complete sprint'}
           </button>
-
-          <Link
-            href={`/projects/${projectId}/backlog`}
-            style={{
-              height: 32,
-              padding: '0 12px',
-              borderRadius: 4,
-              border: '1px solid #DFE1E6',
-              backgroundColor: '#FFFFFF',
-              color: '#172B4D',
-              fontSize: '0.8125rem',
-              fontWeight: 600,
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textDecoration: 'none',
-              transition: 'background-color 0.15s',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#EBECF0')}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
-          >
-            Backlog
-          </Link>
         </div>
       </div>
 
@@ -523,8 +500,8 @@ export default function BoardPage({ params }: PageProps) {
                 onDragLeave={(e) => handleDragLeave(e, col.id)}
                 onDrop={(e) => handleDrop(e, col.id)}
                 style={{
-                  backgroundColor: isHovered ? '#f0fdf4' : '#f8fafc',
-                  border: isHovered ? '2px dashed #22c55e' : '1px solid #e2e8f0',
+                  backgroundColor: isHovered ? '#EBF5F0' : '#f8fafc',
+                  border: isHovered ? '2px dashed var(--color-green-accent)' : '1px solid #e2e8f0',
                   borderRadius: '14px',
                   padding: '14px 12px',
                   minHeight: '560px',
@@ -545,7 +522,7 @@ export default function BoardPage({ params }: PageProps) {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: col.color }} />
-                    <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#1e293b' }}>
+                    <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--color-text-primary)' }}>
                       {col.title}
                     </span>
                     <span
@@ -572,9 +549,9 @@ export default function BoardPage({ params }: PageProps) {
                       width: '100%',
                       padding: '8px 12px',
                       borderRadius: 'var(--radius-pill)',
-                      backgroundColor: 'rgba(99, 102, 241, 0.08)',
-                      border: '1px dashed #6366F1',
-                      color: '#4F46E5',
+                      backgroundColor: 'rgba(0, 117, 74, 0.08)',
+                      border: '1px dashed var(--color-green-accent)',
+                      color: 'var(--color-green-brand)',
                       fontWeight: 600,
                       fontSize: '0.8125rem',
                       display: 'flex',
@@ -584,6 +561,12 @@ export default function BoardPage({ params }: PageProps) {
                       cursor: 'pointer',
                       marginBottom: '1rem',
                       transition: 'var(--transition-fast)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 117, 74, 0.15)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 117, 74, 0.08)';
                     }}
                   >
                     Add Task +

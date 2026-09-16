@@ -92,32 +92,32 @@ export function SprintCard({
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       style={{
-        backgroundColor: isDragOver ? '#F4F8FD' : '#FFFFFF',
+        backgroundColor: isDragOver ? '#F0F8F4' : '#FFFFFF',
         borderRadius: '6px',
         borderTop: isDragOver
-          ? '2px dashed #0052CC'
+          ? '2px dashed var(--color-green-accent)'
           : isActive
-          ? '1px solid #4C9AFF'
+          ? '1px solid rgba(0, 117, 74, 0.28)'
           : '1px solid #DFE1E6',
         borderRight: isDragOver
-          ? '2px dashed #0052CC'
+          ? '2px dashed var(--color-green-accent)'
           : isActive
-          ? '1px solid #4C9AFF'
+          ? '1px solid rgba(0, 117, 74, 0.28)'
           : '1px solid #DFE1E6',
         borderBottom: isDragOver
-          ? '2px dashed #0052CC'
+          ? '2px dashed var(--color-green-accent)'
           : isActive
-          ? '1px solid #4C9AFF'
+          ? '1px solid rgba(0, 117, 74, 0.28)'
           : '1px solid #DFE1E6',
         borderLeft: isDragOver
-          ? '4px solid #0052CC'
+          ? '4px solid var(--color-green-accent)'
           : isActive
-          ? '4px solid #0052CC'
+          ? '4px solid var(--color-green-accent)'
           : '1px solid #DFE1E6',
         boxShadow: isDragOver
-          ? '0 4px 14px rgba(0, 82, 204, 0.15)'
+          ? '0 4px 14px rgba(0, 117, 74, 0.15)'
           : isActive
-          ? '0 2px 8px rgba(0, 82, 204, 0.12)'
+          ? '0 2px 8px rgba(0, 117, 74, 0.12)'
           : 'none',
         overflow: 'visible',
         transition: 'all 0.15s ease',
@@ -127,11 +127,11 @@ export function SprintCard({
       <div
         style={{
           padding: '10px 16px',
-          backgroundColor: isActive ? '#EBF3FB' : '#F1F2F4',
+          backgroundColor: isActive ? '#EBF5F0' : '#F1F2F4',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          borderBottom: isCollapsed ? 'none' : isActive ? '1px solid #B3D4FF' : '1px solid #DFE1E6',
+          borderBottom: isCollapsed ? 'none' : isActive ? '1px solid #C5E4D4' : '1px solid #DFE1E6',
           borderRadius: isCollapsed ? '6px' : '6px 6px 0 0',
           userSelect: 'none',
         }}
@@ -150,14 +150,14 @@ export function SprintCard({
             {isCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
           </div>
 
-          <span style={{ fontWeight: 700, fontSize: '0.92rem', color: isActive ? '#0747A6' : 'var(--color-text-primary)' }}>
+          <span style={{ fontWeight: 700, fontSize: '0.92rem', color: isActive ? 'var(--color-green-brand)' : 'var(--color-text-primary)' }}>
             {sprint.name}
           </span>
 
           {isActive && (
             <span
               style={{
-                backgroundColor: '#0052CC',
+                backgroundColor: 'var(--color-green-accent)',
                 color: '#FFFFFF',
                 fontSize: '0.6875rem',
                 fontWeight: 700,
@@ -213,8 +213,8 @@ export function SprintCard({
                 height: 28,
                 padding: '0 12px',
                 borderRadius: 4,
-                border: '1px solid #0052CC',
-                backgroundColor: '#0052CC',
+                border: '1px solid var(--color-green-accent)',
+                backgroundColor: 'var(--color-green-accent)',
                 color: '#FFFFFF',
                 fontSize: '0.8125rem',
                 fontWeight: 600,
@@ -225,12 +225,12 @@ export function SprintCard({
                 transition: 'background-color 0.15s, border-color 0.15s',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#0747A6';
-                e.currentTarget.style.borderColor = '#0747A6';
+                e.currentTarget.style.backgroundColor = 'var(--color-green-brand)';
+                e.currentTarget.style.borderColor = 'var(--color-green-brand)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#0052CC';
-                e.currentTarget.style.borderColor = '#0052CC';
+                e.currentTarget.style.backgroundColor = 'var(--color-green-accent)';
+                e.currentTarget.style.borderColor = 'var(--color-green-accent)';
               }}
             >
               Complete sprint

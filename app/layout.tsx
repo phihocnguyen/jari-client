@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Alexandria } from 'next/font/google';
 import './globals.css';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
+const alexandria = Alexandria({
+  subsets: ['latin', 'vietnamese'],
+  variable: '--font-alexandria',
   display: 'swap',
 });
 
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={alexandria.variable}>
       <body>
         <QueryProvider>
           {children}
