@@ -130,6 +130,7 @@ export const issueApi = {
       storyPoints: data.storyPoints ?? null,
       startDate: data.startDate || null,
       dueDate: data.dueDate || null,
+      sprintId: data.sprintId || null,
       // Fallback fields for demo mock compatibility
       type: data.type,
       status: data.status,
@@ -189,6 +190,12 @@ export const issueApi = {
 
   setRelease: (issueId: string, releaseId: string | null) =>
     apiClient.patch<ApiResponse<Issue>>(`/issues/${issueId}/release`, { releaseId }).then((r) => ({
+      ...r.data,
+      data: normalizeIssue(r.data.data),
+    })),
+
+  updateSprint: (issueId: string, sprintId: string | null) =>
+    apiClient.patch<ApiResponse<Issue>>(`/issues/${issueId}/sprint`, { sprintId }).then((r) => ({
       ...r.data,
       data: normalizeIssue(r.data.data),
     })),

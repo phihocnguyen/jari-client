@@ -208,21 +208,14 @@ export default function BacklogPage({ params }: PageProps) {
   });
 
   const moveIssueMutation = useMutation({
-    mutationFn: async ({
+    mutationFn: ({
       issueId,
-      sourceSprintId,
       targetSprintId,
     }: {
       issueId: string;
       sourceSprintId?: string;
       targetSprintId?: string;
-    }) => {
-      if (targetSprintId) {
-        return sprintApi.addIssue(targetSprintId, issueId);
-      } else if (sourceSprintId) {
-        return sprintApi.removeIssue(sourceSprintId, issueId);
-      }
-    },
+    }) => issueApi.updateSprint(issueId, targetSprintId ?? null),
     onMutate: async ({ issueId, targetSprintId }) => {
       await qc.cancelQueries({ queryKey: ['issues', projectId] });
       const previousIssues = qc.getQueryData<any>(['issues', projectId, filters]);
