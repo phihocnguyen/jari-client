@@ -19,6 +19,9 @@ export const sprintApi = {
   complete: (sprintId: string, moveToSprintId?: string) =>
     apiClient.post<ApiResponse<Sprint>>(`/sprints/${sprintId}/complete`, { moveToSprintId }).then(r => r.data),
 
+  delete: (sprintId: string) =>
+    apiClient.delete(`/sprints/${sprintId}`).then(r => r.data),
+
   addIssue: (sprintId: string, issueId: string) =>
     apiClient.post(`/sprints/${sprintId}/issues`, { issueId }),
 

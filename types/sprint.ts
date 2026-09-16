@@ -1,5 +1,5 @@
 // ─── Sprint Types ─────────────────────────────────────────────────
-export type SprintStatus = 'PLANNING' | 'ACTIVE' | 'COMPLETED';
+export type SprintStatus = 'PLANNING' | 'PLANNED' | 'ACTIVE' | 'COMPLETED';
 
 export interface Sprint {
   id: string;

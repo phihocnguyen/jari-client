@@ -139,13 +139,12 @@ export function ProjectNavTabs() {
   const params = useParams();
   const pId = (params?.projectId as string) || '00000000-0000-0000-0000-000000000003';
 
-  // Default tabs list (with 'List' included and 'Issues' removed)
+  // Default tabs list (with 'List' included and 'Issues'/'Sprints' removed - Sprints belong in Backlog)
   const defaultTabs: TabItem[] = [
     { id: 'summary',    label: 'Summary',    href: `/projects/${pId}/summary` },
     { id: 'board',      label: 'Board',      href: `/projects/${pId}/board` },
     { id: 'list',       label: 'List',       href: `/projects/${pId}/list` },
     { id: 'backlog',    label: 'Backlog',    href: `/projects/${pId}/backlog` },
-    { id: 'sprints',    label: 'Sprints',    href: `/projects/${pId}/sprints` },
     { id: 'reports',    label: 'Reports',    href: `/projects/${pId}/reports` },
     { id: 'releases',   label: 'Releases',   href: `/projects/${pId}/releases` },
     { id: 'components', label: 'Components', href: `/projects/${pId}/components` },
@@ -166,7 +165,7 @@ export function ProjectNavTabs() {
         const orderIds: string[] = JSON.parse(savedOrder);
         const reordered: TabItem[] = [];
         orderIds.forEach((id) => {
-          if (id === 'issues') return;
+          if (id === 'issues' || id === 'sprints') return;
           const found = defaultTabs.find((t) => t.id === id);
           if (found) reordered.push(found);
         });
