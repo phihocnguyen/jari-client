@@ -90,7 +90,7 @@ export function IssueListQuickCreate({
     }
   };
 
-  const renderCell = (colId: ColumnId) => {
+  const renderCell = (colId: ColumnId, isLast = false) => {
     switch (colId) {
       case 'work':
         return (
@@ -99,7 +99,7 @@ export function IssueListQuickCreate({
             style={{
               padding: '8px 12px',
               paddingLeft: isSubtask ? 32 : 12,
-              borderRight: '1px solid #dcdfe4',
+              borderRight: isLast ? 'none' : '1px solid #dcdfe4',
               overflow: 'hidden',
               boxSizing: 'border-box',
             }}
@@ -163,6 +163,49 @@ export function IssueListQuickCreate({
                   backgroundColor: '#ffffff',
                 }}
               />
+
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                <button
+                  type="button"
+                  onClick={() => handleSubmit()}
+                  disabled={!title.trim() || isSubmitting}
+                  style={{
+                    padding: '4px 8px',
+                    backgroundColor: 'var(--color-green-brand)',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: 4,
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    cursor: !title.trim() || isSubmitting ? 'not-allowed' : 'pointer',
+                    opacity: !title.trim() || isSubmitting ? 0.6 : 1,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}
+                >
+                  <CornerDownLeft size={12} />
+                  <span>Create</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onClose}
+                  style={{
+                    padding: '4px',
+                    backgroundColor: 'transparent',
+                    color: 'var(--color-text-secondary)',
+                    border: 'none',
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                  }}
+                  title="Cancel (Esc)"
+                >
+                  <X size={14} />
+                </button>
+              </div>
             </div>
           </td>
         );
@@ -173,7 +216,7 @@ export function IssueListQuickCreate({
             key="priority"
             style={{
               padding: '8px 12px',
-              borderRight: '1px solid #dcdfe4',
+              borderRight: isLast ? 'none' : '1px solid #dcdfe4',
               overflow: 'hidden',
               boxSizing: 'border-box',
             }}
@@ -227,7 +270,7 @@ export function IssueListQuickCreate({
             key="dueDate"
             style={{
               padding: '8px 12px',
-              borderRight: '1px solid #dcdfe4',
+              borderRight: isLast ? 'none' : '1px solid #dcdfe4',
               overflow: 'hidden',
               boxSizing: 'border-box',
             }}
@@ -264,7 +307,7 @@ export function IssueListQuickCreate({
             key={colId}
             style={{
               padding: '8px 12px',
-              borderRight: '1px solid #dcdfe4',
+              borderRight: isLast ? 'none' : '1px solid #dcdfe4',
               overflow: 'hidden',
               boxSizing: 'border-box',
             }}
@@ -295,53 +338,7 @@ export function IssueListQuickCreate({
       </td>
 
       {/* Dynamic columns matching header order */}
-      {visibleColumns.map((colId) => renderCell(colId))}
-
-      {/* Actions (aligns with Settings column) */}
-      <td style={{ padding: '8px 10px', textAlign: 'right', whiteSpace: 'nowrap', width: 36, boxSizing: 'border-box' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          <button
-            type="button"
-            onClick={() => handleSubmit()}
-            disabled={!title.trim() || isSubmitting}
-            style={{
-              padding: '4px 10px',
-              backgroundColor: 'var(--color-green-brand)',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: 4,
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              cursor: !title.trim() || isSubmitting ? 'not-allowed' : 'pointer',
-              opacity: !title.trim() || isSubmitting ? 0.6 : 1,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 4,
-            }}
-          >
-            <CornerDownLeft size={12} />
-            <span>Create</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              padding: '4px',
-              backgroundColor: 'transparent',
-              color: 'var(--color-text-secondary)',
-              border: 'none',
-              borderRadius: 4,
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-            }}
-            title="Cancel (Esc)"
-          >
-            <X size={15} />
-          </button>
-        </div>
-      </td>
+      {visibleColumns.map((colId, index) => renderCell(colId, index === visibleColumns.length - 1))}
     </tr>
   );
 }

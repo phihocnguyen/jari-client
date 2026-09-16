@@ -142,7 +142,7 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
     return allIssues.filter((i) => includedIds.has(i.id));
   }, [allIssues, query, typeFilter, statusFilter]);
 
-  // Group root issues and calculate pagination (max 12 per page)
+  // Group root issues and calculate pagination (max 10 items per page)
   const { rootIssues, childrenMap } = useMemo(() => {
     const issueIdSet = new Set(filteredIssues.map((i) => i.id));
     const roots: Issue[] = [];
@@ -161,21 +161,25 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
     return { rootIssues: roots, childrenMap: children };
   }, [filteredIssues]);
 
-  const totalRootIssues = rootIssues.length;
-  const totalPages = Math.max(1, Math.ceil(totalRootIssues / pageSize));
-
-  // Current page's root issues (max 12 per page)
-  const paginatedIssues = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    const currentRoots = rootIssues.slice(start, start + pageSize);
+  // Flatten hierarchical issues keeping subtasks grouped under parents
+  const allOrderedIssues = useMemo(() => {
     const result: Issue[] = [];
-    currentRoots.forEach((root) => {
+    rootIssues.forEach((root) => {
       result.push(root);
       const subtasks = childrenMap.get(root.id) || [];
       subtasks.forEach((sub) => result.push(sub));
     });
     return result;
-  }, [rootIssues, childrenMap, currentPage, pageSize]);
+  }, [rootIssues, childrenMap]);
+
+  const totalCount = allOrderedIssues.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+
+  // Strictly at most 10 items per page
+  const paginatedIssues = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return allOrderedIssues.slice(start, start + pageSize);
+  }, [allOrderedIssues, currentPage, pageSize]);
 
   // Auto-clamp page if items shrink
   useEffect(() => {
@@ -463,7 +467,7 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
       ) : (
         <IssueListTable
           issues={paginatedIssues}
-          allIssuesCount={totalRootIssues}
+          allIssuesCount={totalCount}
           currentPage={currentPage}
           pageSize={pageSize}
           totalPages={totalPages}

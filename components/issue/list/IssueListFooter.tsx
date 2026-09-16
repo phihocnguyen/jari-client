@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Plus, RotateCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, RotateCw, ChevronLeft, ChevronRight, SlidersHorizontal } from 'lucide-react';
 
 interface IssueListFooterProps {
   totalCount: number;
@@ -13,6 +13,7 @@ interface IssueListFooterProps {
   onCreateClick: () => void;
   onRefresh: () => void;
   isRefreshing?: boolean;
+  onOpenConfig?: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
 export function IssueListFooter({
@@ -25,6 +26,7 @@ export function IssueListFooter({
   onCreateClick,
   onRefresh,
   isRefreshing = false,
+  onOpenConfig,
 }: IssueListFooterProps) {
   const startItem = totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const endItem = Math.min(currentPage * pageSize, totalCount);
@@ -142,6 +144,39 @@ export function IssueListFooter({
         >
           <RotateCw size={14} />
         </button>
+
+        {onOpenConfig && (
+          <button
+            type="button"
+            onClick={onOpenConfig}
+            title="Configure columns"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 5,
+              background: 'none',
+              border: '1px solid #dcdfe4',
+              borderRadius: 4,
+              padding: '3px 8px',
+              fontSize: '0.78rem',
+              fontWeight: 500,
+              color: 'var(--color-text-secondary)',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)';
+              e.currentTarget.style.color = 'var(--color-text-primary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = 'var(--color-text-secondary)';
+            }}
+          >
+            <SlidersHorizontal size={13} />
+            <span>Columns</span>
+          </button>
+        )}
       </div>
 
       {/* 3. Right: Pagination Controls */}

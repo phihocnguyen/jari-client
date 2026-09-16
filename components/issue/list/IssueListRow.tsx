@@ -78,7 +78,7 @@ export function IssueListRow({
     ? issue.assignee.id || (issue.assignee as any).userId || issue.assigneeId || ''
     : '';
 
-  const renderCell = (colId: ColumnId) => {
+  const renderCell = (colId: ColumnId, isLast = false) => {
     const width = columnWidths ? columnWidths[colId] : undefined;
 
     switch (colId) {
@@ -89,7 +89,7 @@ export function IssueListRow({
             style={{
               padding: '8px 10px',
               verticalAlign: 'middle',
-              borderRight: '1px solid #dcdfe4',
+              borderRight: isLast ? 'none' : '1px solid #dcdfe4',
               overflow: 'hidden',
               boxSizing: 'border-box',
               position: 'relative',
@@ -298,7 +298,7 @@ export function IssueListRow({
             style={{
               padding: '6px 10px',
               verticalAlign: 'middle',
-              borderRight: '1px solid #dcdfe4',
+              borderRight: isLast ? 'none' : '1px solid #dcdfe4',
               boxSizing: 'border-box',
               overflow: 'hidden',
             }}
@@ -406,7 +406,7 @@ export function IssueListRow({
             style={{
               padding: '6px 10px',
               verticalAlign: 'middle',
-              borderRight: '1px solid #dcdfe4',
+              borderRight: isLast ? 'none' : '1px solid #dcdfe4',
               boxSizing: 'border-box',
               overflow: 'hidden',
             }}
@@ -438,7 +438,7 @@ export function IssueListRow({
             style={{
               padding: '6px 10px',
               verticalAlign: 'middle',
-              borderRight: '1px solid #dcdfe4',
+              borderRight: isLast ? 'none' : '1px solid #dcdfe4',
               boxSizing: 'border-box',
               overflow: 'hidden',
             }}
@@ -501,7 +501,7 @@ export function IssueListRow({
             style={{
               padding: '6px 10px',
               verticalAlign: 'middle',
-              borderRight: '1px solid #dcdfe4',
+              borderRight: isLast ? 'none' : '1px solid #dcdfe4',
               boxSizing: 'border-box',
               overflow: 'hidden',
             }}
@@ -560,7 +560,7 @@ export function IssueListRow({
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-              borderRight: '1px solid #dcdfe4',
+              borderRight: isLast ? 'none' : '1px solid #dcdfe4',
               boxSizing: 'border-box',
             }}
           >
@@ -580,15 +580,21 @@ export function IssueListRow({
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-              borderRight: '1px solid #dcdfe4',
+              borderRight: isLast ? 'none' : '1px solid #dcdfe4',
               boxSizing: 'border-box',
             }}
+            title={formatDate(issue.createdAt)}
           >
-            {formatDate(issue.createdAt)}
+            {new Date(issue.createdAt).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            })}
           </td>
         );
 
-      case 'updated':
+      case 'updated': {
+        const updatedDate = issue.updatedAt || issue.createdAt;
         return (
           <td
             key="updated"
@@ -600,15 +606,29 @@ export function IssueListRow({
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-              borderRight: '1px solid #dcdfe4',
+              borderRight: isLast ? 'none' : '1px solid #dcdfe4',
               boxSizing: 'border-box',
             }}
+            title={formatDate(updatedDate)}
           >
-            {formatDate(issue.updatedAt || issue.createdAt)}
+            {new Date(updatedDate).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            })}
           </td>
         );
+      }
 
-      case 'dueDate':
+      case 'dueDate': {
+        const formattedDueDate = issue.dueDate
+          ? new Date(issue.dueDate).toLocaleDateString('en-GB', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+            })
+          : '';
+
         return (
           <td
             key="dueDate"
@@ -616,44 +636,62 @@ export function IssueListRow({
             style={{
               padding: '6px 10px',
               verticalAlign: 'middle',
-              borderRight: '1px solid #dcdfe4',
+              borderRight: isLast ? 'none' : '1px solid #dcdfe4',
               boxSizing: 'border-box',
               overflow: 'hidden',
+              position: 'relative',
             }}
           >
             <div
               style={{
+                position: 'relative',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 6,
                 padding: '3px 6px',
                 borderRadius: 4,
+                cursor: 'pointer',
                 transition: 'background-color 0.12s ease',
               }}
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.05)')}
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
             >
-              <Calendar size={13} color="var(--color-text-secondary)" />
+              <Calendar
+                size={13}
+                style={{
+                  color: issue.dueDate ? '#0c66e4' : 'var(--color-text-secondary)',
+                  flexShrink: 0,
+                }}
+              />
+              <span
+                style={{
+                  fontSize: '0.8125rem',
+                  color: issue.dueDate ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {formattedDueDate || '-'}
+              </span>
+
               <input
                 type="date"
                 value={issue.dueDate ? issue.dueDate.split('T')[0] : ''}
                 onChange={(e) => onUpdateDueDate?.(issue.id, e.target.value || null)}
                 style={{
-                  border: 'none',
-                  backgroundColor: 'transparent',
-                  fontSize: '0.8125rem',
-                  color: issue.dueDate ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  opacity: 0,
                   cursor: 'pointer',
-                  fontFamily: 'inherit',
-                  padding: 0,
-                  outline: 'none',
-                  maxWidth: 115,
                 }}
-                title={issue.dueDate ? `Due date: ${formatDate(issue.dueDate)}` : 'Set due date'}
+                title={issue.dueDate ? `Due date: ${formattedDueDate}` : 'Click to set due date'}
               />
             </div>
           </td>
         );
+      }
 
       default:
         return null;
@@ -701,10 +739,7 @@ export function IssueListRow({
       </td>
 
       {/* Dynamic visible columns in user-configured order */}
-      {visibleColumns.map((colId) => renderCell(colId))}
-
-      {/* Settings Column placeholder */}
-      <td style={{ width: 36, padding: '8px 4px', textAlign: 'center', boxSizing: 'border-box' }} />
+      {visibleColumns.map((colId, index) => renderCell(colId, index === visibleColumns.length - 1))}
     </tr>
   );
 }

@@ -167,7 +167,7 @@ export function IssueListTable(props: IssueListTableProps) {
     const colsSum = visibleColumns.reduce((sum, id) => {
       return sum + (columnWidths[id] || DEFAULT_COLUMN_WIDTHS[id] || 120);
     }, 0);
-    return 40 + colsSum + 36; // 40 for checkbox, 36 for config column
+    return 40 + colsSum; // 40 for checkbox
   }, [visibleColumns, columnWidths]);
 
   // Toggle column options menu
@@ -358,6 +358,7 @@ export function IssueListTable(props: IssueListTableProps) {
   return (
     <div
       style={{
+        position: 'relative',
         border: '1px solid #dcdfe4',
         borderRadius: '6px',
         backgroundColor: '#ffffff',
@@ -365,6 +366,47 @@ export function IssueListTable(props: IssueListTableProps) {
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
       }}
     >
+      {/* Absolute Top-Right Configure Columns Button */}
+      <button
+        ref={configBtnRef}
+        type="button"
+        onClick={handleOpenConfig}
+        title="Configure columns"
+        style={{
+          position: 'absolute',
+          top: 6,
+          right: 8,
+          zIndex: 40,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 26,
+          height: 26,
+          borderRadius: 4,
+          border: configOpen ? '1px solid #0c66e4' : '1px solid #dcdfe4',
+          backgroundColor: configOpen ? '#e9f2ff' : '#f4f5f7',
+          color: configOpen ? '#0c66e4' : '#44546f',
+          cursor: 'pointer',
+          padding: 0,
+          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+          transition: 'all 0.15s ease',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = '#e9f2ff';
+          e.currentTarget.style.color = '#0c66e4';
+          e.currentTarget.style.borderColor = '#0c66e4';
+        }}
+        onMouseLeave={(e) => {
+          if (!configOpen) {
+            e.currentTarget.style.backgroundColor = '#f4f5f7';
+            e.currentTarget.style.color = '#44546f';
+            e.currentTarget.style.borderColor = '#dcdfe4';
+          }
+        }}
+      >
+        <SlidersHorizontal size={14} />
+      </button>
+
       {/* Scrollable Table Area */}
       <div
         style={{
@@ -376,7 +418,8 @@ export function IssueListTable(props: IssueListTableProps) {
       >
         <table
           style={{
-            width: totalTableWidth,
+            width: '100%',
+            minWidth: totalTableWidth,
             tableLayout: 'fixed',
             borderCollapse: 'collapse',
             textAlign: 'left',
@@ -391,7 +434,6 @@ export function IssueListTable(props: IssueListTableProps) {
                 style={{ width: columnWidths[colId] || DEFAULT_COLUMN_WIDTHS[colId] || 120 }}
               />
             ))}
-            <col style={{ width: 36 }} />
           </colgroup>
 
           {/* Table Header */}
@@ -438,7 +480,8 @@ export function IssueListTable(props: IssueListTableProps) {
               </th>
 
               {/* Dynamic Sizable Columns */}
-              {visibleColumns.map((colId) => {
+              {visibleColumns.map((colId, index) => {
+                const isLast = index === visibleColumns.length - 1;
                 const colDef = DEFAULT_COLUMN_DEFINITIONS.find((c) => c.id === colId);
                 const label = colDef?.label || colId;
                 const width = columnWidths[colId] || colDef?.defaultWidth || 120;
@@ -450,11 +493,11 @@ export function IssueListTable(props: IssueListTableProps) {
                     onMouseEnter={() => setHoveredCol(colId)}
                     onMouseLeave={() => setHoveredCol(null)}
                     style={{
-                      padding: '8px 10px',
+                      padding: isLast ? '8px 38px 8px 10px' : '8px 10px',
                       width,
                       position: 'relative',
                       verticalAlign: 'middle',
-                      borderRight: '1px solid #dcdfe4',
+                      borderRight: isLast ? 'none' : '1px solid #dcdfe4',
                       borderBottom: '1px solid #dcdfe4',
                       boxSizing: 'border-box',
                       backgroundColor: '#f4f5f7',
@@ -519,7 +562,7 @@ export function IssueListTable(props: IssueListTableProps) {
                         title={`Options for ${label}`}
                         style={{
                           position: 'absolute',
-                          right: 6,
+                          right: isLast ? 36 : 6,
                           top: '50%',
                           transform: 'translateY(-50%)',
                           display: 'inline-flex',
@@ -552,80 +595,45 @@ export function IssueListTable(props: IssueListTableProps) {
                       </button>
                     )}
 
-                    {/* Resizable Sizable Column Handle */}
-                    <div
-                      onMouseDown={(e) => handleResizeStart(colId, e)}
-                      onClick={(e) => e.stopPropagation()}
-                      style={{
-                        position: 'absolute',
-                        right: -4,
-                        top: 0,
-                        bottom: 0,
-                        width: 9,
-                        cursor: 'col-resize',
-                        userSelect: 'none',
-                        zIndex: 30,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                      title="Drag to resize column"
-                    >
+                    {/* Resizable Sizable Column Handle (not on the very last edge) */}
+                    {!isLast && (
                       <div
+                        onMouseDown={(e) => handleResizeStart(colId, e)}
+                        onClick={(e) => e.stopPropagation()}
                         style={{
-                          width: 2,
-                          height: '100%',
-                          backgroundColor: resizingCol === colId ? '#0c66e4' : 'transparent',
-                          transition: 'background-color 0.15s ease',
+                          position: 'absolute',
+                          right: -4,
+                          top: 0,
+                          bottom: 0,
+                          width: 9,
+                          cursor: 'col-resize',
+                          userSelect: 'none',
+                          zIndex: 30,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
                         }}
-                        onMouseEnter={(e) => {
-                          if (resizingCol !== colId) (e.currentTarget as HTMLElement).style.backgroundColor = '#0c66e4';
-                        }}
-                        onMouseLeave={(e) => {
-                          if (resizingCol !== colId) (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
-                        }}
-                      />
-                    </div>
+                        title="Drag to resize column"
+                      >
+                        <div
+                          style={{
+                            width: 2,
+                            height: '100%',
+                            backgroundColor: resizingCol === colId ? '#0c66e4' : 'transparent',
+                            transition: 'background-color 0.15s ease',
+                          }}
+                          onMouseEnter={(e) => {
+                            if (resizingCol !== colId) (e.currentTarget as HTMLElement).style.backgroundColor = '#0c66e4';
+                          }}
+                          onMouseLeave={(e) => {
+                            if (resizingCol !== colId) (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+                          }}
+                        />
+                      </div>
+                    )}
                   </th>
                 );
               })}
-
-              {/* Settings / Configure columns icon */}
-              <th
-                style={{
-                  width: 36,
-                  padding: '10px 8px',
-                  textAlign: 'center',
-                  borderBottom: '1px solid #dcdfe4',
-                  boxSizing: 'border-box',
-                  backgroundColor: '#f4f5f7',
-                }}
-              >
-                <button
-                  ref={configBtnRef}
-                  type="button"
-                  onClick={handleOpenConfig}
-                  title="Configure columns"
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: 'var(--color-text-secondary)',
-                    padding: 4,
-                    borderRadius: 4,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: configOpen ? 'rgba(0,0,0,0.08)' : 'transparent',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
-                  onMouseLeave={(e) => {
-                    if (!configOpen) e.currentTarget.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <SlidersHorizontal size={14} />
-                </button>
-              </th>
             </tr>
           </thead>
 
@@ -704,7 +712,7 @@ export function IssueListTable(props: IssueListTableProps) {
             ) : (
               <tr>
                 <td
-                  colSpan={visibleColumns.length + 2}
+                  colSpan={visibleColumns.length + 1}
                   style={{
                     padding: '3rem 1rem',
                     textAlign: 'center',
@@ -745,6 +753,7 @@ export function IssueListTable(props: IssueListTableProps) {
         onCreateClick={onOpenInlineCreate}
         onRefresh={onRefresh}
         isRefreshing={isRefreshing}
+        onOpenConfig={handleOpenConfig}
       />
 
       {/* ─── Column Options Portal Menu (As shown in screenshot) ─── */}
@@ -862,6 +871,35 @@ export function IssueListTable(props: IssueListTableProps) {
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
             >
               Remove column
+            </div>
+
+            <div style={{ height: 1, backgroundColor: 'rgba(0, 0, 0, 0.08)', margin: '4px 0' }} />
+
+            {/* Configure visible columns */}
+            <div
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setConfigPos({
+                  top: rect.bottom + window.scrollY + 4,
+                  left: Math.max(8, rect.left + window.scrollX - 40),
+                });
+                setActiveMenuCol(null);
+                setConfigOpen(true);
+              }}
+              style={{
+                padding: '8px 16px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                color: 'var(--color-text-primary)',
+                transition: 'background-color 0.12s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+            >
+              <SlidersHorizontal size={13} />
+              <span>Configure columns...</span>
             </div>
           </div>,
           document.body
