@@ -78,37 +78,6 @@ export function TaskTitleAndActions({
 
   return (
     <div>
-      {/* Blue Highlight Item Key Link above Title */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-        <Link
-          href={`/projects/${issue.projectId}/issues/${issue.key}`}
-          title="Open issue full page"
-          style={{
-            color: '#0052cc',
-            fontWeight: 600,
-            fontSize: '0.875rem',
-            textDecoration: 'none',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 4,
-            padding: '2px 6px',
-            borderRadius: 4,
-            backgroundColor: 'rgba(9, 30, 66, 0.04)',
-            transition: 'all 0.15s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.textDecoration = 'underline';
-            e.currentTarget.style.backgroundColor = 'rgba(9, 30, 66, 0.08)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.textDecoration = 'none';
-            e.currentTarget.style.backgroundColor = 'rgba(9, 30, 66, 0.04)';
-          }}
-        >
-          <span>{issue.key}</span>
-        </Link>
-      </div>
-
       {/* Editable Title */}
       {isEditingTitle ? (
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>

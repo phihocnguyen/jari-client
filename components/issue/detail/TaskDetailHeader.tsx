@@ -176,34 +176,8 @@ export function TaskDetailHeader({
             </div>
           </div>
         ) : viewMode === 'right-bar' ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8125rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             {getTypeIcon(issue.type)}
-            <Link
-              href={`/projects/${projectId}/issues/${issue.key}`}
-              title="Open full page"
-              style={{
-                color: '#0052cc',
-                fontWeight: 600,
-                textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                padding: '2px 6px',
-                borderRadius: 4,
-                backgroundColor: 'rgba(9, 30, 66, 0.04)',
-                transition: 'all 0.15s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.textDecoration = 'underline';
-                e.currentTarget.style.backgroundColor = 'rgba(9, 30, 66, 0.08)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.textDecoration = 'none';
-                e.currentTarget.style.backgroundColor = 'rgba(9, 30, 66, 0.04)';
-              }}
-            >
-              <span>{issue.key}</span>
-            </Link>
           </div>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#626f86', fontSize: '0.8125rem' }}>
