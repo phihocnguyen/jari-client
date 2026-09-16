@@ -213,8 +213,10 @@ export default function BacklogPage({ params }: PageProps) {
       targetSprintId,
     }: {
       issueId: string;
+      issueKey?: string;
       sourceSprintId?: string;
       targetSprintId?: string;
+      targetSprintName?: string;
     }) => issueApi.updateSprint(issueId, targetSprintId ?? null),
     onMutate: async ({ issueId, targetSprintId }) => {
       await qc.cancelQueries({ queryKey: ['issues', projectId] });
@@ -239,14 +241,13 @@ export default function BacklogPage({ params }: PageProps) {
       }
       toast.error(err?.response?.data?.message || 'Failed to move work item');
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['issues', projectId] });
       qc.invalidateQueries({ queryKey: ['sprints', projectId] });
       qc.invalidateQueries({ queryKey: ['board', projectId] });
-      if (pendingMove) {
-        toast.success(`Moved ${pendingMove.issue.key} to ${pendingMove.targetSprintName}`);
+      if (variables.issueKey && variables.targetSprintName) {
+        toast.success(`Moved ${variables.issueKey} to ${variables.targetSprintName}`);
       }
-      setPendingMove(null);
     },
   });
 
@@ -443,11 +444,15 @@ export default function BacklogPage({ params }: PageProps) {
         onClose={() => setPendingMove(null)}
         onConfirm={() => {
           if (pendingMove) {
-            moveIssueMutation.mutate({
+            const moveData = {
               issueId: pendingMove.issue.id,
+              issueKey: pendingMove.issue.key,
               sourceSprintId: pendingMove.sourceSprintId,
               targetSprintId: pendingMove.targetSprintId,
-            });
+              targetSprintName: pendingMove.targetSprintName,
+            };
+            setPendingMove(null);
+            moveIssueMutation.mutate(moveData);
           }
         }}
         loading={moveIssueMutation.isPending}
