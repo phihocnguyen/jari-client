@@ -18,7 +18,6 @@ import { IssueFilterBar } from '@/components/issue/IssueFilterBar';
 import { IssueRow } from '@/components/issue/IssueRow';
 import { CreateIssueModal } from '@/components/issue/CreateIssueModal';
 import { IssueDetailModal } from '@/components/issue/IssueDetailModal';
-import { CreateSprintModal } from '@/components/sprint/CreateSprintModal';
 import { EditSprintModal } from '@/components/sprint/EditSprintModal';
 import { Button } from '@/components/ui/Button';
 import { toast } from '@/components/ui/Toast';
@@ -122,7 +121,6 @@ export default function BacklogPage({ params }: PageProps) {
   const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
 
   const [createIssueOpen, setCreateIssueOpen] = useState(false);
-  const [createSprintOpen, setCreateSprintOpen] = useState(false);
   const [editingSprint, setEditingSprint] = useState<Sprint | null>(null);
   const [activeSprintMenuId, setActiveSprintMenuId] = useState<string | null>(null);
   const [targetSprintId, setTargetSprintId] = useState<string | undefined>(undefined);
@@ -164,6 +162,33 @@ export default function BacklogPage({ params }: PageProps) {
   const allIssues: Issue[] = issuesPage?.data ?? [];
 
   // Mutations
+  const createSprintMutation = useMutation({
+    mutationFn: async () => {
+      let maxNum = 0;
+      sprints.forEach((s: Sprint) => {
+        const match = s.name.match(/(?:sprint\s*)(\d+)/i) || s.name.match(/(\d+)/);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (!isNaN(num) && num > maxNum) {
+            maxNum = num;
+          }
+        }
+      });
+      const nextNum = maxNum > 0 ? maxNum + 1 : sprints.length + 1;
+      const key = project?.projectKey || (project as any)?.key || '';
+      const prefix = key ? `${key} Sprint` : 'Sprint';
+      const sprintName = `${prefix} ${nextNum}`;
+
+      return sprintApi.create(projectId, { name: sprintName });
+    },
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ['sprints', projectId] });
+      toast.success(`Created ${res.data?.name || 'Sprint'}!`);
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Failed to create sprint');
+    },
+  });
   const startSprintMutation = useMutation({
     mutationFn: (sprintId: string) => sprintApi.start(sprintId),
     onSuccess: () => {
@@ -526,7 +551,8 @@ export default function BacklogPage({ params }: PageProps) {
             <StatusPillGroup issues={backlogIssues} />
 
             <button
-              onClick={() => setCreateSprintOpen(true)}
+              onClick={() => createSprintMutation.mutate()}
+              disabled={createSprintMutation.isPending}
               style={{
                 height: 28,
                 padding: '0 12px',
@@ -541,11 +567,12 @@ export default function BacklogPage({ params }: PageProps) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 transition: 'background-color 0.15s',
+                opacity: createSprintMutation.isPending ? 0.7 : 1,
               }}
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#EBECF0')}
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
             >
-              Create sprint
+              {createSprintMutation.isPending ? 'Creating...' : 'Create sprint'}
             </button>
           </div>
         </div>
@@ -614,12 +641,6 @@ export default function BacklogPage({ params }: PageProps) {
         onClose={() => setCreateIssueOpen(false)}
         projectId={projectId}
         initialSprintId={targetSprintId}
-      />
-
-      <CreateSprintModal
-        open={createSprintOpen}
-        onClose={() => setCreateSprintOpen(false)}
-        projectId={projectId}
       />
 
       <EditSprintModal
