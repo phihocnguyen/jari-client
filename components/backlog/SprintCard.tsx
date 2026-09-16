@@ -44,6 +44,7 @@ interface SprintCardProps {
   onEditSprint: (sprint: Sprint) => void;
   onDeleteSprint: (sprint: Sprint) => void;
   onCreateIssueInSprint: (sprintId: string) => void;
+  onDropOnIssue?: (targetIssue: Issue) => void;
 }
 
 export function SprintCard({
@@ -65,6 +66,7 @@ export function SprintCard({
   onEditSprint,
   onDeleteSprint,
   onCreateIssueInSprint,
+  onDropOnIssue,
 }: SprintCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -357,6 +359,7 @@ export function SprintCard({
                 onDragStart={(e) => onIssueDragStart(e, issue)}
                 onDragEnd={onIssueDragEnd}
                 onClick={() => onSelectIssue(issue.id)}
+                onDropOnIssue={onDropOnIssue}
               />
             ))
           ) : (

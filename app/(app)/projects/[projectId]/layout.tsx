@@ -1,4 +1,7 @@
+'use client';
+
 import React from 'react';
+import { usePathname } from 'next/navigation';
 import { ProjectSummaryHeader } from '@/components/summary/ProjectSummaryHeader';
 import { ProjectNavTabs } from '@/components/summary/ProjectNavTabs';
 
@@ -7,6 +10,13 @@ interface ProjectLayoutProps {
 }
 
 export default function ProjectLayout({ children }: ProjectLayoutProps) {
+  const pathname = usePathname();
+  const isIssueDetailPage = pathname?.includes('/issues/');
+
+  if (isIssueDetailPage) {
+    return <div style={{ width: '100%' }}>{children}</div>;
+  }
+
   return (
     <div style={{ maxWidth: '1400px', width: '100%', margin: '0 auto', paddingBottom: '2.5rem' }}>
       {/* 1. Project Header (SSR / Shell) */}

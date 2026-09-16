@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useState } from 'react';
 import { Bookmark, CheckSquare, AlertCircle, Zap, ArrowUp, ArrowDown, Minus } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import type { Issue, IssueType, IssuePriority, IssueStatus } from '@/types/issue';
@@ -11,6 +12,7 @@ interface IssueRowProps {
   onDragStart?: (e: React.DragEvent) => void;
   onDragEnd?: (e: React.DragEvent) => void;
   isDragging?: boolean;
+  onDropOnIssue?: (targetIssue: Issue) => void;
 }
 
 export function IssueRow({
@@ -20,7 +22,9 @@ export function IssueRow({
   onDragStart,
   onDragEnd,
   isDragging = false,
+  onDropOnIssue,
 }: IssueRowProps) {
+  const [isDragOver, setIsDragOver] = useState(false);
   const getTypeIcon = (type: IssueType) => {
     switch (type) {
       case 'EPIC':
@@ -68,29 +72,59 @@ export function IssueRow({
       onClick={onClick}
       draggable={draggable}
       onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
+      onDragEnd={(e) => {
+        setIsDragOver(false);
+        onDragEnd?.(e);
+      }}
+      onDragOver={(e) => {
+        if (!onDropOnIssue) return;
+        e.preventDefault();
+        e.stopPropagation();
+        e.dataTransfer.dropEffect = 'move';
+        if (!isDragOver) setIsDragOver(true);
+      }}
+      onDragLeave={(e) => {
+        if (!onDropOnIssue) return;
+        e.stopPropagation();
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+          setIsDragOver(false);
+        }
+      }}
+      onDrop={(e) => {
+        if (!onDropOnIssue) return;
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragOver(false);
+        onDropOnIssue(issue);
+      }}
       style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '10px 14px',
-        backgroundColor: 'var(--color-surface-white)',
+        backgroundColor: isDragOver ? '#F4F8FD' : 'var(--color-surface-white)',
         border: '1px solid rgba(0, 0, 0, 0.08)',
+        borderTop: isDragOver ? '2px solid #0052CC' : '1px solid rgba(0, 0, 0, 0.08)',
         borderRadius: 'var(--radius-md)',
         marginBottom: '6px',
         cursor: draggable ? 'grab' : 'pointer',
         opacity: isDragging ? 0.35 : 1,
-        transform: isDragging ? 'scale(0.98)' : 'none',
-        transition: 'var(--transition-fast)',
+        transform: isDragOver ? 'scale(1.01)' : isDragging ? 'scale(0.98)' : 'none',
+        boxShadow: isDragOver ? '0 4px 12px rgba(0, 82, 204, 0.18)' : 'none',
+        transition: 'all 0.15s ease',
         userSelect: 'none',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = 'var(--color-green-accent)';
-        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
+        if (!isDragOver) {
+          e.currentTarget.style.borderColor = 'var(--color-green-accent)';
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
+        }
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = 'rgba(0, 0, 0, 0.08)';
-        e.currentTarget.style.boxShadow = 'none';
+        if (!isDragOver) {
+          e.currentTarget.style.borderColor = 'rgba(0, 0, 0, 0.08)';
+          e.currentTarget.style.boxShadow = 'none';
+        }
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
@@ -101,7 +135,7 @@ export function IssueRow({
           style={{
             fontSize: '0.8125rem',
             fontWeight: 600,
-            color: 'var(--color-text-secondary)',
+            color: '#0052cc',
             fontFamily: 'monospace',
           }}
         >

@@ -257,6 +257,53 @@ export default function BacklogPage({ params }: PageProps) {
     setCollapsedSprints((prev) => ({ ...prev, [sprintId]: !prev[sprintId] }));
   };
 
+  const handleDropOnIssue = (targetIssue: Issue) => {
+    const sourceIssue = draggedIssue;
+    if (!sourceIssue || sourceIssue.id === targetIssue.id) return;
+
+    const sourceSprintId = sourceIssue.sprintId;
+    const targetSprintId = targetIssue.sprintId;
+
+    // Reorder in React Query cache
+    const currentList: Issue[] = [...allIssues];
+    const sourceIndex = currentList.findIndex((i) => i.id === sourceIssue.id);
+    const targetIndex = currentList.findIndex((i) => i.id === targetIssue.id);
+
+    if (sourceIndex === -1 || targetIndex === -1) return;
+
+    // Update sourceIssue's sprintId to targetIssue's sprintId
+    const updatedSource = { ...sourceIssue, sprintId: targetSprintId };
+
+    // Move source to target's position
+    currentList.splice(sourceIndex, 1);
+    currentList.splice(targetIndex, 0, updatedSource);
+
+    qc.setQueryData(['issues', projectId, filters], (old: any) => {
+      if (!old) return old;
+      if (Array.isArray(old)) return currentList;
+      return { ...old, data: currentList };
+    });
+
+    setDraggedIssue(null);
+    setDragOverTarget(null);
+
+    // If moved to a different sprint (or to backlog)
+    if (sourceSprintId !== targetSprintId) {
+      const targetSprint = sprints.find((s: Sprint) => s.id === targetSprintId);
+      const targetSprintName = targetSprint ? targetSprint.name : 'Backlog';
+
+      moveIssueMutation.mutate({
+        issueId: sourceIssue.id,
+        issueKey: sourceIssue.key,
+        sourceSprintId,
+        targetSprintId,
+        targetSprintName,
+      });
+    } else {
+      toast.success(`Moved ${sourceIssue.key}`);
+    }
+  };
+
   const activeSprints = sprints.filter((s: Sprint) => s.status === 'ACTIVE');
   const plannedSprints = sprints.filter(
     (s: Sprint) => s.status === 'PLANNING' || s.status === 'PLANNED'
@@ -341,6 +388,7 @@ export default function BacklogPage({ params }: PageProps) {
               setTargetSprintId(sprintId);
               setCreateIssueOpen(true);
             }}
+            onDropOnIssue={handleDropOnIssue}
           />
         );
       })}
@@ -402,6 +450,7 @@ export default function BacklogPage({ params }: PageProps) {
         }}
         loadingIssues={loadingIssues}
         hasSprintsAbove={displaySprints.length > 0}
+        onDropOnIssue={handleDropOnIssue}
       />
 
       {/* Modals */}

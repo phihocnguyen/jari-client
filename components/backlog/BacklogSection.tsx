@@ -24,6 +24,7 @@ interface BacklogSectionProps {
   onCreateIssue: () => void;
   loadingIssues?: boolean;
   hasSprintsAbove?: boolean;
+  onDropOnIssue?: (targetIssue: Issue) => void;
 }
 
 export function BacklogSection({
@@ -43,6 +44,7 @@ export function BacklogSection({
   onCreateIssue,
   loadingIssues = false,
   hasSprintsAbove = false,
+  onDropOnIssue,
 }: BacklogSectionProps) {
   return (
     <div
@@ -143,6 +145,7 @@ export function BacklogSection({
                 onDragStart={(e) => onIssueDragStart(e, issue)}
                 onDragEnd={onIssueDragEnd}
                 onClick={() => onSelectIssue(issue.id)}
+                onDropOnIssue={onDropOnIssue}
               />
             ))
           ) : (

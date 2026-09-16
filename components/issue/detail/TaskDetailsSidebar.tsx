@@ -35,7 +35,7 @@ interface ProjectMember {
 interface TaskDetailsSidebarProps {
   issue: Issue;
   members: ProjectMember[];
-  viewMode: 'modal' | 'right-bar';
+  viewMode: 'modal' | 'right-bar' | 'full-page';
   issues?: Issue[];
   projectLabels?: IssueLabel[];
   projectReleases?: Release[];
@@ -193,8 +193,8 @@ export function TaskDetailsSidebar({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {/* In Modal Mode: Top status and Improve Task button row */}
-      {viewMode === 'modal' && (
+      {/* In Modal & Full-Page Mode: Top status and Improve Story button row */}
+      {(viewMode === 'modal' || viewMode === 'full-page') && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {/* Status Dropdown Pill */}
           <div ref={statusRef} style={{ position: 'relative', flex: 1 }}>
@@ -297,7 +297,7 @@ export function TaskDetailsSidebar({
             <Zap size={14} />
           </button>
 
-          {/* Improve Task */}
+          {/* Improve Story */}
           <button
             type="button"
             onClick={onOpenAiAssistant}
@@ -319,7 +319,7 @@ export function TaskDetailsSidebar({
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
           >
             <Sparkles size={14} color="#0c66e4" />
-            <span>Improve Task</span>
+            <span>+ Improve Story</span>
           </button>
         </div>
       )}
@@ -532,6 +532,39 @@ export function TaskDetailsSidebar({
               )}
             </div>
 
+            {/* Sprint */}
+            <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center' }}>
+              <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Sprint</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span
+                  style={{
+                    color: '#0052cc',
+                    fontSize: '0.8125rem',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                  onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+                >
+                  {(issue as any).sprint?.name || (issue.sprintId ? 'Active Sprint' : 'None (Backlog)')}
+                </span>
+                {(issue as any).sprint && (
+                  <span
+                    style={{
+                      fontSize: '0.6875rem',
+                      fontWeight: 600,
+                      backgroundColor: '#f1f2f4',
+                      color: '#626f86',
+                      padding: '1px 5px',
+                      borderRadius: 3,
+                    }}
+                  >
+                    +1
+                  </span>
+                )}
+              </div>
+            </div>
+
             {/* Priority */}
             <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center' }}>
               <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Priority</span>
@@ -708,6 +741,18 @@ export function TaskDetailsSidebar({
                 value={issue.dueDate}
                 onChange={(iso) => onUpdateDueDate(iso)}
               />
+            </div>
+
+            {/* Team */}
+            <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center' }}>
+              <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Team</span>
+              <span
+                style={{ color: '#626f86', fontSize: '0.8125rem', cursor: 'pointer', padding: '2px 4px' }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+              >
+                Add team
+              </span>
             </div>
 
             {/* Fix Versions */}

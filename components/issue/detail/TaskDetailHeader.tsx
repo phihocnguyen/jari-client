@@ -27,13 +27,15 @@ import type { Issue, IssueType } from '@/types/issue';
 interface TaskDetailHeaderProps {
   issue: Issue;
   projectId: string;
-  viewMode: 'modal' | 'right-bar';
-  onToggleViewMode: () => void;
-  onClose: () => void;
-  prevIssue: Issue | null;
-  nextIssue: Issue | null;
+  viewMode: 'modal' | 'right-bar' | 'full-page';
+  onToggleViewMode?: () => void;
+  onClose?: () => void;
+  prevIssue?: Issue | null;
+  nextIssue?: Issue | null;
   onNavigateIssue?: (issueId: string) => void;
   onDeleteIssue: () => void;
+  projectName?: string;
+  parentKey?: string;
 }
 
 export function TaskDetailHeader({
@@ -42,10 +44,12 @@ export function TaskDetailHeader({
   viewMode,
   onToggleViewMode,
   onClose,
-  prevIssue,
-  nextIssue,
+  prevIssue = null,
+  nextIssue = null,
   onNavigateIssue,
   onDeleteIssue,
+  projectName,
+  parentKey,
 }: TaskDetailHeaderProps) {
   const [isWatching, setIsWatching] = useState(false);
   const [watchersCount, setWatchersCount] = useState(1);
@@ -53,7 +57,7 @@ export function TaskDetailHeader({
 
   const handleShare = () => {
     const url = typeof window !== 'undefined'
-      ? `${window.location.origin}/projects/${projectId}/issues/${issue.id}`
+      ? `${window.location.origin}/projects/${projectId}/issues/${issue.key || issue.id}`
       : '';
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url);
@@ -83,7 +87,7 @@ export function TaskDetailHeader({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: viewMode === 'modal' ? '12px 24px' : '10px 16px',
+        padding: viewMode === 'modal' || viewMode === 'full-page' ? '12px 24px' : '10px 16px',
         borderBottom: '1px solid rgba(0,0,0,0.08)',
         backgroundColor: '#ffffff',
         position: 'sticky',
@@ -93,10 +97,113 @@ export function TaskDetailHeader({
     >
       {/* Left: Breadcrumb / Work item label */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-        {viewMode === 'right-bar' ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#44546f', fontWeight: 500, fontSize: '0.8125rem' }}>
-            <CheckSquare size={16} color="#0c66e4" />
-            <span>Jari work item</span>
+        {viewMode === 'full-page' ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#626f86', fontSize: '0.8125rem' }}>
+            <Link
+              href="/projects"
+              style={{ color: '#626f86', textDecoration: 'none' }}
+              onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+              onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+            >
+              Spaces
+            </Link>
+            <span>/</span>
+            <Link
+              href={`/projects/${projectId}/backlog`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                color: '#626f86',
+                textDecoration: 'none',
+                fontWeight: 500,
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+              onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+            >
+              <div
+                style={{
+                  width: 16,
+                  height: 16,
+                  borderRadius: 3,
+                  backgroundColor: '#0c66e4',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#ffffff',
+                  fontSize: '0.625rem',
+                  fontWeight: 700,
+                }}
+              >
+                {projectName ? projectName.charAt(0).toUpperCase() : 'P'}
+              </div>
+              <span>{projectName || 'Project'}</span>
+            </Link>
+            {parentKey && (
+              <>
+                <span>/</span>
+                <Link
+                  href={`/projects/${projectId}/issues/${parentKey}`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    color: '#626f86',
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                  onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+                >
+                  <Zap size={14} color="#9333ea" fill="#9333ea" />
+                  <span>{parentKey}</span>
+                </Link>
+              </>
+            )}
+            <span>/</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+              {getTypeIcon(issue.type)}
+              <span
+                style={{
+                  color: '#0052cc',
+                  padding: '2px 6px',
+                  borderRadius: 4,
+                  backgroundColor: 'rgba(9, 30, 66, 0.04)',
+                }}
+              >
+                {issue.key}
+              </span>
+            </div>
+          </div>
+        ) : viewMode === 'right-bar' ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8125rem' }}>
+            {getTypeIcon(issue.type)}
+            <Link
+              href={`/projects/${projectId}/issues/${issue.key}`}
+              title="Open full page"
+              style={{
+                color: '#0052cc',
+                fontWeight: 600,
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: '2px 6px',
+                borderRadius: 4,
+                backgroundColor: 'rgba(9, 30, 66, 0.04)',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.textDecoration = 'underline';
+                e.currentTarget.style.backgroundColor = 'rgba(9, 30, 66, 0.08)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.textDecoration = 'none';
+                e.currentTarget.style.backgroundColor = 'rgba(9, 30, 66, 0.04)';
+              }}
+            >
+              <span>{issue.key}</span>
+            </Link>
           </div>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#626f86', fontSize: '0.8125rem' }}>
@@ -120,14 +227,30 @@ export function TaskDetailHeader({
               <span>Add epic</span>
             </button>
             <span>/</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: '#172b4d' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
               {getTypeIcon(issue.type)}
               <Link
                 href={`/projects/${projectId}/issues/${issue.key}`}
                 title="Open full page"
-                style={{ color: '#172b4d', textDecoration: 'none' }}
-                onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
-                onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+                style={{
+                  color: '#0052cc',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  padding: '2px 6px',
+                  borderRadius: 4,
+                  backgroundColor: 'rgba(9, 30, 66, 0.04)',
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.textDecoration = 'underline';
+                  e.currentTarget.style.backgroundColor = 'rgba(9, 30, 66, 0.08)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.textDecoration = 'none';
+                  e.currentTarget.style.backgroundColor = 'rgba(9, 30, 66, 0.04)';
+                }}
               >
                 {issue.key}
               </Link>
@@ -137,50 +260,53 @@ export function TaskDetailHeader({
       </div>
 
       {/* Right: Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        {/* Previous Issue */}
-        <button
-          type="button"
-          disabled={!prevIssue}
-          onClick={() => prevIssue && onNavigateIssue?.(prevIssue.id)}
-          title={prevIssue ? `Previous issue: ${prevIssue.key}` : 'No previous issue'}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            borderRadius: 4,
-            padding: 6,
-            cursor: prevIssue ? 'pointer' : 'default',
-            color: prevIssue ? '#44546f' : '#b3b9c4',
-            display: 'flex',
-            alignItems: 'center',
-          }}
-          onMouseEnter={(e) => prevIssue && (e.currentTarget.style.backgroundColor = '#f1f2f4')}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-        >
-          <ChevronUp size={18} />
-        </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        {/* Previous / Next Issue navigation (modal / right-bar only) */}
+        {viewMode !== 'full-page' && (
+          <>
+            <button
+              type="button"
+              disabled={!prevIssue}
+              onClick={() => prevIssue && onNavigateIssue?.(prevIssue.id)}
+              title={prevIssue ? `Previous issue: ${prevIssue.key}` : 'No previous issue'}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                borderRadius: 4,
+                padding: 6,
+                cursor: prevIssue ? 'pointer' : 'default',
+                color: prevIssue ? '#44546f' : '#b3b9c4',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+              onMouseEnter={(e) => prevIssue && (e.currentTarget.style.backgroundColor = '#f1f2f4')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+            >
+              <ChevronUp size={18} />
+            </button>
 
-        {/* Next Issue */}
-        <button
-          type="button"
-          disabled={!nextIssue}
-          onClick={() => nextIssue && onNavigateIssue?.(nextIssue.id)}
-          title={nextIssue ? `Next issue: ${nextIssue.key}` : 'No next issue'}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            borderRadius: 4,
-            padding: 6,
-            cursor: nextIssue ? 'pointer' : 'default',
-            color: nextIssue ? '#44546f' : '#b3b9c4',
-            display: 'flex',
-            alignItems: 'center',
-          }}
-          onMouseEnter={(e) => nextIssue && (e.currentTarget.style.backgroundColor = '#f1f2f4')}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-        >
-          <ChevronDown size={18} />
-        </button>
+            <button
+              type="button"
+              disabled={!nextIssue}
+              onClick={() => nextIssue && onNavigateIssue?.(nextIssue.id)}
+              title={nextIssue ? `Next issue: ${nextIssue.key}` : 'No next issue'}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                borderRadius: 4,
+                padding: 6,
+                cursor: nextIssue ? 'pointer' : 'default',
+                color: nextIssue ? '#44546f' : '#b3b9c4',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+              onMouseEnter={(e) => nextIssue && (e.currentTarget.style.backgroundColor = '#f1f2f4')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+            >
+              <ChevronDown size={18} />
+            </button>
+          </>
+        )}
 
         {/* Padlock Icon */}
         <button
@@ -188,9 +314,9 @@ export function TaskDetailHeader({
           title="Restricted access"
           style={{
             background: 'transparent',
-            border: 'none',
+            border: '1px solid rgba(0, 0, 0, 0.12)',
             borderRadius: 4,
-            padding: 6,
+            padding: '5px 8px',
             cursor: 'pointer',
             color: '#44546f',
             display: 'flex',
@@ -199,7 +325,7 @@ export function TaskDetailHeader({
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
         >
-          <Lock size={16} />
+          <Lock size={15} />
         </button>
 
         {/* Watchers Eye Button */}
@@ -213,7 +339,7 @@ export function TaskDetailHeader({
           title="Watchers"
           style={{
             background: isWatching ? '#e9f2ff' : 'transparent',
-            border: 'none',
+            border: isWatching ? '1px solid #0c66e4' : '1px solid rgba(0, 0, 0, 0.12)',
             borderRadius: 4,
             padding: '4px 8px',
             cursor: 'pointer',
@@ -227,8 +353,8 @@ export function TaskDetailHeader({
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = isWatching ? '#dbe8fc' : '#f1f2f4')}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = isWatching ? '#e9f2ff' : 'transparent')}
         >
-          <Eye size={15} />
-          <span>{watchersCount}</span>
+          <Eye size={15} color="#0c66e4" />
+          <span style={{ color: '#0c66e4', fontWeight: 600 }}>{watchersCount}</span>
         </button>
 
         {/* Share Button */}
@@ -238,9 +364,9 @@ export function TaskDetailHeader({
           title="Share issue link"
           style={{
             background: 'transparent',
-            border: 'none',
+            border: '1px solid rgba(0, 0, 0, 0.12)',
             borderRadius: 4,
-            padding: 6,
+            padding: '5px 8px',
             cursor: 'pointer',
             color: '#44546f',
             display: 'flex',
@@ -249,7 +375,7 @@ export function TaskDetailHeader({
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
         >
-          <Share2 size={16} />
+          <Share2 size={15} />
         </button>
 
         {/* More Menu Dropdown (...) */}
@@ -260,9 +386,9 @@ export function TaskDetailHeader({
             title="More actions"
             style={{
               background: moreMenuOpen ? '#f1f2f4' : 'transparent',
-              border: 'none',
+              border: '1px solid rgba(0, 0, 0, 0.12)',
               borderRadius: 4,
-              padding: 6,
+              padding: '5px 8px',
               cursor: 'pointer',
               color: '#44546f',
               display: 'flex',
@@ -271,7 +397,7 @@ export function TaskDetailHeader({
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
             onMouseLeave={(e) => !moreMenuOpen && (e.currentTarget.style.backgroundColor = 'transparent')}
           >
-            <MoreHorizontal size={16} />
+            <MoreHorizontal size={15} />
           </button>
 
           {moreMenuOpen && (
@@ -365,67 +491,76 @@ export function TaskDetailHeader({
           )}
         </div>
 
-        {/* Popout to Standalone URL */}
-        <Link
-          href={`/projects/${projectId}/issues/${issue.id}`}
-          title="Open in full page"
-          style={{
-            background: 'transparent',
-            border: 'none',
-            borderRadius: 4,
-            padding: 6,
-            color: '#44546f',
-            display: 'flex',
-            alignItems: 'center',
-            textDecoration: 'none',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-        >
-          <ExternalLink size={16} />
-        </Link>
+        {/* Controls only for Modal & Right-Bar modes */}
+        {viewMode !== 'full-page' && (
+          <>
+            {/* Popout to Standalone URL */}
+            <Link
+              href={`/projects/${projectId}/issues/${issue.key || issue.id}`}
+              title="Open in full page"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                borderRadius: 4,
+                padding: 6,
+                color: '#44546f',
+                display: 'flex',
+                alignItems: 'center',
+                textDecoration: 'none',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+            >
+              <ExternalLink size={16} />
+            </Link>
 
-        {/* Toggle Full-size Modal vs Right Bar */}
-        <button
-          type="button"
-          onClick={onToggleViewMode}
-          title={viewMode === 'modal' ? 'Dock to right bar (Side panel)' : 'Full size (Expand to modal)'}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            borderRadius: 4,
-            padding: 6,
-            cursor: 'pointer',
-            color: '#44546f',
-            display: 'flex',
-            alignItems: 'center',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-        >
-          {viewMode === 'modal' ? <PanelRightClose size={17} /> : <Maximize2 size={16} />}
-        </button>
+            {/* Toggle Full-size Modal vs Right Bar */}
+            {onToggleViewMode && (
+              <button
+                type="button"
+                onClick={onToggleViewMode}
+                title={viewMode === 'modal' ? 'Dock to right bar (Side panel)' : 'Full size (Expand to modal)'}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  borderRadius: 4,
+                  padding: 6,
+                  cursor: 'pointer',
+                  color: '#44546f',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+              >
+                {viewMode === 'modal' ? <PanelRightClose size={17} /> : <Maximize2 size={16} />}
+              </button>
+            )}
 
-        {/* Close Button */}
-        <button
-          type="button"
-          onClick={onClose}
-          title="Close"
-          style={{
-            background: 'transparent',
-            border: 'none',
-            borderRadius: 4,
-            padding: 6,
-            cursor: 'pointer',
-            color: '#44546f',
-            display: 'flex',
-            alignItems: 'center',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-        >
-          <X size={18} />
-        </button>
+            {/* Close Button */}
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                title="Close"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  borderRadius: 4,
+                  padding: 6,
+                  cursor: 'pointer',
+                  color: '#44546f',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+              >
+                <X size={18} />
+              </button>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
