@@ -11,17 +11,25 @@ const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? 'http://localhost:8080/ws';
 class WebSocketClient {
   private client: Client | null = null;
   private userId: string | null = null;
+  private onNotification: ((n: Notification) => void) | null = null;
 
   connect(userId: string, onNotification: (n: Notification) => void): void {
-    if (this.client?.connected) return;
+    if (this.client && this.userId === userId) return; // already connecting/connected for this user
+    if (this.client) this.client.deactivate();
     this.userId = userId;
+    this.onNotification = onNotification;
 
     this.client = new Client({
       webSocketFactory: () => new SockJS(WS_URL) as WebSocket,
-      connectHeaders: {
-        Authorization: `Bearer ${tokenStorage.getAccess() ?? ''}`,
-      },
       reconnectDelay: 5000,
+      // Read the token on every (re)connect so reconnects after a refresh use the latest token
+      beforeConnect: () => {
+        if (this.client) {
+          this.client.connectHeaders = {
+            Authorization: `Bearer ${tokenStorage.getAccess() ?? ''}`,
+          };
+        }
+      },
       onConnect: () => {
         console.log('[WS] Connected');
         this.client!.subscribe(
@@ -29,7 +37,7 @@ class WebSocketClient {
           (message: IMessage) => {
             try {
               const notification = JSON.parse(message.body) as Notification;
-              onNotification(notification);
+              this.onNotification?.(notification);
             } catch {
               console.warn('[WS] Could not parse notification', message.body);
             }
@@ -37,7 +45,10 @@ class WebSocketClient {
         );
       },
       onStompError: (frame) => {
-        console.error('[WS] STOMP error', frame);
+        console.error('[WS] STOMP error', frame.headers['message'] ?? frame);
+      },
+      onWebSocketClose: () => {
+        console.log('[WS] Socket closed (will retry)');
       },
     });
 
@@ -49,6 +60,7 @@ class WebSocketClient {
       this.client.deactivate();
       this.client = null;
       this.userId = null;
+      this.onNotification = null;
       console.log('[WS] Disconnected');
     }
   }
