@@ -48,10 +48,12 @@ export function Sidebar({ collapsed, onToggle, projectId }: SidebarProps) {
   const activeProjectId = projectId || (urlMatch ? urlMatch[1] : null);
   const isProjectMode = Boolean(pathname.startsWith('/projects/') && activeProjectId);
 
-  // Fetch all workspaces
+  // Fetch workspaces belonging to current user
   const { data: workspaces = [] } = useQuery({
-    queryKey: ['workspaces'],
-    queryFn: () => workspaceApi.list().then(r => r.data),
+    queryKey: ['workspaces', currentUser?.id],
+    queryFn: () => workspaceApi.list(currentUser?.id).then(r => r.data),
+    enabled: Boolean(currentUser?.id),
+    staleTime: 1000 * 60 * 5,
   });
 
   // Fetch current project details if in project mode

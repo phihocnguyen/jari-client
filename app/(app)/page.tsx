@@ -16,8 +16,10 @@ export default function DashboardPage() {
   const [createWorkspaceOpen, setCreateWorkspaceOpen] = useState(false);
 
   const { data: workspaces, isLoading } = useQuery({
-    queryKey: ['workspaces'],
-    queryFn: () => workspaceApi.list().then(r => r.data),
+    queryKey: ['workspaces', user?.id],
+    queryFn: () => workspaceApi.list(user?.id).then(r => r.data),
+    enabled: Boolean(user?.id),
+    staleTime: 1000 * 60 * 5,
   });
 
   const [greeting, setGreeting] = useState('Welcome back');

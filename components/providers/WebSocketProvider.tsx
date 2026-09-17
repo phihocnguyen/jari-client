@@ -17,23 +17,31 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const setNotifications = useNotificationStore((s) => s.setNotifications);
 
   useEffect(() => {
-    const token = tokenStorage.getAccess();
-    if (!user?.id || isMockMode() || !token) {
+    if (!user?.id) {
       wsClient.disconnect();
       return;
     }
 
     let cancelled = false;
 
-    // Load persisted notification history so the bell survives reloads
-    notificationApi.list()
-      .then((res) => { if (!cancelled && res.data) setNotifications(res.data); })
-      .catch(() => { /* live pushes still work even if history fetch fails */ });
+    // 1. Always load persisted notification history from database so bell survives reloads
+    notificationApi
+      .list(user.id)
+      .then((res) => {
+        if (!cancelled && res.data) setNotifications(res.data);
+      })
+      .catch(() => {
+        /* live pushes still work even if history fetch fails */
+      });
 
-    wsClient.connect(user.id, (notification) => {
-      addNotification(notification);
-      toast.info(notificationTitle(notification.type), notification.message);
-    });
+    // 2. Connect WebSocket for live push notifications if token is available
+    const token = tokenStorage.getAccess();
+    if (token && !isMockMode()) {
+      wsClient.connect(user.id, (notification) => {
+        addNotification(notification);
+        toast.info(notificationTitle(notification.type), notification.message);
+      });
+    }
 
     return () => {
       cancelled = true;

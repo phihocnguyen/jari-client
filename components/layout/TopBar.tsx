@@ -12,6 +12,7 @@ import { notificationApi } from '@/lib/api/notification';
 import { tokenStorage } from '@/lib/auth/token';
 import { toast } from '@/components/ui/Toast';
 import { timeAgo } from '@/utils/date';
+import { NotificationItem } from '@/components/notification/NotificationItem';
 import type { Notification } from '@/types/notification';
 
 // ─── TopBar ───────────────────────────────────────────────────────
@@ -224,20 +225,25 @@ function UserMenuItem({ icon, label, href }: { icon: React.ReactNode; label: str
 
 // ─── NotificationDropdown ─────────────────────────────────────────
 function NotificationDropdown({ onClose }: { onClose: () => void }) {
-  const router             = useRouter();
+  const router = useRouter();
   const { notifications, markRead, markAllRead } = useNotificationStore();
+  const [filterTab, setFilterTab] = useState<'all' | 'unread'>('all');
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+  const displayedNotifications =
+    filterTab === 'unread' ? notifications.filter((n) => !n.read) : notifications;
 
   const notificationHref = (n: Notification): string | null => {
-    if (n.issueId && n.projectId) return `/projects/${n.projectId}/issues/${n.issueId}`;
-    if (n.projectId) return `/projects/${n.projectId}/settings`;
+    if (n.issueId && n.projectId) return `/projects/${n.projectId}/board`;
+    if (n.projectId) return `/projects/${n.projectId}/summary`;
     if (n.workspaceId) return `/workspaces/${n.workspaceId}/projects`;
     return null;
   };
 
   const handleItemClick = (n: Notification) => {
     if (!n.read) {
-      markRead(n.id); // optimistic update
-      notificationApi.markRead(n.id).catch(() => { /* keep local state anyway */ });
+      markRead(n.id);
+      notificationApi.markRead(n.id).catch(() => {});
     }
     const href = notificationHref(n);
     if (href) {
@@ -248,75 +254,183 @@ function NotificationDropdown({ onClose }: { onClose: () => void }) {
 
   const handleMarkAllRead = () => {
     markAllRead();
-    notificationApi.markAllRead().catch(() => { /* keep local state anyway */ });
+    notificationApi.markAllRead().catch(() => {});
   };
 
   return (
     <div
       className="animate-scale-in"
       style={{
-        position: 'absolute', top: '100%', right: 0,
+        position: 'absolute',
+        top: '100%',
+        right: 0,
         marginTop: 6,
-        background: '#fff',
-        borderRadius: 'var(--radius-card)',
-        boxShadow: 'var(--shadow-dropdown)',
-        width: 340,
-        maxHeight: 420,
+        background: '#ffffff',
+        borderRadius: 12,
+        boxShadow: '0 12px 32px rgba(15, 23, 42, 0.16), 0 2px 6px rgba(15, 23, 42, 0.08)',
+        width: 380,
+        maxHeight: 500,
         overflow: 'hidden',
         zIndex: 50,
-        border: '1px solid rgba(0,0,0,0.08)',
-        display: 'flex', flexDirection: 'column',
+        border: '1px solid rgba(0, 0, 0, 0.08)',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '12px 14px',
-        borderBottom: '1px solid rgba(0,0,0,0.08)',
-      }}>
-        <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Notifications</span>
-        {notifications.some(n => !n.read) && (
+      {/* Header */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '14px 16px 10px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--color-text-primary)' }}>
+            Notifications
+          </span>
+          {unreadCount > 0 && (
+            <span
+              style={{
+                fontSize: '0.6875rem',
+                fontWeight: 700,
+                backgroundColor: 'var(--color-green-accent)',
+                color: '#ffffff',
+                padding: '1px 6px',
+                borderRadius: 10,
+              }}
+            >
+              {unreadCount}
+            </span>
+          )}
+        </div>
+
+        {unreadCount > 0 && (
           <button
+            type="button"
             onClick={handleMarkAllRead}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', color: 'var(--color-green-accent)' }}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              color: 'var(--color-green-accent)',
+              padding: '2px 6px',
+              borderRadius: 4,
+              transition: 'background-color 0.15s ease',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0, 117, 74, 0.08)')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
           >
             Mark all read
           </button>
         )}
       </div>
 
-      <div style={{ overflowY: 'auto', flex: 1 }}>
-        {notifications.length === 0 ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
-            No notifications yet
+      {/* Filter Tabs: All / Unread */}
+      <div
+        style={{
+          display: 'flex',
+          gap: 6,
+          padding: '0 16px 10px',
+          borderBottom: '1px solid #E2E8F0',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setFilterTab('all')}
+          style={{
+            padding: '4px 10px',
+            borderRadius: 6,
+            border: 'none',
+            fontSize: '0.75rem',
+            fontWeight: filterTab === 'all' ? 700 : 500,
+            cursor: 'pointer',
+            backgroundColor: filterTab === 'all' ? '#F1F5F9' : 'transparent',
+            color: filterTab === 'all' ? 'var(--color-text-primary)' : '#64748B',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          All ({notifications.length})
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setFilterTab('unread')}
+          style={{
+            padding: '4px 10px',
+            borderRadius: 6,
+            border: 'none',
+            fontSize: '0.75rem',
+            fontWeight: filterTab === 'unread' ? 700 : 500,
+            cursor: 'pointer',
+            backgroundColor: filterTab === 'unread' ? '#F1F5F9' : 'transparent',
+            color: filterTab === 'unread' ? 'var(--color-text-primary)' : '#64748B',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          Unread ({unreadCount})
+        </button>
+      </div>
+
+      {/* List / Empty State */}
+      <div
+        style={{
+          overflowY: 'auto',
+          flex: 1,
+          maxHeight: 380,
+          scrollbarWidth: 'thin',
+        }}
+      >
+        {displayedNotifications.length === 0 ? (
+          <div
+            style={{
+              padding: '3rem 1.5rem',
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                backgroundColor: '#F1F5F9',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#94A3B8',
+                marginBottom: 4,
+              }}
+            >
+              <Bell size={20} />
+            </div>
+            <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
+              {filterTab === 'unread' ? 'No unread notifications' : 'No notifications yet'}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#94A3B8', maxWidth: 220 }}>
+              {filterTab === 'unread'
+                ? "You've caught up with everything!"
+                : "When you are assigned work or invited, you'll see alerts here."}
+            </div>
           </div>
         ) : (
-          notifications.slice(0, 20).map(n => {
-            const href = notificationHref(n);
-            return (
-              <div
-                key={n.id}
-                onClick={() => handleItemClick(n)}
-                title={href ?? undefined}
-                style={{
-                  padding: '10px 14px',
-                  borderBottom: '1px solid rgba(0,0,0,0.04)',
-                  background: n.read ? 'transparent' : 'rgba(0,117,74,0.04)',
-                  cursor: 'pointer',
-                  display: 'flex', gap: 10, alignItems: 'flex-start',
-                }}
-              >
-                {!n.read && (
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-green-accent)', marginTop: 4, flexShrink: 0 }} />
-                )}
-                <div style={{ fontSize: '0.8125rem', color: 'var(--color-text-primary)', lineHeight: 1.5 }}>
-                  {n.message}
-                  <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: 2 }}>
-                    {timeAgo(n.createdAt)}
-                  </div>
-                </div>
-              </div>
-            );
-          })
+          displayedNotifications.slice(0, 30).map((n) => (
+            <NotificationItem
+              key={n.id}
+              notification={n}
+              onClick={() => handleItemClick(n)}
+              onMarkRead={() => {
+                markRead(n.id);
+                notificationApi.markRead(n.id).catch(() => {});
+              }}
+            />
+          ))
         )}
       </div>
     </div>

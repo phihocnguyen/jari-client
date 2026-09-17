@@ -603,7 +603,7 @@ function InviteMemberModal({
     setSelectedUser(u);
     setValue('userId', u.id);
     setValue('email', u.email);
-    setSearchQuery(u.email);
+    setSearchQuery('');
   };
 
   const toggleProject = (pid: string) => {
@@ -646,74 +646,121 @@ function InviteMemberModal({
           <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text-primary)' }}>
             Email address or name *
           </label>
-          <div style={{ position: 'relative' }}>
-            <input
-              type="text"
-              placeholder="e.g. colleague@jari.com or type name"
-              value={searchQuery}
-              onChange={(e) => {
-                const val = e.target.value;
-                setSearchQuery(val);
-                setValue('email', val);
-                if (selectedUser && selectedUser.email !== val) {
-                  setSelectedUser(null);
-                  setValue('userId', '');
-                }
-              }}
-              className="input"
-              style={{ width: '100%' }}
-            />
-          </div>
 
-          {errors.email && (
+          {/* Selected User Card */}
+          {selectedUser ? (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '8px 12px',
+                border: '1.5px solid var(--color-green-accent)',
+                borderRadius: 'var(--radius-md)',
+                background: 'rgba(0, 117, 74, 0.04)',
+              }}
+            >
+              <Avatar name={selectedUser.fullName} src={selectedUser.avatarUrl} size={32} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-primary)' }}>
+                  {selectedUser.fullName}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+                  {selectedUser.email}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedUser(null);
+                  setSearchQuery('');
+                  setValue('userId', '');
+                  setValue('email', '');
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--color-text-secondary)',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  padding: '2px 8px',
+                  borderRadius: 'var(--radius-sm)',
+                  transition: 'var(--transition-fast)',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--color-red)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'var(--color-text-secondary)')}
+              >
+                ✕ Clear
+              </button>
+            </div>
+          ) : (
+            <div style={{ position: 'relative' }}>
+              <input
+                type="text"
+                placeholder="Search by email or name…"
+                value={searchQuery}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSearchQuery(val);
+                  setValue('email', val);
+                }}
+                className="input"
+                style={{ width: '100%' }}
+              />
+
+              {/* Autocomplete Suggestion Dropdown */}
+              {searchResults.length > 0 && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    zIndex: 20,
+                    background: '#fff',
+                    border: '1px solid rgba(0,0,0,0.12)',
+                    borderRadius: 'var(--radius-md)',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+                    marginTop: 4,
+                    maxHeight: 200,
+                    overflowY: 'auto',
+                  }}
+                >
+                  {searchResults.map(u => (
+                    <div
+                      key={u.id}
+                      onClick={() => handleSelectUser(u)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        padding: '9px 12px',
+                        cursor: 'pointer',
+                        fontSize: '0.8125rem',
+                        borderBottom: '1px solid rgba(0,0,0,0.04)',
+                        transition: 'var(--transition-fast)',
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.04)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
+                    >
+                      <Avatar name={u.fullName} src={u.avatarUrl} size={30} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{u.fullName}</div>
+                        <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.75rem' }}>{u.email}</div>
+                      </div>
+                      <Check size={14} style={{ color: 'var(--color-green-accent)', opacity: 0 }} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {errors.email && !selectedUser && (
             <span style={{ fontSize: '0.75rem', color: 'var(--color-red)' }}>
               {errors.email.message}
             </span>
-          )}
-
-          {/* Autocomplete Suggestion Dropdown */}
-          {searchResults.length > 0 && !selectedUser && (
-            <div
-              style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                zIndex: 20,
-                background: '#fff',
-                border: '1px solid rgba(0,0,0,0.12)',
-                borderRadius: 'var(--radius-md)',
-                boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
-                marginTop: 4,
-                maxHeight: 180,
-                overflowY: 'auto',
-              }}
-            >
-              {searchResults.map(u => (
-                <div
-                  key={u.id}
-                  onClick={() => handleSelectUser(u)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '8px 12px',
-                    cursor: 'pointer',
-                    fontSize: '0.8125rem',
-                    borderBottom: '1px solid rgba(0,0,0,0.04)',
-                    transition: 'var(--transition-fast)',
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.04)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
-                >
-                  <Avatar name={u.fullName} src={u.avatarUrl} size={24} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600 }}>{u.fullName}</div>
-                    <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.75rem' }}>{u.email}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
           )}
         </div>
 

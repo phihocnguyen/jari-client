@@ -13,8 +13,12 @@ import type { Project } from '@/types/project';
 
 // ─── Workspace API ────────────────────────────────────────────────
 export const workspaceApi = {
-  list: () =>
-    apiClient.get<ApiResponse<Workspace[]>>('/workspaces').then(r => r.data),
+  list: (userId?: string) =>
+    apiClient
+      .get<ApiResponse<Workspace[]>>('/workspaces', {
+        params: userId ? { userId } : undefined,
+      })
+      .then((r) => r.data),
 
   get: (id: string) =>
     apiClient.get<ApiResponse<Workspace>>(`/workspaces/${id}`).then(r => r.data),
