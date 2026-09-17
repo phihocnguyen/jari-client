@@ -1,0 +1,165 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { Star, Settings } from 'lucide-react';
+import type { Project } from '@/types/project';
+
+interface ProjectSidebarItemProps {
+  project: Project;
+  isActive: boolean;
+  collapsed: boolean;
+  isStarred: boolean;
+  onToggleStar: (e: React.MouseEvent) => void;
+}
+
+export function ProjectSidebarItem({
+  project,
+  isActive,
+  collapsed,
+  isStarred,
+  onToggleStar,
+}: ProjectSidebarItemProps) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        marginInline: collapsed ? 0 : 6,
+        marginBottom: 2,
+        borderRadius: 8,
+        backgroundColor: isActive
+          ? 'rgba(0, 117, 74, 0.45)'
+          : hovered
+          ? 'rgba(255, 255, 255, 0.05)'
+          : 'transparent',
+        transition: 'background-color 0.15s ease',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: collapsed ? 'center' : 'space-between',
+        position: 'relative',
+      }}
+    >
+      {/* Active Indicator Bar */}
+      {isActive && !collapsed && (
+        <span
+          style={{
+            position: 'absolute',
+            left: 8,
+            top: 8,
+            bottom: 8,
+            width: 3,
+            borderRadius: 2,
+            backgroundColor: 'var(--color-green-accent)',
+          }}
+        />
+      )}
+
+      {/* Main Project Navigation Link (board) */}
+      <Link
+        href={`/projects/${project.id}/board`}
+        title={project.name}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          minWidth: 0,
+          flex: 1,
+          padding: collapsed ? '6px 0' : '6px 6px 6px 24px',
+          justifyContent: collapsed ? 'center' : 'flex-start',
+          textDecoration: 'none',
+        }}
+      >
+        <div
+          style={{
+            width: 20,
+            height: 20,
+            borderRadius: '50%',
+            backgroundColor: project.avatarColor || '#EAB308',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff',
+            fontSize: '0.625rem',
+            fontWeight: 800,
+            flexShrink: 0,
+          }}
+        >
+          {project.name.charAt(0).toUpperCase()}
+        </div>
+
+        {!collapsed && (
+          <span
+            style={{
+              fontSize: '0.8125rem',
+              fontWeight: isActive ? 600 : 400,
+              color: '#fff',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {project.name}
+          </span>
+        )}
+      </Link>
+
+      {/* Sibling Action Buttons (Never nested inside <a>) */}
+      {!collapsed && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            flexShrink: 0,
+            paddingRight: 8,
+          }}
+        >
+          {(hovered || isStarred) && (
+            <button
+              type="button"
+              onClick={onToggleStar}
+              title={isStarred ? 'Remove from favorites' : 'Add to favorites'}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: 2,
+                cursor: 'pointer',
+                color: isStarred ? '#FBBF24' : 'rgba(255, 255, 255, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 4,
+              }}
+            >
+              <Star size={12} fill={isStarred ? '#FBBF24' : 'none'} />
+            </button>
+          )}
+
+          {hovered && (
+            <Link
+              href={`/projects/${project.id}/settings`}
+              title="Space settings"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'rgba(255, 255, 255, 0.5)',
+                padding: 2,
+                borderRadius: 4,
+                textDecoration: 'none',
+                transition: 'color 0.15s ease',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255, 255, 255, 0.5)')}
+            >
+              <Settings size={12} />
+            </Link>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
