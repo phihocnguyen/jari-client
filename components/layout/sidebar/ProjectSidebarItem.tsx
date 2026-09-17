@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Star, Settings, Loader2 } from 'lucide-react';
+import { useNavigationLoading } from '@/components/loading';
 import type { Project } from '@/types/project';
 
 interface ProjectSidebarItemProps {
@@ -24,6 +25,7 @@ export function ProjectSidebarItem({
   const pathname = usePathname();
   const [hovered, setHovered] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+  const { startNavigation } = useNavigationLoading();
 
   // Clear navigating state when route matches
   useEffect(() => {
@@ -72,7 +74,10 @@ export function ProjectSidebarItem({
         href={`/projects/${project.id}/summary`}
         title={project.name}
         onClick={() => {
-          if (!isActive) setIsNavigating(true);
+          if (!isActive) {
+            setIsNavigating(true);
+            startNavigation(`Opening ${project.name}...`);
+          }
         }}
         style={{
           display: 'flex',

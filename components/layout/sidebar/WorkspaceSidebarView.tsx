@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Plus, CheckSquare, Star, ChevronDown } from 'lucide-react';
+import { useNavigationLoading } from '@/components/loading';
 import { WorkspaceAccordionItem } from './WorkspaceAccordionItem';
 import type { Workspace } from '@/types/workspace';
 
@@ -34,6 +35,8 @@ export function WorkspaceSidebarView({
   setStarredExpanded,
   myOpenTasksCount,
 }: WorkspaceSidebarViewProps) {
+  const { startNavigation } = useNavigationLoading();
+
   return (
     <div
       style={{
@@ -261,6 +264,7 @@ export function WorkspaceSidebarView({
                   >
                     <Link
                       href={`/projects/${proj.id}/summary`}
+                      onClick={() => startNavigation(`Opening ${proj.name}...`)}
                       style={{
                         display: 'flex',
                         alignItems: 'center',

@@ -8,6 +8,8 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { ToastContainer } from '@/components/ui/Toast';
 
+import { GlobalLoadingProvider } from '@/components/loading';
+
 // ─── App Shell Layout (Client Guard) ─────────────────────────────
 export default function AppShellLayout({ children }: LayoutProps<'/'>) {
   const router          = useRouter();
@@ -33,16 +35,18 @@ export default function AppShellLayout({ children }: LayoutProps<'/'>) {
 
   return (
     <WebSocketProvider>
-      <div className="app-shell">
-        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(v => !v)} />
-        <div className={`app-content${collapsed ? ' sidebar-collapsed' : ''}`}>
-          <TopBar />
-          <main className="app-main">
-            {children}
-          </main>
+      <GlobalLoadingProvider>
+        <div className="app-shell">
+          <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(v => !v)} />
+          <div className={`app-content${collapsed ? ' sidebar-collapsed' : ''}`}>
+            <TopBar />
+            <main className="app-main">
+              {children}
+            </main>
+          </div>
         </div>
-      </div>
-      <ToastContainer />
+        <ToastContainer />
+      </GlobalLoadingProvider>
     </WebSocketProvider>
   );
 }
