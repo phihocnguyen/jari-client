@@ -21,6 +21,7 @@ interface ProjectSidebarViewProps {
   collapsed: boolean;
   projectId: string;
   project?: Project | null;
+  isLoading?: boolean;
   pathname: string;
   workspaces: Workspace[];
   onOpenCreateIssue: () => void;
@@ -31,13 +32,13 @@ export function ProjectSidebarView({
   collapsed,
   projectId,
   project,
+  isLoading,
   pathname,
-  workspaces,
   onOpenCreateIssue,
   onOpenSearch,
 }: ProjectSidebarViewProps) {
-  const projectName = project?.name || 'Teams in Space';
-  const projectInitial = projectName.charAt(0).toUpperCase();
+  const projectName = project?.name || (isLoading ? '' : 'Teams in Space');
+  const projectInitial = projectName ? projectName.charAt(0).toUpperCase() : 'T';
 
   // Project navigation items matching the tabs:
   const PROJECT_NAV_ITEMS = [
@@ -108,8 +109,20 @@ export function ProjectSidebarView({
         overflowY: 'auto',
         overflowX: 'hidden',
         position: 'relative',
+        animation: 'sidebarSlideFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
+      <style>{`
+        @keyframes sidebarSlideFadeIn {
+          from { opacity: 0; transform: translateX(-4px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes sidebarPulse {
+          0%, 100% { opacity: 0.35; }
+          50% { opacity: 0.85; }
+        }
+      `}</style>
+
       {/* ─── Header: "← All Workspaces" + Project Title ─────── */}
       <div
         style={{
@@ -144,54 +157,94 @@ export function ProjectSidebarView({
 
         {/* Project Header Block */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {/* Project Avatar Square */}
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              backgroundColor: project?.avatarColor || '#00754A',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              fontWeight: 800,
-              fontSize: '0.9375rem',
-              flexShrink: 0,
-              boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
-            }}
-          >
-            {projectInitial}
-          </div>
-
-          {!collapsed && (
-            <div style={{ minWidth: 0, flex: 1 }}>
+          {isLoading && !project ? (
+            /* Skeleton Loading State for Project Header */
+            <>
               <div
                 style={{
-                  fontSize: '0.6875rem',
-                  fontWeight: 700,
-                  color: 'rgba(255, 255, 255, 0.45)',
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                  animation: 'sidebarPulse 1.5s infinite ease-in-out',
+                  flexShrink: 0,
                 }}
-              >
-                PROJECTS
-              </div>
+              />
+              {!collapsed && (
+                <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div
+                    style={{
+                      width: 55,
+                      height: 9,
+                      borderRadius: 3,
+                      backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                      animation: 'sidebarPulse 1.5s infinite ease-in-out',
+                    }}
+                  />
+                  <div
+                    style={{
+                      width: 120,
+                      height: 14,
+                      borderRadius: 4,
+                      backgroundColor: 'rgba(255, 255, 255, 0.18)',
+                      animation: 'sidebarPulse 1.5s infinite ease-in-out',
+                    }}
+                  />
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {/* Project Avatar Square */}
               <div
                 style={{
-                  fontSize: '0.9375rem',
-                  fontWeight: 700,
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  backgroundColor: project?.avatarColor || '#00754A',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   color: '#fff',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  letterSpacing: '-0.01em',
+                  fontWeight: 800,
+                  fontSize: '0.9375rem',
+                  flexShrink: 0,
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
                 }}
-                title={projectName}
               >
-                {projectName}
+                {projectInitial}
               </div>
-            </div>
+
+              {!collapsed && (
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div
+                    style={{
+                      fontSize: '0.6875rem',
+                      fontWeight: 700,
+                      color: 'rgba(255, 255, 255, 0.45)',
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    PROJECTS
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '0.9375rem',
+                      fontWeight: 700,
+                      color: '#fff',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      letterSpacing: '-0.01em',
+                    }}
+                    title={projectName}
+                  >
+                    {projectName}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

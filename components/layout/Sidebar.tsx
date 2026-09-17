@@ -55,7 +55,7 @@ export function Sidebar({ collapsed, onToggle, projectId }: SidebarProps) {
   });
 
   // Fetch current project details if in project mode
-  const { data: currentProject } = useQuery({
+  const { data: currentProject, isLoading: isProjectLoading } = useQuery({
     queryKey: ['project', activeProjectId],
     queryFn: () => (activeProjectId ? projectApi.get(activeProjectId).then(r => r.data) : null),
     enabled: Boolean(isProjectMode && activeProjectId),
@@ -182,12 +182,30 @@ export function Sidebar({ collapsed, onToggle, projectId }: SidebarProps) {
           {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
         </button>
 
+        {/* Subtle Top Loading Progress Bar when transitioning/fetching project */}
+        {isProjectMode && isProjectLoading && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 3,
+              background: 'linear-gradient(90deg, #00754A, #10B981, #34D399, #00754A)',
+              backgroundSize: '200% 100%',
+              animation: 'sidebarProgress 1.2s linear infinite',
+              zIndex: 110,
+            }}
+          />
+        )}
+
         {/* ─── Sidebar Views: Project Mode vs Workspace Mode ───────── */}
         {isProjectMode && activeProjectId ? (
           <ProjectSidebarView
             collapsed={collapsed}
             projectId={activeProjectId}
             project={currentProject}
+            isLoading={isProjectLoading}
             pathname={pathname}
             workspaces={workspaces}
             onOpenCreateIssue={() => setCreateIssueOpen(true)}
