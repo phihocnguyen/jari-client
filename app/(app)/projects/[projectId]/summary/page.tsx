@@ -21,10 +21,10 @@ export default function ProjectSummaryPage() {
     queryKey: ['summary', projectId],
     queryFn: () => summaryApi.get(projectId),
     enabled: Boolean(projectId),
-    staleTime: 1000 * 60 * 2, // 2 min
+    staleTime: 1000 * 60 * 5, // 5 min
   });
 
-  if (isLoading) {
+  if (isLoading && !data) {
     return (
       <GlobalLoadingOverlay
         label="Loading project summary..."

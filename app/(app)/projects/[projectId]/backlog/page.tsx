@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { issueApi } from '@/lib/api/issue';
 import { sprintApi } from '@/lib/api/sprint';
@@ -21,9 +22,10 @@ interface PageProps {
   params: Promise<{ projectId: string }>;
 }
 
-export default function BacklogPage({ params }: PageProps) {
+export default function BacklogPage() {
   const qc = useQueryClient();
-  const [resolvedParams, setResolvedParams] = useState<{ projectId: string } | null>(null);
+  const routeParams = useParams();
+  const projectId = (routeParams?.projectId as string) ?? '';
   const [filters, setFilters] = useState<IssueFilter>({});
   const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
 
@@ -48,10 +50,6 @@ export default function BacklogPage({ params }: PageProps) {
     targetSprintName: string;
     isTargetActive?: boolean;
   } | null>(null);
-
-  useEffect(() => {
-    params.then((p) => setResolvedParams(p));
-  }, [params]);
 
   // Auto-scroll when dragging near viewport top or bottom edges
   useEffect(() => {
@@ -130,25 +128,31 @@ export default function BacklogPage({ params }: PageProps) {
     };
   }, [draggedIssue]);
 
-  const projectId = resolvedParams?.projectId ?? '';
-
   // Data Queries
   const { data: project } = useQuery({
     queryKey: ['project', projectId],
     queryFn: () => (projectId ? projectApi.get(projectId).then((r) => r.data) : null),
     enabled: Boolean(projectId),
+    staleTime: 1000 * 60 * 5,
   });
 
   const { data: sprints = [] } = useQuery({
     queryKey: ['sprints', projectId],
     queryFn: () => (projectId ? sprintApi.list(projectId).then((r) => r.data) : []),
     enabled: Boolean(projectId),
+    staleTime: 1000 * 60 * 5,
   });
 
+  const hasActiveFilters = Boolean(
+    filters &&
+    (filters.query || filters.assigneeId || filters.status || filters.type || filters.priority)
+  );
+
   const { data: issuesPage, isLoading: loadingIssues } = useQuery({
-    queryKey: ['issues', projectId, filters],
-    queryFn: () => (projectId ? issueApi.list(projectId, filters) : null),
+    queryKey: hasActiveFilters ? ['issues', projectId, filters] : ['issues', projectId],
+    queryFn: () => (projectId ? issueApi.list(projectId, hasActiveFilters ? filters : undefined) : null),
     enabled: Boolean(projectId),
+    staleTime: 1000 * 60 * 5,
   });
 
   const allIssues: Issue[] = issuesPage?.data ?? [];
@@ -448,7 +452,7 @@ export default function BacklogPage({ params }: PageProps) {
           setTargetSprintId(undefined);
           setCreateIssueOpen(true);
         }}
-        loadingIssues={loadingIssues}
+        loadingIssues={loadingIssues && allIssues.length === 0}
         hasSprintsAbove={displaySprints.length > 0}
         onDropOnIssue={handleDropOnIssue}
       />

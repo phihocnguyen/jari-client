@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Search, ChevronDown, MoreHorizontal, CheckCircle2, Bookmark,
@@ -46,31 +47,29 @@ function formatSprintDates(start?: string, end?: string) {
   return `Ends ${fmt(end!)}`;
 }
 
-export default function BoardPage({ params }: PageProps) {
+export default function BoardPage() {
   const qc = useQueryClient();
-  const [resolvedParams, setResolvedParams] = useState<{ projectId: string } | null>(null);
+  const routeParams = useParams();
+  const projectId = (routeParams?.projectId as string) ?? '';
+
   const [query, setQuery] = useState('');
   const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
   const [createIssueOpen, setCreateIssueOpen] = useState(false);
   const [draggedIssueId, setDraggedIssueId] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 
-  useEffect(() => {
-    params.then((p) => setResolvedParams(p));
-  }, [params]);
-
-  const projectId = resolvedParams?.projectId ?? '';
-
   const { data: project } = useQuery({
     queryKey: ['project', projectId],
     queryFn: () => (projectId ? projectApi.get(projectId).then((r) => r.data) : null),
     enabled: Boolean(projectId),
+    staleTime: 1000 * 60 * 5,
   });
 
   const { data: sprints = [], isLoading: loadingSprints } = useQuery({
     queryKey: ['sprints', projectId],
     queryFn: () => (projectId ? sprintApi.list(projectId).then((r) => r.data) : []),
     enabled: Boolean(projectId),
+    staleTime: 1000 * 60 * 5,
   });
 
   const activeSprint = sprints.find((s: Sprint) => s.status === 'ACTIVE');
@@ -79,12 +78,14 @@ export default function BoardPage({ params }: PageProps) {
     queryKey: ['board', projectId],
     queryFn: () => (projectId && activeSprint ? sprintApi.getBoard(projectId).then((r) => r.data) : null),
     enabled: Boolean(projectId && activeSprint),
+    staleTime: 1000 * 60 * 5,
   });
 
   const { data: issuesPage, isLoading: loadingIssues } = useQuery({
     queryKey: ['issues', projectId],
     queryFn: () => (projectId ? issueApi.list(projectId) : null),
     enabled: Boolean(projectId),
+    staleTime: 1000 * 60 * 5,
   });
 
   const allIssues: Issue[] = issuesPage?.data ?? [];
@@ -212,8 +213,8 @@ export default function BoardPage({ params }: PageProps) {
     }
   };
 
-  // If sprints are still loading
-  if (loadingSprints) {
+  // If sprints are still loading on initial fetch
+  if (loadingSprints && sprints.length === 0) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         <h1 style={{ fontSize: '1.625rem', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.02em' }}>
@@ -474,7 +475,7 @@ export default function BoardPage({ params }: PageProps) {
       </div>
 
       {/* Board Columns Grid */}
-      {loadingBoard && loadingIssues ? (
+      {(loadingBoard || loadingIssues) && activeIssues.length === 0 ? (
         <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-secondary)' }}>
           Loading Board...
         </div>

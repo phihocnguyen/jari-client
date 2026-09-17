@@ -47,6 +47,7 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
     queryKey: ['issues', projectId],
     queryFn: () => (projectId ? issueApi.list(projectId) : null),
     enabled: Boolean(projectId),
+    staleTime: 1000 * 60 * 5,
   });
 
   // 2. Fetch Project Members

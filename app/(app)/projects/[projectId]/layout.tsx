@@ -1,7 +1,6 @@
 'use client';
 
-import React, { Suspense } from 'react';
-import ProjectLoading from './loading';
+import React from 'react';
 
 interface ProjectLayoutProps {
   children: React.ReactNode;
@@ -10,9 +9,7 @@ interface ProjectLayoutProps {
 export default function ProjectLayout({ children }: ProjectLayoutProps) {
   return (
     <div style={{ width: '100%', minHeight: '60vh' }}>
-      <Suspense fallback={<ProjectLoading />}>
-        {children}
-      </Suspense>
+      {children}
     </div>
   );
 }
