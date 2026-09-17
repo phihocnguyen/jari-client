@@ -8,8 +8,11 @@ import { Avatar } from '@/components/ui/Avatar';
 import { useAuthStore } from '@/store/auth.store';
 import { useNotificationStore } from '@/store/notification.store';
 import { authApi } from '@/lib/api/auth';
+import { notificationApi } from '@/lib/api/notification';
 import { tokenStorage } from '@/lib/auth/token';
 import { toast } from '@/components/ui/Toast';
+import { timeAgo } from '@/utils/date';
+import type { Notification } from '@/types/notification';
 
 // ─── TopBar ───────────────────────────────────────────────────────
 interface TopBarProps {
@@ -221,7 +224,31 @@ function UserMenuItem({ icon, label, href }: { icon: React.ReactNode; label: str
 
 // ─── NotificationDropdown ─────────────────────────────────────────
 function NotificationDropdown({ onClose }: { onClose: () => void }) {
+  const router             = useRouter();
   const { notifications, markRead, markAllRead } = useNotificationStore();
+
+  const notificationHref = (n: Notification): string | null => {
+    if (n.issueId && n.projectId) return `/projects/${n.projectId}/issues/${n.issueId}`;
+    if (n.projectId) return `/projects/${n.projectId}/settings`;
+    return null;
+  };
+
+  const handleItemClick = (n: Notification) => {
+    if (!n.read) {
+      markRead(n.id); // optimistic update
+      notificationApi.markRead(n.id).catch(() => { /* keep local state anyway */ });
+    }
+    const href = notificationHref(n);
+    if (href) {
+      onClose();
+      router.push(href);
+    }
+  };
+
+  const handleMarkAllRead = () => {
+    markAllRead();
+    notificationApi.markAllRead().catch(() => { /* keep local state anyway */ });
+  };
 
   return (
     <div
@@ -248,7 +275,7 @@ function NotificationDropdown({ onClose }: { onClose: () => void }) {
         <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Notifications</span>
         {notifications.some(n => !n.read) && (
           <button
-            onClick={markAllRead}
+            onClick={handleMarkAllRead}
             style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', color: 'var(--color-green-accent)' }}
           >
             Mark all read
@@ -262,29 +289,33 @@ function NotificationDropdown({ onClose }: { onClose: () => void }) {
             No notifications yet
           </div>
         ) : (
-          notifications.slice(0, 20).map(n => (
-            <div
-              key={n.id}
-              onClick={() => markRead(n.id)}
-              style={{
-                padding: '10px 14px',
-                borderBottom: '1px solid rgba(0,0,0,0.04)',
-                background: n.read ? 'transparent' : 'rgba(0,117,74,0.04)',
-                cursor: 'pointer',
-                display: 'flex', gap: 10, alignItems: 'flex-start',
-              }}
-            >
-              {!n.read && (
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-green-accent)', marginTop: 4, flexShrink: 0 }} />
-              )}
-              <div style={{ fontSize: '0.8125rem', color: 'var(--color-text-primary)', lineHeight: 1.5 }}>
-                {n.message}
-                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: 2 }}>
-                  {new Date(n.createdAt).toLocaleString()}
+          notifications.slice(0, 20).map(n => {
+            const href = notificationHref(n);
+            return (
+              <div
+                key={n.id}
+                onClick={() => handleItemClick(n)}
+                title={href ?? undefined}
+                style={{
+                  padding: '10px 14px',
+                  borderBottom: '1px solid rgba(0,0,0,0.04)',
+                  background: n.read ? 'transparent' : 'rgba(0,117,74,0.04)',
+                  cursor: 'pointer',
+                  display: 'flex', gap: 10, alignItems: 'flex-start',
+                }}
+              >
+                {!n.read && (
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-green-accent)', marginTop: 4, flexShrink: 0 }} />
+                )}
+                <div style={{ fontSize: '0.8125rem', color: 'var(--color-text-primary)', lineHeight: 1.5 }}>
+                  {n.message}
+                  <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: 2 }}>
+                    {timeAgo(n.createdAt)}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>
