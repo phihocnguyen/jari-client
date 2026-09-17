@@ -6,156 +6,138 @@ export default function ProjectLoading() {
         flexDirection: 'column',
         gap: '1.25rem',
         width: '100%',
-        animation: 'projectFadeIn 0.3s ease-out forwards',
+        animation: 'summaryFadeIn 0.3s ease-out forwards',
       }}
     >
       <style>{`
-        @keyframes projectFadeIn {
-          from { opacity: 0; transform: translateY(4px); }
+        @keyframes summaryFadeIn {
+          from { opacity: 0; transform: translateY(6px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes skeletonPulse {
+        @keyframes summaryPulse {
           0%, 100% { opacity: 0.5; }
-          50% { opacity: 0.9; }
+          50% { opacity: 0.95; }
         }
-        .skeleton-shimmer {
+        .summary-shimmer {
           background: linear-gradient(90deg, #E2E8F0 25%, #EDF2F7 50%, #E2E8F0 75%);
           background-size: 200% 100%;
-          animation: skeletonShimmer 1.5s infinite, skeletonPulse 2s infinite ease-in-out;
+          animation: summaryShimmer 1.4s infinite, summaryPulse 2s infinite ease-in-out;
         }
-        @keyframes skeletonShimmer {
+        @keyframes summaryShimmer {
           0% { background-position: 200% 0; }
           100% { background-position: -200% 0; }
         }
       `}</style>
 
-      {/* Top Header Skeleton */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {/* Subpage Header with Loading Indicator */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <div
-            className="skeleton-shimmer"
-            style={{ width: 140, height: 14, borderRadius: 4 }}
+            className="summary-shimmer"
+            style={{ width: 140, height: 32, borderRadius: 6 }}
           />
           <div
-            className="skeleton-shimmer"
-            style={{ width: 220, height: 32, borderRadius: 6 }}
-          />
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div
-            className="skeleton-shimmer"
-            style={{ width: 100, height: 34, borderRadius: 6 }}
-          />
-          <div
-            className="skeleton-shimmer"
-            style={{ width: 110, height: 34, borderRadius: 6 }}
-          />
-        </div>
-      </div>
-
-      {/* Filter / Search Bar Skeleton */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          padding: '8px 0',
-          borderBottom: '1px solid #E2E8F0',
-        }}
-      >
-        <div
-          className="skeleton-shimmer"
-          style={{ width: 240, height: 32, borderRadius: 6 }}
-        />
-        <div style={{ display: 'flex', gap: 6 }}>
-          {[1, 2, 3].map(i => (
-            <div
-              key={i}
-              className="skeleton-shimmer"
-              style={{ width: 30, height: 30, borderRadius: '50%' }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '4px 12px',
+              borderRadius: 20,
+              backgroundColor: 'rgba(0, 117, 74, 0.08)',
+              color: 'var(--color-green-brand)',
+              fontSize: '0.8125rem',
+              fontWeight: 600,
+            }}
+          >
+            <span
+              style={{
+                width: 12,
+                height: 12,
+                border: '2px solid rgba(0, 117, 74, 0.25)',
+                borderTopColor: 'var(--color-green-accent)',
+                borderRadius: '50%',
+                animation: 'orbitSpin 0.7s linear infinite',
+                display: 'inline-block',
+              }}
             />
-          ))}
+            <span>Loading project data…</span>
+          </div>
         </div>
-        <div
-          className="skeleton-shimmer"
-          style={{ width: 80, height: 26, borderRadius: 14 }}
-        />
       </div>
 
-      {/* Board Columns Skeleton (4 Columns) */}
+      {/* 1. Metric Badges Skeleton */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(4, minmax(260px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
           gap: '1rem',
-          marginTop: '0.5rem',
+          marginBottom: '0.5rem',
+        }}
+      >
+        {[1, 2, 3, 4].map(i => (
+          <div
+            key={i}
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: 10,
+              padding: '1.125rem 1.25rem',
+              border: '1px solid #E2E8F0',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 14,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+            }}
+          >
+            <div
+              className="summary-shimmer"
+              style={{ width: 42, height: 42, borderRadius: 10, flexShrink: 0 }}
+            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+              <div className="summary-shimmer" style={{ width: '60%', height: 20, borderRadius: 4 }} />
+              <div className="summary-shimmer" style={{ width: '80%', height: 12, borderRadius: 3 }} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 2. Main 2-Column Dashboard Grid Skeleton */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))',
+          gap: '1.5rem',
+          alignItems: 'stretch',
         }}
       >
         {[
-          { title: 'TO DO', count: 3 },
-          { title: 'IN PROGRESS', count: 2 },
-          { title: 'REVIEW', count: 1 },
-          { title: 'DONE', count: 2 },
-        ].map((col, idx) => (
+          { title: 'Status overview', height: 260 },
+          { title: 'Recent activity', height: 260 },
+          { title: 'Priority breakdown', height: 240 },
+          { title: 'Types of work', height: 240 },
+        ].map((w, idx) => (
           <div
             key={idx}
             style={{
-              backgroundColor: '#F4F5F7',
-              borderRadius: 8,
-              padding: '12px 10px',
-              minHeight: '65vh',
+              backgroundColor: '#FFFFFF',
+              borderRadius: 10,
+              padding: '1.25rem 1.5rem',
+              border: '1px solid #E2E8F0',
+              minHeight: w.height,
               display: 'flex',
               flexDirection: 'column',
-              gap: 10,
+              gap: 14,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
             }}
           >
-            {/* Column Header Skeleton */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px 6px' }}>
-              <div
-                className="skeleton-shimmer"
-                style={{ width: 90, height: 16, borderRadius: 4 }}
-              />
-              <div
-                className="skeleton-shimmer"
-                style={{ width: 24, height: 18, borderRadius: 10 }}
-              />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="summary-shimmer" style={{ width: 140, height: 18, borderRadius: 4 }} />
+              <div className="summary-shimmer" style={{ width: 70, height: 14, borderRadius: 4 }} />
             </div>
-
-            {/* Column Cards Skeleton */}
-            {Array.from({ length: col.count }).map((_, cIdx) => (
-              <div
-                key={cIdx}
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: 6,
-                  padding: 12,
-                  boxShadow: '0 1px 2px rgba(9, 30, 66, 0.08)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 10,
-                }}
-              >
-                <div
-                  className="skeleton-shimmer"
-                  style={{ width: '85%', height: 16, borderRadius: 4 }}
-                />
-                <div
-                  className="skeleton-shimmer"
-                  style={{ width: '60%', height: 12, borderRadius: 4 }}
-                />
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
-                  <div
-                    className="skeleton-shimmer"
-                    style={{ width: 50, height: 14, borderRadius: 4 }}
-                  />
-                  <div
-                    className="skeleton-shimmer"
-                    style={{ width: 22, height: 22, borderRadius: '50%' }}
-                  />
-                </div>
-              </div>
-            ))}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12, justifyContent: 'center' }}>
+              <div className="summary-shimmer" style={{ width: '100%', height: 36, borderRadius: 6 }} />
+              <div className="summary-shimmer" style={{ width: '92%', height: 28, borderRadius: 6 }} />
+              <div className="summary-shimmer" style={{ width: '78%', height: 22, borderRadius: 6 }} />
+            </div>
           </div>
         ))}
       </div>

@@ -193,7 +193,7 @@ export function GlobalSearchModal({
               {matchingProjects.map(p => (
                 <div
                   key={p.id}
-                  onClick={() => handleNavigate(`/projects/${p.id}/board`)}
+                  onClick={() => handleNavigate(`/projects/${p.id}/summary`)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',

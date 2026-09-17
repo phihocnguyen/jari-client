@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Star, Settings } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { Star, Settings, Loader2 } from 'lucide-react';
 import type { Project } from '@/types/project';
 
 interface ProjectSidebarItemProps {
@@ -20,7 +21,16 @@ export function ProjectSidebarItem({
   isStarred,
   onToggleStar,
 }: ProjectSidebarItemProps) {
+  const pathname = usePathname();
   const [hovered, setHovered] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  // Clear navigating state when route matches
+  useEffect(() => {
+    if (pathname.includes(`/projects/${project.id}`)) {
+      setIsNavigating(false);
+    }
+  }, [pathname, project.id]);
 
   return (
     <div
@@ -57,10 +67,13 @@ export function ProjectSidebarItem({
         />
       )}
 
-      {/* Main Project Navigation Link (board) */}
+      {/* Main Project Navigation Link (summary) */}
       <Link
-        href={`/projects/${project.id}/board`}
+        href={`/projects/${project.id}/summary`}
         title={project.name}
+        onClick={() => {
+          if (!isActive) setIsNavigating(true);
+        }}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -103,6 +116,18 @@ export function ProjectSidebarItem({
           >
             {project.name}
           </span>
+        )}
+
+        {isNavigating && !collapsed && (
+          <Loader2
+            size={12}
+            color="#6EE7B7"
+            style={{
+              animation: 'orbitSpin 0.7s linear infinite',
+              flexShrink: 0,
+              marginLeft: 'auto',
+            }}
+          />
         )}
       </Link>
 
