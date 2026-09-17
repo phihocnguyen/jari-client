@@ -11,8 +11,10 @@ export interface Notification {
   id: string;
   type: NotificationType;
   targetUserId: string;
-  issueId?: string;
-  issueKey?: string;
+  issueId?: string | null;
+  issueKey?: string | null;
+  projectId?: string | null;
+  projectName?: string | null;
   message: string;
   read: boolean;
   createdAt: string;
