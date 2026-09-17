@@ -20,10 +20,14 @@ export const useNotificationStore = create<NotificationState>((set) => ({
   unreadCount:   0,
 
   addNotification: (n) =>
-    set((s) => ({
-      notifications: [n, ...s.notifications],
-      unreadCount:   s.unreadCount + (n.read ? 0 : 1),
-    })),
+    set((s) => {
+      // Skip duplicates (e.g. WS reconnect replay)
+      if (s.notifications.some(x => x.id === n.id)) return s;
+      return {
+        notifications: [n, ...s.notifications],
+        unreadCount:   s.unreadCount + (n.read ? 0 : 1),
+      };
+    }),
 
   setNotifications: (ns) =>
     set({ notifications: ns, unreadCount: ns.filter(n => !n.read).length }),
