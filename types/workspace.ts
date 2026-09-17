@@ -6,6 +6,7 @@ export interface Workspace {
   slug?: string;
   description?: string;
   logoUrl?: string;
+  ownerId?: string;
   createdAt: string;
   updatedAt: string;
   memberCount?: number;
@@ -17,10 +18,13 @@ export type WorkspaceRole = 'WORKSPACE_ADMIN' | 'WORKSPACE_MEMBER' | 'WORKSPACE_
 export interface WorkspaceMember {
   userId: string;
   fullName: string;
+  displayName?: string;
   email: string;
   avatarUrl?: string;
   role: WorkspaceRole;
   joinedAt: string;
+  projectIds?: string[];
+  projectNames?: string[];
 }
 
 export interface CreateWorkspaceRequest {
@@ -35,10 +39,16 @@ export interface UpdateWorkspaceRequest {
 }
 
 export interface InviteMemberRequest {
-  userId: string;
-  roleName: string;
+  userId?: string;
+  email?: string;
+  roleName: WorkspaceRole;
+  projectIds?: string[];
 }
 
 export interface UpdateMemberRoleRequest {
-  role: WorkspaceRole;
+  roleName: WorkspaceRole;
+}
+
+export interface UpdateMemberProjectsRequest {
+  projectIds: string[];
 }

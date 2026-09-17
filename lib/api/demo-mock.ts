@@ -15,6 +15,7 @@ const DEMO_WORKSPACES = [
     slug: 'acme-eng',
     description: 'Primary workspace for Acme Software products',
     role: 'WORKSPACE_ADMIN' as const,
+    ownerId: ADMIN_USER.id,
     memberCount: 5,
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
@@ -26,9 +27,50 @@ const DEMO_WORKSPACES = [
     slug: 'design-ui',
     description: 'Jari component library and design system',
     role: 'WORKSPACE_MEMBER' as const,
+    ownerId: '99999999-9999-9999-9999-999999999999',
     memberCount: 3,
     createdAt: '2026-01-15T00:00:00Z',
     updatedAt: '2026-01-15T00:00:00Z',
+  },
+];
+
+let DEMO_WORKSPACE_MEMBERS = [
+  {
+    userId: ADMIN_USER.id,
+    fullName: ADMIN_USER.fullName,
+    email: ADMIN_USER.email,
+    role: 'WORKSPACE_ADMIN' as const,
+    joinedAt: '2026-01-01T00:00:00Z',
+    projectIds: ['00000000-0000-0000-0000-000000000003'],
+    projectNames: ['Teams in Space'],
+  },
+  {
+    userId: '22222222-2222-2222-2222-222222222222',
+    fullName: 'Sarah Connor',
+    email: 'sarah@jari.com',
+    role: 'WORKSPACE_MEMBER' as const,
+    joinedAt: '2026-02-15T00:00:00Z',
+    projectIds: ['00000000-0000-0000-0000-000000000003'],
+    projectNames: ['Teams in Space'],
+  },
+];
+
+let DEMO_PROJECT_MEMBERS = [
+  {
+    userId: ADMIN_USER.id,
+    fullName: ADMIN_USER.fullName,
+    displayName: ADMIN_USER.fullName,
+    email: ADMIN_USER.email,
+    role: 'PROJECT_ADMIN' as const,
+    joinedAt: '2026-02-01T00:00:00Z',
+  },
+  {
+    userId: '22222222-2222-2222-2222-222222222222',
+    fullName: 'Sarah Connor',
+    displayName: 'Sarah Connor',
+    email: 'sarah@jari.com',
+    role: 'PROJECT_MEMBER' as const,
+    joinedAt: '2026-02-15T00:00:00Z',
   },
 ];
 
@@ -40,6 +82,10 @@ const DEMO_PROJECTS = [
     projectKey: 'TIS',
     key: 'TIS',
     description: 'Software project for space flight systems',
+    leadId: ADMIN_USER.id,
+    leadName: ADMIN_USER.fullName,
+    leadEmail: ADMIN_USER.email,
+    defaultAssignee: 'UNASSIGNED' as const,
     avatarColor: '#EAB308',
     memberCount: 6,
     role: 'PROJECT_ADMIN' as const,
@@ -53,6 +99,10 @@ const DEMO_PROJECTS = [
     projectKey: 'API',
     key: 'API',
     description: 'Spring Boot microservices & WebSocket service',
+    leadId: ADMIN_USER.id,
+    leadName: ADMIN_USER.fullName,
+    leadEmail: ADMIN_USER.email,
+    defaultAssignee: 'PROJECT_LEAD' as const,
     avatarColor: '#6366F1',
     memberCount: 3,
     role: 'PROJECT_ADMIN' as const,
@@ -258,12 +308,19 @@ export function getDemoResponse(config: InternalAxiosRequestConfig): AxiosRespon
       responseData = { success: true, data: DEMO_STATUSES };
     } else if (url.includes('/ref/priorities')) {
       responseData = { success: true, data: DEMO_PRIORITIES };
-    } else if (url.includes('/users/me')) {
-      responseData = { success: true, data: ADMIN_USER };
+    } else if (url.includes('/users/search')) {
+      responseData = {
+        success: true,
+        data: [
+          ADMIN_USER,
+          { id: '22222222-2222-2222-2222-222222222222', fullName: 'Sarah Connor', email: 'sarah@jari.com', createdAt: '2026-01-01T00:00:00Z' },
+          { id: '33333333-3333-3333-3333-333333333333', fullName: 'Alex Rivera', email: 'alex@jari.com', createdAt: '2026-01-01T00:00:00Z' },
+        ],
+      };
     } else if (url.includes('/workspaces/') && url.endsWith('/members')) {
       responseData = {
         success: true,
-        data: [{ userId: ADMIN_USER.id, fullName: ADMIN_USER.fullName, email: ADMIN_USER.email, role: 'WORKSPACE_ADMIN', joinedAt: '2026-01-01T00:00:00Z' }],
+        data: DEMO_WORKSPACE_MEMBERS,
       };
     } else if (url.includes('/workspaces/') && url.endsWith('/projects')) {
       responseData = { success: true, data: DEMO_PROJECTS };
@@ -276,7 +333,7 @@ export function getDemoResponse(config: InternalAxiosRequestConfig): AxiosRespon
     } else if (url.includes('/projects/') && url.endsWith('/members')) {
       responseData = {
         success: true,
-        data: [{ userId: ADMIN_USER.id, fullName: ADMIN_USER.fullName, email: ADMIN_USER.email, role: 'PROJECT_ADMIN' }],
+        data: DEMO_PROJECT_MEMBERS,
       };
     } else if (url.includes('/projects/') && url.endsWith('/sprints')) {
       responseData = { success: true, data: DEMO_SPRINTS };
@@ -304,7 +361,7 @@ export function getDemoResponse(config: InternalAxiosRequestConfig): AxiosRespon
       };
     } else if (url.match(/\/projects\/[^\/]+$/)) {
       const id = url.split('/').pop();
-      const proj = DEMO_PROJECTS.find(p => p.id === id) ?? DEMO_PROJECTS[0];
+      const proj = DEMO_PROJECTS.find(p => p.id === id || p.projectKey?.toLowerCase() === id?.toLowerCase() || p.key?.toLowerCase() === id?.toLowerCase()) ?? DEMO_PROJECTS[0];
       responseData = { success: true, data: proj };
     } else if (url.includes('/projects/') && url.endsWith('/releases')) {
       responseData = {
@@ -374,7 +431,40 @@ export function getDemoResponse(config: InternalAxiosRequestConfig): AxiosRespon
       payload = config.data;
     }
 
-    if (method === 'DELETE' && url.includes('/issues/')) {
+    if (method === 'POST' && url.includes('/workspaces/') && url.endsWith('/members')) {
+      const newMember = {
+        userId: payload.userId || '33333333-3333-3333-3333-333333333333',
+        fullName: payload.email ? payload.email.split('@')[0] : 'Invited Member',
+        email: payload.email || 'invited@jari.com',
+        role: payload.roleName || 'WORKSPACE_MEMBER',
+        joinedAt: new Date().toISOString(),
+        projectIds: payload.projectIds || [],
+        projectNames: (payload.projectIds || []).map((pid: string) => DEMO_PROJECTS.find(p => p.id === pid)?.name || 'Project'),
+      };
+      DEMO_WORKSPACE_MEMBERS.push(newMember);
+      responseData = { success: true, data: newMember };
+    } else if (method === 'PUT' && url.includes('/workspaces/') && url.includes('/members/') && url.endsWith('/role')) {
+      const parts = url.split('/');
+      const userId = parts[parts.indexOf('members') + 1];
+      const member = DEMO_WORKSPACE_MEMBERS.find(m => m.userId === userId);
+      if (member) {
+        member.role = payload.roleName;
+      }
+      responseData = { success: true, data: member || DEMO_WORKSPACE_MEMBERS[0] };
+    } else if (method === 'PUT' && url.includes('/workspaces/') && url.includes('/members/') && url.endsWith('/projects')) {
+      const parts = url.split('/');
+      const userId = parts[parts.indexOf('members') + 1];
+      const member = DEMO_WORKSPACE_MEMBERS.find(m => m.userId === userId);
+      if (member) {
+        member.projectIds = payload.projectIds || [];
+        member.projectNames = (payload.projectIds || []).map((pid: string) => DEMO_PROJECTS.find(p => p.id === pid)?.name || 'Project');
+      }
+      responseData = { success: true, data: member || DEMO_WORKSPACE_MEMBERS[0] };
+    } else if (method === 'DELETE' && url.includes('/workspaces/') && url.includes('/members/')) {
+      const userId = url.split('/').pop();
+      DEMO_WORKSPACE_MEMBERS = DEMO_WORKSPACE_MEMBERS.filter(m => m.userId !== userId);
+      responseData = { success: true, data: 'Member removed' };
+    } else if (method === 'DELETE' && url.includes('/issues/')) {
       const id = url.split('/').pop();
       DEMO_ISSUES = DEMO_ISSUES.filter((i) => i.id !== id);
       responseData = { success: true, data: 'Issue deleted' };
@@ -508,6 +598,36 @@ export function getDemoResponse(config: InternalAxiosRequestConfig): AxiosRespon
           createdAt: new Date().toISOString(),
         },
       };
+    } else if (method === 'PUT' && url.includes('/projects/') && url.includes('/members/') && url.endsWith('/role')) {
+      const parts = url.split('/');
+      const userId = parts[parts.length - 2];
+      const found = DEMO_PROJECT_MEMBERS.find(m => m.userId === userId);
+      if (found) {
+        found.role = payload.roleName;
+      }
+      responseData = { success: true, data: found };
+    } else if (method === 'POST' && url.includes('/projects/') && url.endsWith('/members')) {
+      const newMember = {
+        userId: payload.userId || 'user-demo-' + Date.now(),
+        fullName: payload.fullName || (payload.email ? payload.email.split('@')[0] : 'New Member'),
+        displayName: payload.fullName || (payload.email ? payload.email.split('@')[0] : 'New Member'),
+        email: payload.email || 'member@jari.com',
+        role: payload.roleName || 'PROJECT_MEMBER',
+        joinedAt: new Date().toISOString(),
+      };
+      DEMO_PROJECT_MEMBERS.push(newMember);
+      responseData = { success: true, data: newMember };
+    } else if (method === 'DELETE' && url.includes('/projects/') && url.includes('/members/')) {
+      const userId = url.split('/').pop();
+      DEMO_PROJECT_MEMBERS = DEMO_PROJECT_MEMBERS.filter(m => m.userId !== userId);
+      responseData = { success: true, data: null, message: 'Member removed' };
+    } else if (method === 'PUT' && url.match(/\/projects\/[^\/]+$/)) {
+      const id = url.split('/').pop();
+      const proj = DEMO_PROJECTS.find(p => p.id === id || p.projectKey?.toLowerCase() === id?.toLowerCase() || p.key?.toLowerCase() === id?.toLowerCase());
+      if (proj) {
+        Object.assign(proj, payload, { updatedAt: new Date().toISOString() });
+      }
+      responseData = { success: true, data: proj ?? DEMO_PROJECTS[0] };
     } else if (url.includes('/projects')) {
       responseData = {
         success: true,

@@ -1,6 +1,13 @@
 import apiClient from './client';
 import type { ApiResponse } from '@/types/api';
-import type { Project, ProjectMember, CreateProjectRequest, UpdateProjectRequest } from '@/types/project';
+import type {
+  Project,
+  ProjectMember,
+  CreateProjectRequest,
+  UpdateProjectRequest,
+  AddProjectMemberRequest,
+  UpdateProjectMemberRoleRequest,
+} from '@/types/project';
 
 // ─── Project API ──────────────────────────────────────────────────
 export const projectApi = {
@@ -22,4 +29,14 @@ export const projectApi = {
   // Members
   listMembers: (projectId: string) =>
     apiClient.get<ApiResponse<ProjectMember[]>>(`/projects/${projectId}/members`).then(r => r.data),
+
+  addMember: (projectId: string, data: AddProjectMemberRequest) =>
+    apiClient.post<ApiResponse<ProjectMember>>(`/projects/${projectId}/members`, data).then(r => r.data),
+
+  updateMemberRole: (projectId: string, userId: string, data: UpdateProjectMemberRoleRequest) =>
+    apiClient.put<ApiResponse<ProjectMember>>(`/projects/${projectId}/members/${userId}/role`, data).then(r => r.data),
+
+  removeMember: (projectId: string, userId: string) =>
+    apiClient.delete(`/projects/${projectId}/members/${userId}`).then(r => r.data),
 };
+

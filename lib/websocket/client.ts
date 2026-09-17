@@ -24,9 +24,10 @@ class WebSocketClient {
       reconnectDelay: 5000,
       // Read the token on every (re)connect so reconnects after a refresh use the latest token
       beforeConnect: () => {
+        const token = tokenStorage.getAccess();
         if (this.client) {
           this.client.connectHeaders = {
-            Authorization: `Bearer ${tokenStorage.getAccess() ?? ''}`,
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           };
         }
       },
@@ -45,7 +46,7 @@ class WebSocketClient {
         );
       },
       onStompError: (frame) => {
-        console.error('[WS] STOMP error', frame.headers['message'] ?? frame);
+        console.error('[WS] STOMP error:', frame.headers['message'] ?? frame, frame.body || '');
       },
       onWebSocketClose: () => {
         console.log('[WS] Socket closed (will retry)');

@@ -10,6 +10,12 @@ export interface Project {
   projectKey: string;
   key?: string;
   description?: string;
+  leadId?: string;
+  leadName?: string;
+  leadEmail?: string;
+  leadAvatarUrl?: string;
+  defaultAssignee?: 'UNASSIGNED' | 'PROJECT_LEAD';
+  projectType?: ProjectType;
   avatarUrl?: string;
   avatarColor?: string;
   createdAt: string;
@@ -21,9 +27,11 @@ export interface Project {
 export interface ProjectMember {
   userId: string;
   fullName: string;
+  displayName?: string;
   email: string;
   avatarUrl?: string;
   role: ProjectRole;
+  joinedAt?: string;
 }
 
 export interface CreateProjectRequest {
@@ -39,4 +47,16 @@ export interface UpdateProjectRequest {
   description?: string;
   leadId?: string;
   status?: ProjectStatus;
+  defaultAssignee?: 'UNASSIGNED' | 'PROJECT_LEAD';
 }
+
+export interface AddProjectMemberRequest {
+  userId?: string;
+  email?: string;
+  roleName: ProjectRole;
+}
+
+export interface UpdateProjectMemberRoleRequest {
+  roleName: ProjectRole;
+}
+

@@ -12,8 +12,9 @@ interface ProjectLayoutProps {
 export default function ProjectLayout({ children }: ProjectLayoutProps) {
   const pathname = usePathname();
   const isIssueDetailPage = pathname?.includes('/issues/');
+  const isSettingsPage = pathname?.includes('/settings');
 
-  if (isIssueDetailPage) {
+  if (isIssueDetailPage || isSettingsPage) {
     return <div style={{ width: '100%' }}>{children}</div>;
   }
 

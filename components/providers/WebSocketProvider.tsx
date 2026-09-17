@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useAuthStore } from '@/store/auth.store';
 import { useNotificationStore } from '@/store/notification.store';
 import { wsClient } from '@/lib/websocket/client';
+import { tokenStorage } from '@/lib/auth/token';
 import { notificationApi } from '@/lib/api/notification';
 import { notificationTitle } from '@/utils/notification';
 import { toast } from '@/components/ui/Toast';
@@ -16,7 +17,8 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const setNotifications = useNotificationStore((s) => s.setNotifications);
 
   useEffect(() => {
-    if (!user?.id || isMockMode()) {
+    const token = tokenStorage.getAccess();
+    if (!user?.id || isMockMode() || !token) {
       wsClient.disconnect();
       return;
     }
