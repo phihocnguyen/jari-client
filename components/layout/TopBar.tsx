@@ -230,6 +230,7 @@ function NotificationDropdown({ onClose }: { onClose: () => void }) {
   const notificationHref = (n: Notification): string | null => {
     if (n.issueId && n.projectId) return `/projects/${n.projectId}/issues/${n.issueId}`;
     if (n.projectId) return `/projects/${n.projectId}/settings`;
+    if (n.workspaceId) return `/workspaces/${n.workspaceId}/projects`;
     return null;
   };
 
