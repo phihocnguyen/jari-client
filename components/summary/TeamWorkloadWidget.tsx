@@ -51,14 +51,13 @@ export function TeamWorkloadWidget({ projectId, teamWorkload, isLoading }: TeamW
             No team workload data available yet.
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
             {teamWorkload.map((member) => (
               <WorkloadBar
                 key={member.userId}
                 name={member.fullName || 'Unassigned'}
                 percent={member.percent}
                 assignedCount={member.assignedCount}
-                color={member.percent > 70 ? '#EA580C' : member.percent > 30 ? '#00754A' : '#94A3B8'}
               />
             ))}
           </div>
@@ -72,12 +71,10 @@ function WorkloadBar({
   name,
   percent,
   assignedCount,
-  color,
 }: {
   name: string;
   percent: number;
   assignedCount: number;
-  color: string;
 }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -99,33 +96,31 @@ function WorkloadBar({
       <div
         style={{
           flex: 1,
-          height: 16,
+          height: 20,
           backgroundColor: 'rgba(0,0,0,0.06)',
           borderRadius: 4,
           overflow: 'hidden',
           position: 'relative',
         }}
       >
-        <div
-          style={{
-            width: `${Math.max(percent, 2)}%`,
-            height: '100%',
-            backgroundColor: color,
-            borderRadius: 4,
-            display: 'flex',
-            alignItems: 'center',
-            paddingLeft: 6,
-            transition: 'width 0.4s ease',
-          }}
-        >
-          {percent > 5 && (
-            <span style={{ fontSize: '0.65rem', fontWeight: 700, color: '#fff' }}>{percent}%</span>
-          )}
-        </div>
+        {percent > 0 ? (
+          <div
+            style={{
+              width: `${Math.max(percent, 2)}%`,
+              height: '100%',
+              backgroundColor: '#6B778C',
+              borderRadius: 4,
+              display: 'flex',
+              alignItems: 'center',
+              paddingLeft: 8,
+              transition: 'width 0.4s ease',
+              minWidth: percent > 5 ? 36 : undefined,
+            }}
+          >
+            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#fff' }}>{percent}%</span>
+          </div>
+        ) : null}
       </div>
-      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', minWidth: 45, textAlign: 'right' }}>
-        {assignedCount} {assignedCount === 1 ? 'task' : 'tasks'}
-      </span>
     </div>
   );
 }
