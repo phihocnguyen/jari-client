@@ -148,7 +148,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <div style={{ width: '100%', maxWidth: 1440, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         {/* Hero Greeting Banner */}
         <div
           style={{

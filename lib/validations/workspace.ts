@@ -4,9 +4,9 @@ export const createWorkspaceSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name must be at most 100 characters'),
   workspaceKey: z
     .string()
-    .min(1, 'Workspace key is required')
     .max(20, 'Workspace key must be at most 20 characters')
-    .regex(/^[A-Z0-9_]+$/, 'Must be uppercase letters, numbers, and underscore only'),
+    .optional()
+    .or(z.literal('')),
   description: z.string().optional(),
 });
 

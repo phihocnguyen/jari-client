@@ -23,7 +23,13 @@ export function CreateWorkspaceModal({ open, onClose }: Props) {
   });
 
   const mutation = useMutation({
-    mutationFn: (data: CreateWorkspaceFormData) => workspaceApi.create(data),
+    mutationFn: (data: CreateWorkspaceFormData) => {
+      const fallbackKey = data.name.toUpperCase().replace(/\s+/g, '_').replace(/[^A-Z0-9_]/g, '').slice(0, 20) || 'WS';
+      return workspaceApi.create({
+        ...data,
+        workspaceKey: data.workspaceKey || fallbackKey,
+      });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['workspaces'] });
       toast.success('Workspace created!');
@@ -41,7 +47,7 @@ export function CreateWorkspaceModal({ open, onClose }: Props) {
     const name = e.target.value;
     setValue('name', name);
     const key = name.toUpperCase().replace(/\s+/g, '_').replace(/[^A-Z0-9_]/g, '').slice(0, 20);
-    setValue('workspaceKey', key);
+    setValue('workspaceKey', key || 'WS');
   };
 
   return (
@@ -69,26 +75,24 @@ export function CreateWorkspaceModal({ open, onClose }: Props) {
         <Input
           id="ws-name"
           label="Workspace name *"
-          placeholder="My Workspace"
+          placeholder="Workspace name"
           error={errors.name?.message}
           {...register('name')}
           onChange={handleNameChange}
         />
-        <Input
-          id="ws-key"
-          label="Workspace key *"
-          placeholder="MY_WORKSPACE"
-          hint="Uppercase letters, numbers, and underscores only (max 20)"
-          error={errors.workspaceKey?.message}
-          {...register('workspaceKey')}
-        />
-        <Input
-          id="ws-desc"
-          label="Description"
-          placeholder="Optional description"
-          error={errors.description?.message}
-          {...register('description')}
-        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text-primary)' }}>
+            Description
+          </label>
+          <textarea
+            id="ws-desc"
+            className="input"
+            rows={3}
+            style={{ resize: 'vertical' }}
+            placeholder="Description"
+            {...register('description')}
+          />
+        </div>
       </form>
     </Modal>
   );

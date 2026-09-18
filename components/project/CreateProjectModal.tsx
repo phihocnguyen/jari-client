@@ -111,7 +111,7 @@ export function CreateProjectModal({ open, onClose, workspaceId }: Props) {
           >
             {workspaces.map((ws: any) => (
               <option key={ws.id} value={ws.id}>
-                {ws.name} ({ws.workspaceKey || ws.key || 'WS'})
+                {ws.name}
               </option>
             ))}
           </select>
@@ -125,7 +125,7 @@ export function CreateProjectModal({ open, onClose, workspaceId }: Props) {
         <Input
           id="proj-name"
           label="Project name *"
-          placeholder="My Mobile App"
+          placeholder="Project name"
           error={errors.name?.message}
           {...register('name')}
           onChange={handleNameChange}
@@ -133,7 +133,7 @@ export function CreateProjectModal({ open, onClose, workspaceId }: Props) {
         <Input
           id="proj-key"
           label="Project Key *"
-          placeholder="MOBILE"
+          placeholder="Project key"
           hint="Uppercase letters, numbers, and underscores (max 20)"
           error={errors.projectKey?.message}
           {...register('projectKey')}
@@ -153,7 +153,7 @@ export function CreateProjectModal({ open, onClose, workspaceId }: Props) {
             className="input"
             rows={3}
             style={{ resize: 'vertical' }}
-            placeholder="Add a short description..."
+            placeholder="Description"
           />
         </div>
       </form>
