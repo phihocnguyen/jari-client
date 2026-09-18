@@ -1,20 +1,21 @@
 import { IssueStatus } from '@/types/issue';
 
-export const getStatusBadgeStyle = (status: IssueStatus) => {
-  switch (status) {
+export const getStatusBadgeStyle = (status?: IssueStatus | string) => {
+  const norm = (status || '').toUpperCase().replace(/[_\s-]+/g, '');
+  switch (norm) {
     case 'DONE':
       return {
         bg: '#e3fcef',
         color: '#006644',
         label: 'Done',
       };
-    case 'IN_PROGRESS':
+    case 'INPROGRESS':
       return {
         bg: '#e9f2ff',
         color: '#0052cc',
         label: 'In Progress',
       };
-    case 'IN_REVIEW':
+    case 'INREVIEW':
       return {
         bg: '#eae6ff',
         color: '#403294',
@@ -29,3 +30,4 @@ export const getStatusBadgeStyle = (status: IssueStatus) => {
       };
   }
 };
+

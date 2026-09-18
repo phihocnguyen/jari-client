@@ -13,6 +13,7 @@ import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { DashboardProjects } from '@/components/dashboard/DashboardProjects';
 import { DashboardWorkspaces } from '@/components/dashboard/DashboardWorkspaces';
 import { AssignedToMeSection } from '@/components/dashboard/AssignedToMeSection';
+import { getGreeting } from '@/utils/date';
 import type { Project } from '@/types/project';
 import type { Issue } from '@/types/issue';
 
@@ -189,11 +190,4 @@ export default function DashboardPage() {
       />
     </>
   );
-}
-
-function getGreeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 17) return 'Good afternoon';
-  return 'Good evening';
 }
