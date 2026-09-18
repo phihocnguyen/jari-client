@@ -36,7 +36,6 @@ export function ProjectCard({ project }: ProjectCardProps) {
             </div>
             <div>
               <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--color-text-primary)', lineHeight: 1.3 }}>{project.name}</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: 1 }}>Key: {pKey}</div>
             </div>
           </div>
           <ArrowRight size={16} style={{ color: 'var(--color-green-accent)', marginTop: 4, flexShrink: 0 }} />

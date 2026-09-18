@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
 import { useQuery } from '@tanstack/react-query';
 import { workspaceApi } from '@/lib/api/workspace';
@@ -53,6 +54,7 @@ function formatStatus(status?: string): string {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const user = useAuthStore(s => s.user);
   const [createWorkspaceOpen, setCreateWorkspaceOpen] = useState(false);
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
@@ -286,12 +288,14 @@ export default function DashboardPage() {
                 <div
                   key={proj.id}
                   className="card"
+                  onClick={() => router.push(`/projects/${proj.id}/summary`)}
                   style={{
                     padding: '1.5rem',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
                     transition: 'var(--transition-base)',
+                    cursor: 'pointer',
                   }}
                   onMouseEnter={e => {
                     e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)';
@@ -305,9 +309,8 @@ export default function DashboardPage() {
                   <div>
                     {/* Project Header */}
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                      <Link
-                        href={`/projects/${proj.id}/summary`}
-                        style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', minWidth: 0 }}
+                      <div
+                        style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}
                       >
                         <div
                           style={{
@@ -340,11 +343,8 @@ export default function DashboardPage() {
                           >
                             {proj.name}
                           </div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: 2 }}>
-                            Key: <span style={{ fontWeight: 600 }}>{proj.projectKey || proj.key}</span>
-                          </div>
                         </div>
-                      </Link>
+                      </div>
 
                       <span
                         style={{
@@ -393,6 +393,7 @@ export default function DashboardPage() {
                     <div style={{ display: 'flex', gap: 6 }}>
                       <Link
                         href={`/projects/${proj.id}/summary`}
+                        onClick={e => e.stopPropagation()}
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
@@ -411,6 +412,7 @@ export default function DashboardPage() {
                       </Link>
                       <Link
                         href={`/projects/${proj.id}/board`}
+                        onClick={e => e.stopPropagation()}
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
@@ -428,6 +430,7 @@ export default function DashboardPage() {
                       </Link>
                       <Link
                         href={`/projects/${proj.id}/backlog`}
+                        onClick={e => e.stopPropagation()}
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
@@ -447,6 +450,7 @@ export default function DashboardPage() {
 
                     <Link
                       href={`/projects/${proj.id}/summary`}
+                      onClick={e => e.stopPropagation()}
                       title="Open Project Summary"
                       style={{ color: 'var(--color-green-accent)', display: 'flex', alignItems: 'center' }}
                     >
@@ -674,7 +678,7 @@ export default function DashboardPage() {
               {filteredIssues.slice(0, 10).map((issue: any, idx: number) => (
                 <Link
                   key={issue.id}
-                  href={`/projects/${issue.projectId}/board?issueId=${issue.id}`}
+                  href={`/projects/${issue.projectId}/issues/${issue.key || issue.id}`}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
