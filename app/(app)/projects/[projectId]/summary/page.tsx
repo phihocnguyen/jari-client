@@ -72,7 +72,7 @@ export default function ProjectSummaryPage() {
         <RecentActivityWidget recentActivity={data?.recentActivity} isLoading={isLoading} />
         <PriorityBreakdownWidget projectId={projectId} priorityBreakdown={data?.priorityBreakdown} isLoading={isLoading} />
         <TypesOfWorkWidget projectId={projectId} typeBreakdown={data?.typeBreakdown} isLoading={isLoading} />
-        <TeamWorkloadWidget teamWorkload={data?.teamWorkload} isLoading={isLoading} />
+        <TeamWorkloadWidget projectId={projectId} teamWorkload={data?.teamWorkload} isLoading={isLoading} />
         <EpicProgressWidget projectId={projectId} epicProgress={data?.epicProgress} isLoading={isLoading} />
       </div>
     </div>

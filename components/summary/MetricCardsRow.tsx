@@ -31,7 +31,7 @@ export function MetricCardsRow({ metrics, isLoading }: MetricCardsRowProps) {
     },
     {
       icon: <Calendar size={18} color="#EF4444" />,
-      title: isLoading ? '—' : `${metrics?.dueNext7Days ?? 0} due`,
+      title: isLoading ? '—' : `${metrics?.dueNext7Days ?? 0} due soon`,
       subtitle: 'in the next 7 days',
       bg: '#FEE2E2',
     },

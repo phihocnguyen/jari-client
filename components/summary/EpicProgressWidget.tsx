@@ -1,23 +1,32 @@
 'use client';
 
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { Zap } from 'lucide-react';
 import type { EpicProgress } from '@/types/summary';
 
 interface EpicProgressWidgetProps {
+  projectId?: string;
   epicProgress?: EpicProgress[];
   isLoading?: boolean;
 }
 
 // ─── Epic Progress Widget ───────────────────────────────────────────
-export function EpicProgressWidget({ epicProgress, isLoading }: EpicProgressWidgetProps) {
+export function EpicProgressWidget({ projectId, epicProgress, isLoading }: EpicProgressWidgetProps) {
+  const params = useParams();
+  const pId = projectId || (params?.projectId as string) || '';
+
   return (
     <div className="card" style={{ padding: '1.5rem', height: '380px', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+        <div style={{ marginBottom: 4 }}>
           <h2 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Epic progress</h2>
         </div>
         <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
-          See how your epics are progressing at a glance.
+          See how your epics are progressing at a glance.{' '}
+          <Link href={`/projects/${pId}/backlog`} style={{ color: 'var(--color-green-accent)', fontWeight: 500 }}>
+            View all epics
+          </Link>
         </p>
 
         {/* Legend */}

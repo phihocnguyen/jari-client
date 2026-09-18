@@ -1,24 +1,39 @@
 'use client';
 
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { Avatar } from '@/components/ui/Avatar';
 import type { MemberWorkload } from '@/types/summary';
 
 interface TeamWorkloadWidgetProps {
+  projectId?: string;
   teamWorkload?: MemberWorkload[];
   isLoading?: boolean;
 }
 
 // ─── Team Workload Widget ──────────────────────────────────────────
-export function TeamWorkloadWidget({ teamWorkload, isLoading }: TeamWorkloadWidgetProps) {
+export function TeamWorkloadWidget({ projectId, teamWorkload, isLoading }: TeamWorkloadWidgetProps) {
+  const params = useParams();
+  const pId = projectId || (params?.projectId as string) || '';
+
   return (
     <div className="card" style={{ padding: '1.5rem', height: '380px', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flexShrink: 0 }}>
         <div style={{ marginBottom: 4 }}>
           <h2 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Team workload</h2>
         </div>
-        <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginBottom: '1.25rem' }}>
-          Monitor the capacity of your team across active issues.
+        <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
+          Monitor the capacity of your team.{' '}
+          <Link href={`/projects/${pId}/list`} style={{ color: 'var(--color-green-accent)', fontWeight: 500 }}>
+            Reassign work items to get the right balance
+          </Link>
         </p>
+
+        {/* Column Headers */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingBottom: 8, fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-secondary)' }}>
+          <span style={{ width: 140, flexShrink: 0 }}>Assignee</span>
+          <span style={{ flex: 1 }}>Work distribution</span>
+        </div>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', paddingRight: 4 }}>
