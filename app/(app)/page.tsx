@@ -757,13 +757,11 @@ export default function DashboardPage() {
       </div>
 
       <CreateWorkspaceModal open={createWorkspaceOpen} onClose={() => setCreateWorkspaceOpen(false)} />
-      {selectedWorkspaceId && (
-        <CreateProjectModal
-          open={createProjectOpen}
-          onClose={() => setCreateProjectOpen(false)}
-          workspaceId={selectedWorkspaceId}
-        />
-      )}
+      <CreateProjectModal
+        open={createProjectOpen}
+        onClose={() => setCreateProjectOpen(false)}
+        workspaceId={selectedWorkspaceId || undefined}
+      />
     </>
   );
 }
