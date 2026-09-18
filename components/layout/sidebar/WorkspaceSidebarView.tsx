@@ -273,7 +273,7 @@ export function WorkspaceSidebarView({
                     onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
                   >
                     <Link
-                      href={`/projects/${proj.id}/board`}
+                      href={`/projects/${proj.id}/summary`}
                       onClick={() => startNavigation(`Opening ${proj.name}...`)}
                       style={{
                         display: 'flex',

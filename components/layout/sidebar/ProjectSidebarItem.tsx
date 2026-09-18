@@ -69,9 +69,9 @@ export function ProjectSidebarItem({
         />
       )}
 
-      {/* Main Project Navigation Link (board) */}
+      {/* Main Project Navigation Link (summary) */}
       <Link
-        href={`/projects/${project.id}/board`}
+        href={`/projects/${project.id}/summary`}
         title={project.name}
         onClick={() => {
           if (!isActive) {

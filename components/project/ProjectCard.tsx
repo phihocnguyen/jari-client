@@ -18,7 +18,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const color = project.avatarColor ?? getColor(pKey);
 
   return (
-    <Link href={`/projects/${project.id}/board`} style={{ textDecoration: 'none' }}>
+    <Link href={`/projects/${project.id}/summary`} style={{ textDecoration: 'none' }}>
       <div
         className="card"
         style={{ padding: '1.25rem', cursor: 'pointer', transition: 'var(--transition-base)', height: '100%' }}

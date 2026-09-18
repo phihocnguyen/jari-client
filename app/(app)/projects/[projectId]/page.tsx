@@ -7,5 +7,5 @@ interface PageProps {
 export default async function ProjectMainPage({ params }: PageProps) {
   const resolvedParams = await params;
   const projectId = resolvedParams.projectId;
-  redirect(`/projects/${projectId}/board`);
+  redirect(`/projects/${projectId}/summary`);
 }

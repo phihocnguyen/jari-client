@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth.store';
 import { useQuery } from '@tanstack/react-query';
@@ -58,6 +58,10 @@ export default function DashboardPage() {
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string>('');
 
+  // Filtering for "Assigned to Me"
+  const [filterWorkspaceId, setFilterWorkspaceId] = useState<string>('all');
+  const [filterProjectId, setFilterProjectId] = useState<string>('all');
+
   // 1. Fetch user workspaces
   const { data: workspaces = [], isLoading: isWorkspacesLoading } = useQuery({
     queryKey: ['workspaces', user?.id],
@@ -94,12 +98,14 @@ export default function DashboardPage() {
     queryFn: async () => {
       if (allProjects.length === 0) return [];
       const issueLists = await Promise.all(
-        allProjects.slice(0, 6).map(p =>
+        allProjects.slice(0, 10).map((p: any) =>
           issueApi.list(p.id, { size: 50 }).then(r =>
             (r.data || []).map((i: Issue) => ({
               ...i,
               projectName: p.name,
               projectId: p.id,
+              workspaceId: p.workspaceId,
+              workspaceName: p.workspaceName,
             }))
           )
         )
@@ -111,6 +117,21 @@ export default function DashboardPage() {
     enabled: Boolean(user?.id && allProjects.length > 0),
     staleTime: 1000 * 60 * 3,
   });
+
+  // Filtered projects based on selected workspace
+  const availableProjectsForFilter = useMemo(() => {
+    if (filterWorkspaceId === 'all') return allProjects;
+    return allProjects.filter((p: any) => p.workspaceId === filterWorkspaceId);
+  }, [allProjects, filterWorkspaceId]);
+
+  // Filtered issues based on selected workspace and project
+  const filteredIssues = useMemo(() => {
+    return myIssues.filter((issue: any) => {
+      const matchWs = filterWorkspaceId === 'all' || issue.workspaceId === filterWorkspaceId;
+      const matchProj = filterProjectId === 'all' || issue.projectId === filterProjectId;
+      return matchWs && matchProj;
+    });
+  }, [myIssues, filterWorkspaceId, filterProjectId]);
 
   const [greeting, setGreeting] = useState('Welcome back');
   useEffect(() => {
@@ -167,7 +188,7 @@ export default function DashboardPage() {
               {greeting}, {(user?.fullName || (user as any)?.displayName || 'User').split(' ')[0]} 👋
             </h1>
             <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.9375rem', maxWidth: 500 }}>
-              Here is your workspace overview. Select a project below to jump directly into the active board.
+              Here is your workspace overview. Select a project below to jump directly into the project summary.
             </p>
           </div>
 
@@ -223,7 +244,7 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* ─── Projects / Spaces Section (Direct Access to Board) ─── */}
+        {/* ─── Projects / Spaces Section (Direct Access to Summary) ─── */}
         <section>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
             <div>
@@ -231,7 +252,7 @@ export default function DashboardPage() {
                 Projects & Spaces
               </h2>
               <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginTop: 2 }}>
-                Click any project to enter its Board directly.
+                Select a project to view its summary dashboard or jump straight into the board.
               </p>
             </div>
             {workspaces.length > 0 && (
@@ -285,7 +306,7 @@ export default function DashboardPage() {
                     {/* Project Header */}
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                       <Link
-                        href={`/projects/${proj.id}/board`}
+                        href={`/projects/${proj.id}/summary`}
                         style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', minWidth: 0 }}
                       >
                         <div
@@ -371,7 +392,7 @@ export default function DashboardPage() {
                   >
                     <div style={{ display: 'flex', gap: 6 }}>
                       <Link
-                        href={`/projects/${proj.id}/board`}
+                        href={`/projects/${proj.id}/summary`}
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
@@ -385,11 +406,11 @@ export default function DashboardPage() {
                           textDecoration: 'none',
                         }}
                       >
-                        <Kanban size={13} />
-                        <span>Board</span>
+                        <LayoutDashboard size={13} />
+                        <span>Summary</span>
                       </Link>
                       <Link
-                        href={`/projects/${proj.id}/summary`}
+                        href={`/projects/${proj.id}/board`}
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
@@ -402,8 +423,8 @@ export default function DashboardPage() {
                           textDecoration: 'none',
                         }}
                       >
-                        <LayoutDashboard size={13} />
-                        <span>Summary</span>
+                        <Kanban size={13} />
+                        <span>Board</span>
                       </Link>
                       <Link
                         href={`/projects/${proj.id}/backlog`}
@@ -425,8 +446,8 @@ export default function DashboardPage() {
                     </div>
 
                     <Link
-                      href={`/projects/${proj.id}/board`}
-                      title="Open Board"
+                      href={`/projects/${proj.id}/summary`}
+                      title="Open Project Summary"
                       style={{ color: 'var(--color-green-accent)', display: 'flex', alignItems: 'center' }}
                     >
                       <ArrowRight size={16} />
@@ -558,29 +579,108 @@ export default function DashboardPage() {
           )}
         </section>
 
-        {/* ─── Assigned to Me Section (Tasks) ───────────────────────── */}
-        {myIssues.length > 0 && (
-          <section>
-            <div style={{ marginBottom: '1rem' }}>
+        {/* ─── Assigned to Me Section (with Workspace & Project Filters) ─── */}
+        <section>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 12,
+              marginBottom: '1rem',
+            }}
+          >
+            <div>
               <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                Assigned to Me ({myIssues.length})
+                Assigned to Me ({filteredIssues.length})
               </h2>
               <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginTop: 2 }}>
-                Open work items currently assigned to you across projects.
+                Open work items currently assigned to you.
               </p>
             </div>
 
+            {/* Filter Dropdowns */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              {/* Workspace Filter */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-secondary)' }}>
+                  Workspace:
+                </span>
+                <select
+                  value={filterWorkspaceId}
+                  onChange={e => {
+                    setFilterWorkspaceId(e.target.value);
+                    setFilterProjectId('all');
+                  }}
+                  style={{
+                    padding: '5px 10px',
+                    fontSize: '0.8125rem',
+                    borderRadius: 6,
+                    border: '1px solid rgba(0,0,0,0.15)',
+                    backgroundColor: '#fff',
+                    color: 'var(--color-text-primary)',
+                    outline: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <option value="all">All Workspaces ({workspaces.length})</option>
+                  {workspaces.map(ws => (
+                    <option key={ws.id} value={ws.id}>
+                      {ws.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Project Filter */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-secondary)' }}>
+                  Project:
+                </span>
+                <select
+                  value={filterProjectId}
+                  onChange={e => setFilterProjectId(e.target.value)}
+                  style={{
+                    padding: '5px 10px',
+                    fontSize: '0.8125rem',
+                    borderRadius: 6,
+                    border: '1px solid rgba(0,0,0,0.15)',
+                    backgroundColor: '#fff',
+                    color: 'var(--color-text-primary)',
+                    outline: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <option value="all">All Projects ({availableProjectsForFilter.length})</option>
+                  {availableProjectsForFilter.map((p: any) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {filteredIssues.length === 0 ? (
+            <div className="card" style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
+              {myIssues.length === 0
+                ? 'All caught up! No active work items assigned to you right now.'
+                : 'No work items match the selected workspace and project filter.'}
+            </div>
+          ) : (
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-              {myIssues.slice(0, 5).map((issue, idx) => (
+              {filteredIssues.slice(0, 10).map((issue: any, idx: number) => (
                 <Link
                   key={issue.id}
-                  href={`/projects/${(issue as any).projectId}/board?issueId=${issue.id}`}
+                  href={`/projects/${issue.projectId}/board?issueId=${issue.id}`}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     padding: '0.875rem 1.25rem',
-                    borderBottom: idx < Math.min(myIssues.length, 5) - 1 ? '1px solid rgba(0,0,0,0.06)' : 'none',
+                    borderBottom: idx < Math.min(filteredIssues.length, 10) - 1 ? '1px solid rgba(0,0,0,0.06)' : 'none',
                     textDecoration: 'none',
                     color: 'inherit',
                     transition: 'background-color 0.15s',
@@ -607,7 +707,20 @@ export default function DashboardPage() {
                     </span>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                    {issue.workspaceName && (
+                      <span
+                        style={{
+                          fontSize: '0.6875rem',
+                          backgroundColor: 'rgba(0,0,0,0.04)',
+                          padding: '2px 7px',
+                          borderRadius: 4,
+                          color: 'var(--color-text-secondary)',
+                        }}
+                      >
+                        {issue.workspaceName}
+                      </span>
+                    )}
                     <span
                       style={{
                         fontSize: '0.6875rem',
@@ -617,7 +730,7 @@ export default function DashboardPage() {
                         color: 'var(--color-text-secondary)',
                       }}
                     >
-                      {(issue as any).projectName}
+                      {issue.projectName}
                     </span>
                     <span
                       style={{
@@ -635,8 +748,8 @@ export default function DashboardPage() {
                 </Link>
               ))}
             </div>
-          </section>
-        )}
+          )}
+        </section>
       </div>
 
       <CreateWorkspaceModal open={createWorkspaceOpen} onClose={() => setCreateWorkspaceOpen(false)} />
