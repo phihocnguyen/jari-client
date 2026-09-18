@@ -69,9 +69,9 @@ export function ProjectSidebarItem({
         />
       )}
 
-      {/* Main Project Navigation Link (summary) */}
+      {/* Main Project Navigation Link (board) */}
       <Link
-        href={`/projects/${project.id}/summary`}
+        href={`/projects/${project.id}/board`}
         title={project.name}
         onClick={() => {
           if (!isActive) {
@@ -82,25 +82,26 @@ export function ProjectSidebarItem({
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 8,
+          gap: collapsed ? 0 : 8,
           minWidth: 0,
-          flex: 1,
+          flex: collapsed ? undefined : 1,
           padding: collapsed ? '6px 0' : '6px 6px 6px 24px',
           justifyContent: collapsed ? 'center' : 'flex-start',
           textDecoration: 'none',
+          width: collapsed ? '100%' : undefined,
         }}
       >
         <div
           style={{
-            width: 20,
-            height: 20,
+            width: collapsed ? 24 : 20,
+            height: collapsed ? 24 : 20,
             borderRadius: '50%',
             backgroundColor: project.avatarColor || '#EAB308',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: '#fff',
-            fontSize: '0.625rem',
+            fontSize: collapsed ? '0.6875rem' : '0.625rem',
             fontWeight: 800,
             flexShrink: 0,
           }}

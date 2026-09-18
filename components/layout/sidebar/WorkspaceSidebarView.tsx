@@ -55,17 +55,27 @@ export function WorkspaceSidebarView({
           display: 'flex',
           alignItems: 'center',
           justifyContent: collapsed ? 'center' : 'space-between',
-          padding: collapsed ? '0 12px' : '0 16px',
+          padding: collapsed ? '0' : '0 16px',
           borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
           flexShrink: 0,
         }}
       >
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+        <Link
+          href="/"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            width: collapsed ? '100%' : 'auto',
+            gap: collapsed ? 0 : 10,
+            textDecoration: 'none',
+          }}
+        >
           <div
             style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
+              width: collapsed ? 26 : 30,
+              height: collapsed ? 26 : 30,
+              borderRadius: 7,
               flexShrink: 0,
               background: 'var(--color-green-accent)',
               display: 'flex',
@@ -73,7 +83,7 @@ export function WorkspaceSidebarView({
               justifyContent: 'center',
               color: '#fff',
               fontWeight: 800,
-              fontSize: '1rem',
+              fontSize: collapsed ? '0.875rem' : '1rem',
               transform: 'rotate(45deg)',
               boxShadow: '0 2px 6px rgba(0, 117, 74, 0.4)',
             }}
@@ -263,7 +273,7 @@ export function WorkspaceSidebarView({
                     onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
                   >
                     <Link
-                      href={`/projects/${proj.id}/summary`}
+                      href={`/projects/${proj.id}/board`}
                       onClick={() => startNavigation(`Opening ${proj.name}...`)}
                       style={{
                         display: 'flex',

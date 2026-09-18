@@ -126,9 +126,12 @@ export function ProjectSidebarView({
       {/* ─── Header: "← All Workspaces" + Project Title ─────── */}
       <div
         style={{
-          padding: collapsed ? '14px 8px 10px' : '12px 14px 12px',
+          padding: collapsed ? '12px 0 10px' : '12px 14px 12px',
           borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
           flexShrink: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: collapsed ? 'center' : 'stretch',
         }}
       >
         {/* Back Link to Workspaces Overview */}
@@ -138,25 +141,28 @@ export function ProjectSidebarView({
           style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: 6,
+            justifyContent: 'center',
+            gap: collapsed ? 0 : 6,
             fontSize: '0.75rem',
             fontWeight: 600,
             color: 'rgba(255, 255, 255, 0.65)',
             textDecoration: 'none',
-            marginBottom: collapsed ? 10 : 8,
-            padding: '2px 4px',
-            borderRadius: 4,
+            marginBottom: collapsed ? 8 : 8,
+            padding: collapsed ? '4px' : '2px 4px',
+            borderRadius: 6,
+            width: collapsed ? 28 : undefined,
+            height: collapsed ? 28 : undefined,
             transition: 'color 0.15s ease',
           }}
           onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
           onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255, 255, 255, 0.65)')}
         >
-          <ArrowLeft size={13} />
+          <ArrowLeft size={14} />
           {!collapsed && <span>All Workspaces</span>}
         </Link>
 
         {/* Project Header Block */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start', gap: 10, width: '100%' }}>
           {isLoading && !project ? (
             /* Skeleton Loading State for Project Header */
             <>

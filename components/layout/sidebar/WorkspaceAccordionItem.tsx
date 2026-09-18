@@ -44,6 +44,7 @@ export function WorkspaceAccordionItem({
         onClick={onToggleExpand}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
+        title={collapsed ? workspace.name : undefined}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -60,17 +61,18 @@ export function WorkspaceAccordionItem({
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
+            gap: collapsed ? 0 : 8,
             minWidth: 0,
-            flex: 1,
+            flex: collapsed ? undefined : 1,
+            justifyContent: collapsed ? 'center' : 'flex-start',
             overflow: 'hidden',
           }}
         >
           <div
             style={{
-              width: 28,
-              height: 28,
-              borderRadius: 6,
+              width: collapsed ? 32 : 28,
+              height: collapsed ? 32 : 28,
+              borderRadius: collapsed ? 8 : 6,
               flexShrink: 0,
               backgroundColor: 'var(--color-green-light)',
               color: 'var(--color-green-brand)',
@@ -78,7 +80,7 @@ export function WorkspaceAccordionItem({
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: 800,
-              fontSize: '0.8125rem',
+              fontSize: collapsed ? '0.875rem' : '0.8125rem',
             }}
           >
             {workspace.name.charAt(0).toUpperCase()}
