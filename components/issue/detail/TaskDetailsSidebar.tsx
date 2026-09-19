@@ -24,6 +24,7 @@ import { Select } from '@/components/ui/Select';
 import { renderPriorityIcon } from '@/utils/issue-priority';
 import { getStatusBadgeStyle } from '@/utils/issue-status';
 import type { Issue, IssueLabel, IssuePriority, IssueStatus, Release } from '@/types/issue';
+import type { ProjectComponent } from '@/types/component';
 
 interface ProjectMember {
   userId: string;
@@ -39,6 +40,7 @@ interface TaskDetailsSidebarProps {
   issues?: Issue[];
   projectLabels?: IssueLabel[];
   projectReleases?: Release[];
+  projectComponents?: ProjectComponent[];
   onUpdateStatus: (status: IssueStatus) => void;
   onUpdatePriority: (priority: IssuePriority) => void;
   onUpdateAssignee: (assigneeId: string | null) => void;
@@ -50,6 +52,7 @@ interface TaskDetailsSidebarProps {
   onCreateLabel: (name: string) => Promise<IssueLabel>;
   onSetRelease: (releaseId: string | null) => void;
   onCreateRelease: (data: { name: string; description?: string; releaseDate?: string }) => Promise<Release>;
+  onSetComponents?: (componentIds: string[]) => void;
   onOpenAiAssistant: () => void;
 }
 
@@ -76,6 +79,7 @@ export function TaskDetailsSidebar({
   issues = [],
   projectLabels = [],
   projectReleases = [],
+  projectComponents = [],
   onUpdateStatus,
   onUpdatePriority,
   onUpdateAssignee,
@@ -87,6 +91,7 @@ export function TaskDetailsSidebar({
   onCreateLabel,
   onSetRelease,
   onCreateRelease,
+  onSetComponents,
   onOpenAiAssistant,
 }: TaskDetailsSidebarProps) {
   const [detailsExpanded, setDetailsExpanded] = useState(true);
@@ -100,10 +105,12 @@ export function TaskDetailsSidebar({
   const [savingLabel, setSavingLabel] = useState(false);
   const [releaseMenuOpen, setReleaseMenuOpen] = useState(false);
   const [releaseModalOpen, setReleaseModalOpen] = useState(false);
+  const [componentMenuOpen, setComponentMenuOpen] = useState(false);
   const statusRef = useRef<HTMLDivElement>(null);
   const parentRef = useRef<HTMLDivElement>(null);
   const labelsRef = useRef<HTMLDivElement>(null);
   const releaseRef = useRef<HTMLDivElement>(null);
+  const componentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -118,6 +125,7 @@ export function TaskDetailsSidebar({
         setLabelInput('');
       }
       if (releaseRef.current && !releaseRef.current.contains(target)) setReleaseMenuOpen(false);
+      if (componentRef.current && !componentRef.current.contains(target)) setComponentMenuOpen(false);
     }
     if (statusMenuOpen || parentMenuOpen || labelsMenuOpen || releaseMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
@@ -860,6 +868,138 @@ export function TaskDetailsSidebar({
                         + Create release
                       </button>
                     </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Components */}
+            <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center' }}>
+              <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Components</span>
+              <div ref={componentRef} style={{ position: 'relative' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
+                  {issue.components && issue.components.length > 0 ? (
+                    issue.components.map((c) => (
+                      <span
+                        key={c.id}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          padding: '1px 8px',
+                          borderRadius: 10,
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          backgroundColor: '#e9f2ff',
+                          color: '#0c66e4',
+                        }}
+                      >
+                        {c.name}
+                        <X
+                          size={11}
+                          style={{ cursor: 'pointer' }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const current = issue.components || [];
+                            const updated = current.filter((x) => x.id !== c.id);
+                            onSetComponents?.(updated.map((x) => x.id));
+                          }}
+                        />
+                      </span>
+                    ))
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setComponentMenuOpen((v) => !v)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#626f86',
+                        fontSize: '0.8125rem',
+                        cursor: 'pointer',
+                        padding: '2px 4px',
+                        borderRadius: 4,
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                    >
+                      None
+                    </button>
+                  )}
+                  {issue.components && issue.components.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setComponentMenuOpen((v) => !v)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#0c66e4',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        padding: '2px 4px',
+                      }}
+                    >
+                      + Add
+                    </button>
+                  )}
+                </div>
+
+                {componentMenuOpen && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: 0,
+                      width: 260,
+                      top: '100%',
+                      marginTop: 4,
+                      backgroundColor: '#ffffff',
+                      borderRadius: 6,
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.22)',
+                      border: '1px solid rgba(0,0,0,0.12)',
+                      zIndex: 100,
+                      maxHeight: 200,
+                      overflowY: 'auto',
+                      padding: '4px 0',
+                    }}
+                  >
+                    {projectComponents.map((c) => {
+                      const isAttached = issue.components?.some((ic) => ic.id === c.id);
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => {
+                            const current = issue.components || [];
+                            const exists = current.some((x) => x.id === c.id);
+                            const updated = exists ? current.filter((x) => x.id !== c.id) : [...current, c];
+                            onSetComponents?.(updated.map((x) => x.id));
+                          }}
+                          style={{
+                            width: '100%',
+                            padding: '6px 12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '0.8125rem',
+                            textAlign: 'left',
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                        >
+                          <span style={{ color: '#172b4d', fontWeight: 500 }}>{c.name}</span>
+                          {isAttached && <Check size={13} color="#0c66e4" />}
+                        </button>
+                      );
+                    })}
+                    {projectComponents.length === 0 && (
+                      <div style={{ padding: '8px 12px', color: '#626f86', fontSize: '0.8125rem' }}>
+                        No components defined in project.
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

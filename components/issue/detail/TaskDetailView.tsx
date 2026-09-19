@@ -9,6 +9,7 @@ import { projectApi } from '@/lib/api/project';
 import { refApi } from '@/lib/api/ref';
 import { labelApi } from '@/lib/api/label';
 import { releaseApi } from '@/lib/api/release';
+import { componentApi } from '@/lib/api/component';
 import { toast } from '@/components/ui/Toast';
 import type { Issue, IssuePriority, IssueStatus } from '@/types/issue';
 
@@ -100,6 +101,13 @@ export function TaskDetailView({
   const { data: projectReleases = [] } = useQuery({
     queryKey: ['project-releases', projectId],
     queryFn: () => releaseApi.list(projectId),
+    enabled: Boolean(projectId),
+  });
+
+  // 4.3 Fetch Project Components
+  const { data: projectComponents = [] } = useQuery({
+    queryKey: ['project-components', projectId],
+    queryFn: () => componentApi.list(projectId),
     enabled: Boolean(projectId),
   });
 
@@ -202,8 +210,22 @@ export function TaskDetailView({
       qc.invalidateQueries({ queryKey: ['issue', issueId] });
       if (effectiveId !== issueId) qc.invalidateQueries({ queryKey: ['issue', effectiveId] });
       qc.invalidateQueries({ queryKey: ['issues', projectId] });
+      toast.success('Release updated');
     },
-    onError: () => toast.error('Failed to update fix version'),
+    onError: () => toast.error('Failed to update release'),
+  });
+
+  // Set Components Mutation
+  const setComponentsMutation = useMutation({
+    mutationFn: (componentIds: string[]) => issueApi.setComponents(effectiveId, componentIds),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['issue', issueId] });
+      if (effectiveId !== issueId) qc.invalidateQueries({ queryKey: ['issue', effectiveId] });
+      qc.invalidateQueries({ queryKey: ['issues', projectId] });
+      qc.invalidateQueries({ queryKey: ['project-components', projectId] });
+      toast.success('Components updated');
+    },
+    onError: () => toast.error('Failed to update components'),
   });
 
   // Status Update Mutation
@@ -528,6 +550,8 @@ export function TaskDetailView({
             onUpdateParent={(parentId) => updateParentMutation.mutate(parentId)}
             onSetLabels={(labelIds) => setLabelsMutation.mutate(labelIds)}
             onSetRelease={(releaseId) => setReleaseMutation.mutate(releaseId)}
+            projectComponents={projectComponents}
+            onSetComponents={(ids) => setComponentsMutation.mutate(ids)}
             onCreateRelease={(data) =>
               new Promise((resolve, reject) => {
                 createReleaseMutation.mutate(data, { onSuccess: resolve, onError: reject });

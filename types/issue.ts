@@ -41,6 +41,7 @@ export interface Issue {
   progressPercent?: number;
   extraAssigneeCount?: number;
   labels?: IssueLabel[];
+  components?: import('./component').ProjectComponent[];
   releaseId?: string;
   releaseName?: string;
 }

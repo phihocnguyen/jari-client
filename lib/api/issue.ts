@@ -51,6 +51,10 @@ export function normalizeIssue(item: any): Issue {
     dueDate: item.dueDate,
     createdAt: item.createdAt || new Date().toISOString(),
     updatedAt: item.updatedAt || new Date().toISOString(),
+    labels: item.labels || [],
+    components: item.components || [],
+    releaseId: item.releaseId,
+    releaseName: item.releaseName,
     assignee: item.assignee
       ? { ...item.assignee, fullName: (!item.assignee.fullName || item.assignee.fullName === 'Developer' || item.assignee.fullName === 'dev_user') ? 'Học Nguyễn' : item.assignee.fullName }
       : (item.assigneeId ? { id: item.assigneeId, fullName: (!item.assigneeName || item.assigneeName === 'Developer' || item.assigneeName === 'dev_user') ? 'Học Nguyễn' : item.assigneeName } : undefined),
@@ -202,6 +206,12 @@ export const issueApi = {
 
   setLabels: (issueId: string, labelIds: string[]) =>
     apiClient.put<ApiResponse<Issue>>(`/issues/${issueId}/labels`, { labelIds }).then((r) => ({
+      ...r.data,
+      data: normalizeIssue(r.data.data),
+    })),
+
+  setComponents: (issueId: string, componentIds: string[]) =>
+    apiClient.put<ApiResponse<Issue>>(`/issues/${issueId}/components`, { componentIds }).then((r) => ({
       ...r.data,
       data: normalizeIssue(r.data.data),
     })),
