@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { UseFormRegister, UseFormSetValue, FieldErrors } from 'react-hook-form';
-import { User } from 'lucide-react';
+import { User, Check } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { IssueTypeSelect } from './IssueTypeSelect';
 import { IssueParentBanner } from './IssueParentBanner';
@@ -10,6 +10,7 @@ import type { ReferenceItem } from '@/lib/api/ref';
 import type { ProjectMember } from '@/types/project';
 import type { Sprint } from '@/types/sprint';
 import type { Issue } from '@/types/issue';
+import type { ProjectComponent } from '@/types/component';
 import type { CreateIssueFormData } from '@/lib/validations/issue';
 
 interface CreateIssueFormProps {
@@ -23,6 +24,9 @@ interface CreateIssueFormProps {
   members: ProjectMember[];
   sprints: Sprint[];
   existingIssues: Issue[];
+  components?: ProjectComponent[];
+  selectedComponentIds?: string[];
+  onToggleComponent?: (id: string) => void;
   initialParentId?: string;
   initialParentKey?: string;
   initialParentTitle?: string;
@@ -38,6 +42,9 @@ export function CreateIssueForm({
   priorities,
   members,
   existingIssues,
+  components = [],
+  selectedComponentIds = [],
+  onToggleComponent,
   initialParentId,
   initialParentKey,
   initialParentTitle,
@@ -181,6 +188,42 @@ export function CreateIssueForm({
         </div>
       </div>
 
+      {/* Row 5: Components */}
+      {components && components.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+          <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
+            Components
+          </label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {components.map((c) => {
+              const isSelected = selectedComponentIds.includes(c.id);
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => onToggleComponent?.(c.id)}
+                  style={{
+                    padding: '3px 10px',
+                    borderRadius: 12,
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    border: isSelected ? '1px solid #0c66e4' : '1px solid rgba(0,0,0,0.12)',
+                    backgroundColor: isSelected ? '#e9f2ff' : '#ffffff',
+                    color: isSelected ? '#0c66e4' : '#44546f',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}
+                >
+                  {c.name}
+                  {isSelected && <Check size={12} />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Row 6: Due Date */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>

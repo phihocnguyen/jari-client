@@ -3,6 +3,7 @@ import { IssueListContainer } from '@/components/issue/list/IssueListContainer';
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
+  searchParams?: Promise<{ component?: string }>;
 }
 
 export const metadata = {
@@ -11,12 +12,14 @@ export const metadata = {
 };
 
 // ─── Server Component (SSR Shell) ─────────────────────────────────
-export default async function ProjectListPage({ params }: PageProps) {
+export default async function ProjectListPage({ params, searchParams }: PageProps) {
   const { projectId } = await params;
+  const sParams = searchParams ? await searchParams : undefined;
+  const initialComponent = sParams?.component;
 
   return (
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <IssueListContainer projectId={projectId} />
+      <IssueListContainer projectId={projectId} initialComponent={initialComponent} />
     </div>
   );
 }

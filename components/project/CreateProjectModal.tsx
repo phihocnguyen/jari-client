@@ -21,7 +21,7 @@ interface Props {
 export function CreateProjectModal({ open, onClose, workspaceId }: Props) {
   const qc = useQueryClient();
 
-  const { data: workspacesRes } = useQuery({
+  const { data: workspacesRes, isLoading: isLoadingWorkspaces } = useQuery({
     queryKey: ['workspaces'],
     queryFn: () => workspaceApi.list(),
     enabled: open,
@@ -29,16 +29,16 @@ export function CreateProjectModal({ open, onClose, workspaceId }: Props) {
   const workspaces = workspacesRes?.data || [];
 
   const [selectedWsId, setSelectedWsId] = useState<string>(workspaceId || '');
+  const [wsError, setWsError] = useState<string>('');
 
   useEffect(() => {
-    if (workspaceId) {
-      setSelectedWsId(workspaceId);
-    } else if (workspaces.length > 0 && !selectedWsId) {
-      setSelectedWsId(workspaces[0].id);
+    if (open) {
+      setSelectedWsId(workspaceId || '');
+      setWsError('');
     }
-  }, [workspaceId, workspaces, selectedWsId]);
+  }, [open, workspaceId]);
 
-  const activeWorkspaceId = selectedWsId || workspaceId || workspaces[0]?.id || '';
+  const activeWorkspaceId = selectedWsId || workspaceId || '';
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<CreateProjectFormData>({
     resolver: zodResolver(createProjectSchema),
@@ -66,6 +66,14 @@ export function CreateProjectModal({ open, onClose, workspaceId }: Props) {
     },
   });
 
+  const handleFormSubmit = (data: CreateProjectFormData) => {
+    if (!activeWorkspaceId) {
+      setWsError('Please select a workspace');
+      return;
+    }
+    mutation.mutate(data);
+  };
+
   // Auto-generate projectKey from name
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
@@ -86,7 +94,7 @@ export function CreateProjectModal({ open, onClose, workspaceId }: Props) {
           <Button
             loading={mutation.isPending}
             disabled={!activeWorkspaceId || workspaces.length === 0}
-            onClick={handleSubmit(d => mutation.mutate(d))}
+            onClick={handleSubmit(handleFormSubmit)}
           >
             Create project
           </Button>
@@ -94,28 +102,39 @@ export function CreateProjectModal({ open, onClose, workspaceId }: Props) {
       }
     >
       <form
-        onSubmit={handleSubmit(d => mutation.mutate(d))}
+        onSubmit={handleSubmit(handleFormSubmit)}
         style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
       >
-        {/* Parent Workspace Selector */}
+        {/* Workspace Selector */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text-primary)' }}>
-            Parent Workspace *
+            Workspace *
           </label>
           <select
             value={activeWorkspaceId}
-            onChange={(e) => setSelectedWsId(e.target.value)}
+            onChange={(e) => {
+              setSelectedWsId(e.target.value);
+              if (e.target.value) setWsError('');
+            }}
             className="input"
             style={{ cursor: 'pointer' }}
-            disabled={mutation.isPending}
+            disabled={mutation.isPending || isLoadingWorkspaces}
           >
+            <option value="" disabled>
+              {isLoadingWorkspaces ? 'Loading workspaces...' : 'Select workspace'}
+            </option>
             {workspaces.map((ws: any) => (
               <option key={ws.id} value={ws.id}>
                 {ws.name}
               </option>
             ))}
           </select>
-          {workspaces.length === 0 && (
+          {wsError && (
+            <span style={{ fontSize: '0.75rem', color: 'var(--color-red)' }}>
+              {wsError}
+            </span>
+          )}
+          {!isLoadingWorkspaces && workspaces.length === 0 && (
             <span style={{ fontSize: '0.75rem', color: 'var(--color-red)' }}>
               No workspace found. Please create a workspace first.
             </span>

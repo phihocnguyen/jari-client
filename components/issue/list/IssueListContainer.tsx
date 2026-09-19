@@ -2,9 +2,10 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Plus, Filter, CheckCircle2 } from 'lucide-react';
+import { Search, Plus, Filter, CheckCircle2, X, Layers } from 'lucide-react';
 import { issueApi } from '@/lib/api/issue';
 import { projectApi } from '@/lib/api/project';
+import { componentApi } from '@/lib/api/component';
 import { refApi } from '@/lib/api/ref';
 import { toast } from '@/components/ui/Toast';
 import { IssueDetailModal } from '@/components/issue/IssueDetailModal';
@@ -18,15 +19,23 @@ import type { Issue, IssueStatus, IssuePriority, IssueType, CreateIssueRequest }
 
 interface IssueListContainerProps {
   projectId: string;
+  initialComponent?: string;
 }
 
-export function IssueListContainer({ projectId }: IssueListContainerProps) {
+export function IssueListContainer({ projectId, initialComponent }: IssueListContainerProps) {
   const qc = useQueryClient();
 
   // Filter & Search State
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [componentFilter, setComponentFilter] = useState<string>(() => {
+    if (initialComponent) return initialComponent;
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('component') || 'ALL';
+    }
+    return 'ALL';
+  });
 
   // Pagination State (Max 10 items per page)
   const pageSize = 10;
@@ -76,6 +85,13 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
     staleTime: 1000 * 60 * 30,
   });
 
+  // 4. Fetch Project Components
+  const { data: projectComponents = [] } = useQuery({
+    queryKey: ['project-components', projectId],
+    queryFn: () => (projectId ? componentApi.list(projectId) : []),
+    enabled: Boolean(projectId),
+  });
+
   const issueTypes = issueTypesRes?.data ?? [];
   const statuses = statusesRes?.data ?? [];
   const priorities = prioritiesRes?.data ?? [];
@@ -108,11 +124,11 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
     });
   };
 
-  // Filtered issues based on query, type, and status, preserving parent-child relationships
+  // Filtered issues based on query, type, status, and component, preserving parent-child relationships
   const filteredIssues = useMemo(() => {
     if (!allIssues.length) return [];
     const q = query.trim().toLowerCase();
-    const hasFilter = Boolean(q || typeFilter !== 'ALL' || statusFilter !== 'ALL');
+    const hasFilter = Boolean(q || typeFilter !== 'ALL' || statusFilter !== 'ALL' || componentFilter !== 'ALL');
     if (!hasFilter) return allIssues;
 
     // Directly matching issue IDs
@@ -126,8 +142,11 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
 
       const matchesType = typeFilter === 'ALL' || issue.type === typeFilter;
       const matchesStatus = statusFilter === 'ALL' || issue.status === statusFilter;
+      const matchesComponent =
+        componentFilter === 'ALL' ||
+        (issue.components && issue.components.some((c) => c.id === componentFilter || c.name === componentFilter));
 
-      if (matchesQuery && matchesType && matchesStatus) {
+      if (matchesQuery && matchesType && matchesStatus && matchesComponent) {
         directlyMatchingIds.add(issue.id);
       }
     });
@@ -141,7 +160,7 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
     });
 
     return allIssues.filter((i) => includedIds.has(i.id));
-  }, [allIssues, query, typeFilter, statusFilter]);
+  }, [allIssues, query, typeFilter, statusFilter, componentFilter]);
 
   // Group root issues and calculate pagination (max 10 items per page)
   const { rootIssues, childrenMap } = useMemo(() => {
@@ -420,6 +439,53 @@ export function IssueListContainer({ projectId }: IssueListContainerProps) {
               { value: 'DONE', label: 'Done', badgeStyle: getStatusBadgeStyle('DONE') },
             ]}
           />
+
+          {/* Component Filter */}
+          <Select<string>
+            value={componentFilter}
+            onChange={(val) => {
+              setComponentFilter(val);
+              setCurrentPage(1);
+            }}
+            minWidth={160}
+            options={[
+              { value: 'ALL', label: 'All Components' },
+              ...projectComponents.map((c) => ({
+                value: c.id,
+                label: c.name,
+              })),
+            ]}
+          />
+
+          {/* Active Component Filter Chip with Clear Button */}
+          {componentFilter !== 'ALL' && (
+            <button
+              type="button"
+              onClick={() => {
+                setComponentFilter('ALL');
+                setCurrentPage(1);
+              }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: '4px 8px',
+                borderRadius: 12,
+                backgroundColor: '#e9f2ff',
+                color: '#0c66e4',
+                border: 'none',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+              title="Clear component filter"
+            >
+              <span>
+                Component: {projectComponents.find((c) => c.id === componentFilter)?.name || componentFilter}
+              </span>
+              <X size={12} />
+            </button>
+          )}
         </div>
 
         {/* Action Button to open Modal creation */}

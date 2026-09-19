@@ -8,6 +8,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { issueApi } from '@/lib/api/issue';
 import { projectApi } from '@/lib/api/project';
+import { componentApi } from '@/lib/api/component';
 import { sprintApi } from '@/lib/api/sprint';
 import { refApi } from '@/lib/api/ref';
 import { toast } from '@/components/ui/Toast';
@@ -38,6 +39,7 @@ export function CreateIssueModal({
 }: Props) {
   const qc = useQueryClient();
   const [createAnother, setCreateAnother] = useState(false);
+  const [selectedComponentIds, setSelectedComponentIds] = useState<string[]>([]);
 
   // 1. Fetch Reference Data (Issue Types, Statuses, Priorities)
   const { data: issueTypesRes } = useQuery({
@@ -82,6 +84,13 @@ export function CreateIssueModal({
     enabled: open && Boolean(projectId),
   });
 
+  // 5. Fetch Project Components
+  const { data: projectComponents = [] } = useQuery({
+    queryKey: ['project-components', projectId],
+    queryFn: () => (projectId ? componentApi.list(projectId) : []),
+    enabled: open && Boolean(projectId),
+  });
+
   const issueTypes = issueTypesRes?.data ?? [];
   const statuses = statusesRes?.data ?? [];
   const priorities = prioritiesRes?.data ?? [];
@@ -107,6 +116,7 @@ export function CreateIssueModal({
   // When modal opens or initial props change, sync form values
   useEffect(() => {
     if (open) {
+      setSelectedComponentIds([]);
       if (initialType) setValue('type', initialType);
       if (initialParentId) setValue('parentId', initialParentId);
       if (initialSprintId) setValue('sprintId', initialSprintId);
@@ -159,7 +169,7 @@ export function CreateIssueModal({
         finalPriorityId = matched?.id;
       }
 
-      return issueApi.create(projectId, {
+      const res = await issueApi.create(projectId, {
         title: data.title,
         description: data.description,
         issueTypeId: finalIssueTypeId,
@@ -174,6 +184,16 @@ export function CreateIssueModal({
         storyPoints: data.storyPoints != null ? Number(data.storyPoints) : undefined,
         dueDate: data.dueDate || undefined,
       });
+
+      if (selectedComponentIds.length > 0 && res?.data?.id) {
+        try {
+          await issueApi.setComponents(res.data.id, selectedComponentIds);
+        } catch (err) {
+          console.error('Failed to link components to created issue:', err);
+        }
+      }
+
+      return res;
     },
     onSuccess: (res) => {
       const createdIssue = res?.data;
@@ -191,6 +211,7 @@ export function CreateIssueModal({
       qc.invalidateQueries({ queryKey: ['issues', projectId], refetchType: 'none' });
       qc.invalidateQueries({ queryKey: ['board', projectId], refetchType: 'none' });
       qc.invalidateQueries({ queryKey: ['sprints', projectId], refetchType: 'none' });
+      qc.invalidateQueries({ queryKey: ['project-components', projectId], refetchType: 'none' });
       toast.success('Issue created successfully!');
 
       if (createAnother) {
@@ -279,6 +300,13 @@ export function CreateIssueModal({
         members={members}
         sprints={sprints}
         existingIssues={existingIssues}
+        components={projectComponents}
+        selectedComponentIds={selectedComponentIds}
+        onToggleComponent={(id) =>
+          setSelectedComponentIds((prev) =>
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+          )
+        }
         initialParentId={initialParentId}
         initialParentKey={initialParentKey}
         initialParentTitle={initialParentTitle}

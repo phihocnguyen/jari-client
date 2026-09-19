@@ -180,6 +180,28 @@ export function IssueListRow({
               >
                 {issue.title}
               </span>
+
+              {/* Components Chips */}
+              {issue.components && issue.components.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, marginLeft: 6 }}>
+                  {issue.components.map((c) => (
+                    <span
+                      key={c.id}
+                      style={{
+                        fontSize: '0.6875rem',
+                        fontWeight: 600,
+                        backgroundColor: '#e9f2ff',
+                        color: '#0c66e4',
+                        padding: '1px 6px',
+                        borderRadius: 3,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {c.name}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Hover Action Icons (Side peek + quick subtask + delete) overlay */}
