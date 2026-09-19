@@ -2,8 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Search, Bell, LogOut, User, Settings, ChevronDown } from 'lucide-react';
+import { ProjectPresenceAvatars } from '@/components/project/ProjectPresenceAvatars';
 import { Avatar } from '@/components/ui/Avatar';
 import { useAuthStore } from '@/store/auth.store';
 import { useNotificationStore } from '@/store/notification.store';
@@ -22,6 +23,7 @@ interface TopBarProps {
 
 export function TopBar({ breadcrumbs }: TopBarProps) {
   const router          = useRouter();
+  const pathname        = usePathname();
   const user            = useAuthStore(s => s.user);
   const logout          = useAuthStore(s => s.logout);
   const unreadCount     = useNotificationStore(s => s.unreadCount);
@@ -29,6 +31,10 @@ export function TopBar({ breadcrumbs }: TopBarProps) {
   const [notifOpen, setNotifOpen] = useState(false);
   const userRef  = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
+
+  // Extract projectId if inside a project page route
+  const projectMatch = pathname ? pathname.match(/\/projects\/([^\/]+)/) : null;
+  const currentProjectId = projectMatch ? projectMatch[1] : null;
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -85,8 +91,16 @@ export function TopBar({ breadcrumbs }: TopBarProps) {
         ))}
       </nav>
 
-      {/* Right: Notification + User */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      {/* Right: Presence + Notification + User */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        {/* Real-time Project Viewers Presence */}
+        {currentProjectId && (
+          <>
+            <ProjectPresenceAvatars projectId={currentProjectId} />
+            <div style={{ width: 1, height: 20, backgroundColor: 'rgba(0,0,0,0.1)' }} />
+          </>
+        )}
+
         {/* Notification Bell */}
         <div ref={notifRef} style={{ position: 'relative' }}>
           <button

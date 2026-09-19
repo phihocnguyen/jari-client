@@ -66,6 +66,39 @@ class WebSocketClient {
     }
   }
 
+  subscribeTopic(destination: string, callback: (data: any) => void): () => void {
+    let sub: any = null;
+    const trySub = () => {
+      if (this.client && this.client.connected && !sub) {
+        sub = this.client.subscribe(destination, (message: IMessage) => {
+          try {
+            const data = JSON.parse(message.body);
+            callback(data);
+          } catch {
+            callback(message.body);
+          }
+        });
+      }
+    };
+
+    trySub();
+
+    const interval = setInterval(() => {
+      if (!sub && this.client && this.client.connected) {
+        trySub();
+      }
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+      if (sub) {
+        try {
+          sub.unsubscribe();
+        } catch {}
+      }
+    };
+  }
+
   isConnected(): boolean {
     return this.client?.connected ?? false;
   }
