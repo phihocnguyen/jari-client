@@ -16,6 +16,15 @@ import {
   Minus,
   Search,
   X,
+  GitCommit,
+  GitPullRequest,
+  GitBranch,
+  ExternalLink,
+  Trash2,
+  Play,
+  CheckCircle2,
+  AlertCircle,
+  Plus,
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
@@ -25,6 +34,26 @@ import { renderPriorityIcon } from '@/utils/issue-priority';
 import { getStatusBadgeStyle } from '@/utils/issue-status';
 import type { Issue, IssueLabel, IssuePriority, IssueStatus, Release } from '@/types/issue';
 import type { ProjectComponent } from '@/types/component';
+import { developmentApi } from '@/lib/api/development';
+import type { IssueDevelopment, DevelopmentType } from '@/types/development';
+import { automationApi } from '@/lib/api/automation';
+import type { AutomationLog } from '@/types/automation';
+
+function timeAgo(dateStr?: string): string {
+  if (!dateStr) return 'just now';
+  const past = new Date(dateStr).getTime();
+  if (isNaN(past)) return dateStr;
+  const now = Date.now();
+  const diffSec = Math.floor((now - past) / 1000);
+  if (diffSec < 60) return 'just now';
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHours = Math.floor(diffMin / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 30) return `${diffDays}d ago`;
+  return new Date(dateStr).toLocaleDateString();
+}
 
 interface ProjectMember {
   userId: string;
@@ -111,6 +140,88 @@ export function TaskDetailsSidebar({
   const labelsRef = useRef<HTMLDivElement>(null);
   const releaseRef = useRef<HTMLDivElement>(null);
   const componentRef = useRef<HTMLDivElement>(null);
+
+  // Development states
+  const [developments, setDevelopments] = useState<IssueDevelopment[]>([]);
+  const [isDevLoading, setIsDevLoading] = useState(false);
+  const [devModalOpen, setDevModalOpen] = useState(false);
+  const [devType, setDevType] = useState<DevelopmentType>('COMMIT');
+  const [devTitle, setDevTitle] = useState('');
+  const [devUrl, setDevUrl] = useState('');
+  const [devStatus, setDevStatus] = useState('OPEN');
+  const [isSubmittingDev, setIsSubmittingDev] = useState(false);
+
+  // Automation states
+  const [automationLogs, setAutomationLogs] = useState<AutomationLog[]>([]);
+  const [isAutoLoading, setIsAutoLoading] = useState(false);
+  const [isRunningRule, setIsRunningRule] = useState(false);
+
+  useEffect(() => {
+    if (!issue?.id || !devExpanded) return;
+    setIsDevLoading(true);
+    developmentApi.list(issue.id)
+      .then((data) => setDevelopments(data))
+      .catch((err) => console.error('Failed to load developments:', err))
+      .finally(() => setIsDevLoading(false));
+  }, [issue?.id, devExpanded]);
+
+  useEffect(() => {
+    if (!issue?.id || !autoExpanded) return;
+    setIsAutoLoading(true);
+    automationApi.listLogs(issue.id)
+      .then((data) => setAutomationLogs(data))
+      .catch((err) => console.error('Failed to load automation logs:', err))
+      .finally(() => setIsAutoLoading(false));
+  }, [issue?.id, autoExpanded]);
+
+  const handleCreateDev = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!devTitle.trim() || !devUrl.trim()) {
+      toast.error('Title and URL are required');
+      return;
+    }
+    setIsSubmittingDev(true);
+    try {
+      const created = await developmentApi.create(issue.id, {
+        type: devType,
+        title: devTitle.trim(),
+        url: devUrl.trim(),
+        status: devStatus,
+      });
+      setDevelopments((prev) => [created, ...prev]);
+      toast.success('Development item linked');
+      setDevModalOpen(false);
+      setDevTitle('');
+      setDevUrl('');
+    } catch (err) {
+      toast.error('Failed to link development item');
+    } finally {
+      setIsSubmittingDev(false);
+    }
+  };
+
+  const handleDeleteDev = async (id: string) => {
+    try {
+      await developmentApi.delete(id);
+      setDevelopments((prev) => prev.filter((d) => d.id !== id));
+      toast.success('Development link removed');
+    } catch (err) {
+      toast.error('Failed to remove link');
+    }
+  };
+
+  const handleRunRule = async (ruleCode: string) => {
+    setIsRunningRule(true);
+    try {
+      const res = await automationApi.runRule(issue.id, ruleCode);
+      setAutomationLogs((prev) => [res, ...prev]);
+      toast.success(`Rule finished: ${res.status}`);
+    } catch (err) {
+      toast.error('Failed to run rule');
+    } finally {
+      setIsRunningRule(false);
+    }
+  };
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -1057,7 +1168,7 @@ export function TaskDetailsSidebar({
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 6,
+            justifyContent: 'space-between',
             padding: '10px 14px',
             cursor: 'pointer',
             fontWeight: 600,
@@ -1065,12 +1176,132 @@ export function TaskDetailsSidebar({
           }}
           onClick={() => setDevExpanded(!devExpanded)}
         >
-          {devExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-          <span>Development</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {devExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            <span>Development {developments.length > 0 && `(${developments.length})`}</span>
+          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setDevModalOpen(true);
+            }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#0c66e4',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+            }}
+          >
+            <Plus size={13} />
+            <span>Link item</span>
+          </button>
         </div>
+
         {devExpanded && (
-          <div style={{ padding: '8px 14px 12px', fontSize: '0.8125rem', color: '#626f86' }}>
-            No branches, commits, or pull requests connected yet.
+          <div style={{ padding: '8px 14px 12px', fontSize: '0.8125rem' }}>
+            {isDevLoading ? (
+              <div style={{ color: '#626f86', padding: '4px 0' }}>Loading developments...</div>
+            ) : developments.length === 0 ? (
+              <div style={{ color: '#626f86', padding: '4px 0' }}>
+                No branches, commits, or pull requests connected yet.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {developments.map((dev) => {
+                  const isPr = dev.type === 'PULL_REQUEST';
+                  const isBranch = dev.type === 'BRANCH';
+                  const statusBg =
+                    dev.status === 'MERGED' ? '#e3fcef' : dev.status === 'OPEN' ? '#eae6ff' : '#f4f5f7';
+                  const statusColor =
+                    dev.status === 'MERGED' ? '#006644' : dev.status === 'OPEN' ? '#403294' : '#42526e';
+
+                  return (
+                    <div
+                      key={dev.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '6px 8px',
+                        borderRadius: 6,
+                        backgroundColor: '#f8f9fa',
+                        border: '1px solid rgba(0,0,0,0.06)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
+                        <div style={{ color: '#626f86', flexShrink: 0 }}>
+                          {isPr ? (
+                            <GitPullRequest size={15} color="#6554c0" />
+                          ) : isBranch ? (
+                            <GitBranch size={15} color="#0c66e4" />
+                          ) : (
+                            <GitCommit size={15} color="#36b37e" />
+                          )}
+                        </div>
+                        <a
+                          href={dev.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{
+                            color: '#0c66e4',
+                            textDecoration: 'none',
+                            fontWeight: 500,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                          onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+                        >
+                          {dev.title}
+                        </a>
+                        {dev.status && (
+                          <span
+                            style={{
+                              fontSize: '0.6875rem',
+                              fontWeight: 700,
+                              padding: '1px 6px',
+                              borderRadius: 4,
+                              backgroundColor: statusBg,
+                              color: statusColor,
+                              flexShrink: 0,
+                            }}
+                          >
+                            {dev.status}
+                          </span>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 8 }}>
+                        <a
+                          href={dev.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          title="Open external link"
+                          style={{ color: '#626f86', display: 'flex', alignItems: 'center' }}
+                        >
+                          <ExternalLink size={13} />
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteDev(dev.id)}
+                          title="Remove link"
+                          style={{ background: 'none', border: 'none', color: '#de350b', cursor: 'pointer', padding: 2 }}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1098,16 +1329,82 @@ export function TaskDetailsSidebar({
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             {autoExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-            <span>Automation</span>
+            <span>Automation {automationLogs.length > 0 && `(${automationLogs.length})`}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#626f86', fontSize: '0.75rem', fontWeight: 500 }}>
             <Zap size={12} />
             <span>Rule executions</span>
           </div>
         </div>
+
         {autoExpanded && (
-          <div style={{ padding: '8px 14px 12px', fontSize: '0.8125rem', color: '#626f86' }}>
-            No automation rules have executed for this task recently.
+          <div style={{ padding: '8px 14px 12px', fontSize: '0.8125rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, paddingBottom: 8, borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+              <span style={{ fontSize: '0.75rem', color: '#626f86' }}>Trigger rule:</span>
+              <button
+                type="button"
+                disabled={isRunningRule}
+                onClick={() => handleRunRule('AUTO_CLOSE_PARENT')}
+                style={{
+                  padding: '3px 8px',
+                  borderRadius: 4,
+                  backgroundColor: '#f1f2f4',
+                  border: '1px solid rgba(0,0,0,0.1)',
+                  fontSize: '0.6875rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  color: '#172b4d',
+                }}
+              >
+                Auto-evaluate subtasks
+              </button>
+              <button
+                type="button"
+                disabled={isRunningRule}
+                onClick={() => handleRunRule('AUTO_ASSIGN_ME')}
+                style={{
+                  padding: '3px 8px',
+                  borderRadius: 4,
+                  backgroundColor: '#f1f2f4',
+                  border: '1px solid rgba(0,0,0,0.1)',
+                  fontSize: '0.6875rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  color: '#172b4d',
+                }}
+              >
+                Assign to me
+              </button>
+            </div>
+
+            {isAutoLoading ? (
+              <div style={{ color: '#626f86', padding: '4px 0' }}>Loading automation audit logs...</div>
+            ) : automationLogs.length === 0 ? (
+              <div style={{ color: '#626f86', padding: '4px 0' }}>
+                No automation rules have executed for this task recently.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 220, overflowY: 'auto' }}>
+                {automationLogs.map((item) => (
+                  <div
+                    key={item.id}
+                    style={{
+                      padding: '8px 10px',
+                      borderRadius: 6,
+                      backgroundColor: '#f8f9fa',
+                      border: '1px solid rgba(0,0,0,0.06)',
+                      fontSize: '0.75rem',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
+                      <span style={{ fontWeight: 700, color: '#172b4d' }}>{item.ruleName}</span>
+                      <span style={{ color: '#626f86', fontSize: '0.6875rem' }}>{timeAgo(item.executedAt)}</span>
+                    </div>
+                    <p style={{ margin: 0, color: '#44546f', lineHeight: 1.4 }}>{item.description}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1124,8 +1421,8 @@ export function TaskDetailsSidebar({
         }}
       >
         <div>
-          <div>Created 2 hours ago</div>
-          <div>Updated 2 hours ago</div>
+          <div>Created {timeAgo(issue.createdAt)}</div>
+          <div>Updated {timeAgo(issue.updatedAt)}</div>
         </div>
         <button
           type="button"
@@ -1145,6 +1442,156 @@ export function TaskDetailsSidebar({
           <span>Configure</span>
         </button>
       </div>
+
+      {/* ─── Link Development Item Modal ───────────────────────── */}
+      {devModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(9, 30, 66, 0.54)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 110,
+            padding: 16,
+          }}
+          onClick={(e) => e.target === e.currentTarget && setDevModalOpen(false)}
+        >
+          <div
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: 10,
+              width: '100%',
+              maxWidth: 440,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '14px 18px',
+                borderBottom: '1px solid rgba(0,0,0,0.08)',
+              }}
+            >
+              <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, margin: 0, color: '#172b4d' }}>
+                Link development item
+              </h3>
+              <button
+                type="button"
+                onClick={() => setDevModalOpen(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#626f86', padding: 4 }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateDev} style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#44546f', marginBottom: 6 }}>
+                  Item Type
+                </label>
+                <select
+                  value={devType}
+                  onChange={(e) => setDevType(e.target.value as DevelopmentType)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    borderRadius: 6,
+                    border: '1px solid rgba(0,0,0,0.15)',
+                    fontSize: '0.875rem',
+                    outline: 'none',
+                    backgroundColor: '#ffffff',
+                  }}
+                >
+                  <option value="COMMIT">Commit</option>
+                  <option value="PULL_REQUEST">Pull Request</option>
+                  <option value="BRANCH">Branch</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#44546f', marginBottom: 6 }}>
+                  Title / Name <span style={{ color: '#de350b' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder={devType === 'COMMIT' ? 'e.g. feat(auth): add OAuth2 handler' : devType === 'BRANCH' ? 'feature/jari-auth' : '#14 Add user profile'}
+                  value={devTitle}
+                  onChange={(e) => setDevTitle(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    borderRadius: 6,
+                    border: '1px solid rgba(0,0,0,0.15)',
+                    fontSize: '0.875rem',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#44546f', marginBottom: 6 }}>
+                  URL <span style={{ color: '#de350b' }}>*</span>
+                </label>
+                <input
+                  type="url"
+                  required
+                  placeholder="https://github.com/phihocnguyen/jari/pull/1"
+                  value={devUrl}
+                  onChange={(e) => setDevUrl(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    borderRadius: 6,
+                    border: '1px solid rgba(0,0,0,0.15)',
+                    fontSize: '0.875rem',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              {devType === 'PULL_REQUEST' && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#44546f', marginBottom: 6 }}>
+                    Status
+                  </label>
+                  <select
+                    value={devStatus}
+                    onChange={(e) => setDevStatus(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      borderRadius: 6,
+                      border: '1px solid rgba(0,0,0,0.15)',
+                      fontSize: '0.875rem',
+                      outline: 'none',
+                      backgroundColor: '#ffffff',
+                    }}
+                  >
+                    <option value="OPEN">Open</option>
+                    <option value="MERGED">Merged</option>
+                    <option value="CLOSED">Closed</option>
+                  </select>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 6 }}>
+                <Button type="button" variant="ghost" onClick={() => setDevModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmittingDev}>
+                  Link item
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* ─── Create Release Modal ─────────────────────────────── */}
       {releaseModalOpen && (
