@@ -376,12 +376,27 @@ export default function BacklogPage() {
   const displaySprints = [...activeSprints, ...plannedSprints];
   const backlogIssues = allIssues.filter((i: Issue) => !i.sprintId);
 
-  if ((loadingSprints || loadingIssues) && allIssues.length === 0 && sprints.length === 0) {
+  if ((loadingSprints && sprints.length === 0) || (loadingIssues && allIssues.length === 0)) {
     return <BacklogSkeleton />;
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', userSelect: 'none' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1rem',
+        width: '100%',
+        userSelect: 'none',
+        animation: 'backlogFadeIn 0.25s ease-out forwards',
+      }}
+    >
+      <style>{`
+        @keyframes backlogFadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
       {/* Top Filter Bar (Jira Backlog Style) */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
         <IssueFilterBar filters={filters} onChange={setFilters} />

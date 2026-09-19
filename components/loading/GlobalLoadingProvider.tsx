@@ -62,7 +62,35 @@ export function GlobalLoadingProvider({ children }: GlobalLoadingProviderProps) 
       }}
     >
       {children}
-      {isNavigating && <GlobalLoadingOverlay label={loadingLabel} />}
+      {isNavigating && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 3,
+            zIndex: 99999,
+            overflow: 'hidden',
+            backgroundColor: 'rgba(0, 117, 74, 0.15)',
+          }}
+        >
+          <style>{`
+            @keyframes topNavShimmer {
+              0% { transform: translateX(-100%); }
+              100% { transform: translateX(100%); }
+            }
+          `}</style>
+          <div
+            style={{
+              height: '100%',
+              width: '100%',
+              background: 'linear-gradient(90deg, #00754A, #10B981, #00754A)',
+              animation: 'topNavShimmer 1.2s ease-in-out infinite',
+            }}
+          />
+        </div>
+      )}
     </NavigationLoadingContext.Provider>
   );
 }

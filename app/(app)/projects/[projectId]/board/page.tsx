@@ -16,6 +16,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { toast } from '@/components/ui/Toast';
 import { CreateIssueModal } from '@/components/issue/CreateIssueModal';
 import { IssueDetailModal } from '@/components/issue/IssueDetailModal';
+import { BoardSkeleton } from '@/components/board/BoardSkeleton';
 import type { Issue, IssueStatus } from '@/types/issue';
 import type { Sprint } from '@/types/sprint';
 
@@ -213,18 +214,9 @@ export default function BoardPage() {
     }
   };
 
-  // If sprints are still loading on initial fetch
-  if (loadingSprints && sprints.length === 0) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-        <h1 style={{ fontSize: '1.625rem', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.02em' }}>
-          Board
-        </h1>
-        <div style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: '0.9375rem' }}>
-          Loading active sprint...
-        </div>
-      </div>
-    );
+  // If sprints or board data are still loading on initial fetch
+  if ((loadingSprints && sprints.length === 0) || (loadingBoard && !boardData)) {
+    return <BoardSkeleton />;
   }
 
   // If there is NO active sprint, render empty state with Backlog redirect button
@@ -348,7 +340,20 @@ export default function BoardPage() {
   const sprintDateRange = formatSprintDates(activeSprint.startDate, activeSprint.endDate);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1.25rem',
+        animation: 'boardFadeIn 0.25s ease-out forwards',
+      }}
+    >
+      <style>{`
+        @keyframes boardFadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
       {/* Top Header with Active Sprint Info & Complete Button */}
       <div
         style={{

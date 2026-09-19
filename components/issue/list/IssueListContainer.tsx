@@ -353,7 +353,21 @@ export function IssueListContainer({ projectId, initialComponent }: IssueListCon
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1rem',
+        width: '100%',
+        animation: 'listFadeIn 0.25s ease-out forwards',
+      }}
+    >
+      <style>{`
+        @keyframes listFadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
       {/* 1. Header Toolbar (Search + Filters + Full Create Trigger) */}
       <div
         style={{
@@ -515,18 +529,7 @@ export function IssueListContainer({ projectId, initialComponent }: IssueListCon
 
       {/* 2. Jira List Table */}
       {loadingIssues ? (
-        <div
-          style={{
-            padding: '4rem',
-            textAlign: 'center',
-            backgroundColor: '#ffffff',
-            borderRadius: '8px',
-            border: '1px solid rgba(0,0,0,0.1)',
-            color: 'var(--color-text-secondary)',
-          }}
-        >
-          Loading issues...
-        </div>
+        <IssueListTableSkeleton />
       ) : (
         <IssueListTable
           issues={paginatedIssues}
@@ -601,6 +604,68 @@ export function IssueListContainer({ projectId, initialComponent }: IssueListCon
         issues={filteredIssues}
         onNavigateIssue={(id) => setSelectedIssueId(id)}
       />
+    </div>
+  );
+}
+
+function IssueListTableSkeleton() {
+  return (
+    <div
+      style={{
+        backgroundColor: '#FFFFFF',
+        borderRadius: '8px',
+        border: '1px solid rgba(0, 0, 0, 0.08)',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Table Header Skeleton */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '40px 100px 1fr 120px 100px 140px 100px',
+          padding: '10px 16px',
+          backgroundColor: '#F8F9FA',
+          borderBottom: '1px solid #E2E8F0',
+          gap: '12px',
+          alignItems: 'center',
+        }}
+      >
+        <div className="skeleton" style={{ width: 16, height: 16, borderRadius: 3 }} />
+        <div className="skeleton" style={{ width: 60, height: 14, borderRadius: 3 }} />
+        <div className="skeleton" style={{ width: 120, height: 14, borderRadius: 3 }} />
+        <div className="skeleton" style={{ width: 70, height: 14, borderRadius: 3 }} />
+        <div className="skeleton" style={{ width: 60, height: 14, borderRadius: 3 }} />
+        <div className="skeleton" style={{ width: 80, height: 14, borderRadius: 3 }} />
+        <div className="skeleton" style={{ width: 60, height: 14, borderRadius: 3 }} />
+      </div>
+
+      {/* Rows Skeleton */}
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {Array.from({ length: 7 }).map((_, i) => (
+          <div
+            key={i}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '40px 100px 1fr 120px 100px 140px 100px',
+              padding: '12px 16px',
+              borderBottom: '1px solid #F1F5F9',
+              gap: '12px',
+              alignItems: 'center',
+            }}
+          >
+            <div className="skeleton" style={{ width: 16, height: 16, borderRadius: 3 }} />
+            <div className="skeleton" style={{ width: 55, height: 16, borderRadius: 4 }} />
+            <div className="skeleton" style={{ width: `${i % 2 === 0 ? 65 : 80}%`, height: 16, borderRadius: 4, maxWidth: 380 }} />
+            <div className="skeleton" style={{ width: 75, height: 22, borderRadius: 12 }} />
+            <div className="skeleton" style={{ width: 65, height: 18, borderRadius: 4 }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div className="skeleton" style={{ width: 22, height: 22, borderRadius: '50%' }} />
+              <div className="skeleton" style={{ width: 70, height: 14, borderRadius: 3 }} />
+            </div>
+            <div className="skeleton" style={{ width: 65, height: 14, borderRadius: 3 }} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

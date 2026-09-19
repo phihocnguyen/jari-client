@@ -10,7 +10,7 @@ import { TeamWorkloadWidget } from '@/components/summary/TeamWorkloadWidget';
 import { RecentActivityWidget } from '@/components/summary/RecentActivityWidget';
 import { TypesOfWorkWidget } from '@/components/summary/TypesOfWorkWidget';
 import { EpicProgressWidget } from '@/components/summary/EpicProgressWidget';
-import { GlobalLoadingOverlay } from '@/components/loading';
+import { SummarySkeleton } from '@/components/summary/SummarySkeleton';
 
 // ─── Project Summary Page (Client) ──────────────────────────────────
 export default function ProjectSummaryPage() {
@@ -25,12 +25,7 @@ export default function ProjectSummaryPage() {
   });
 
   if (isLoading && !data) {
-    return (
-      <GlobalLoadingOverlay
-        label="Loading project summary..."
-        sublabel="Preparing workspace metrics and recent activity"
-      />
-    );
+    return <SummarySkeleton />;
   }
 
   return (
