@@ -35,6 +35,7 @@ import {
 import { projectApi } from '@/lib/api/project';
 import { userApi } from '@/lib/api/user';
 import { useAuthStore } from '@/store/auth.store';
+import { ProjectIcon, PROJECT_ICONS, PROJECT_COLORS, JiraCloudSmileyIcon } from '@/components/project/ProjectIcon';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Avatar } from '@/components/ui/Avatar';
@@ -48,38 +49,6 @@ import {
   type UpdateProjectFormData,
   type InviteProjectMemberFormData,
 } from '@/lib/validations/project';
-
-// ─── SVG Cloud Smiley Icon (Jira Default Software Space Icon) ──────
-function JiraCloudSmileyIcon({ size = 48, color = '#FFFFFF' }: { size?: number; color?: string }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 100 100"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ display: 'block' }}
-    >
-      {/* Cloud body */}
-      <path
-        d="M28 68 C22 68 18 64 18 58 C18 52.5 22 48.5 27 48 C27.5 40 34 33 43 33 C46.5 33 49.5 34.5 52 37 C56 31 63 28 70 31 C77 34 81 40 81 48 C86 48.5 90 52.5 90 58 C90 64 85 68 79 68 Z"
-        fill={color}
-      />
-      {/* Left eye */}
-      <circle cx="43" cy="50" r="2.8" fill="#0C66E4" />
-      {/* Right eye */}
-      <circle cx="59" cy="50" r="2.8" fill="#0C66E4" />
-      {/* Cute smile */}
-      <path
-        d="M47 56 Q51 61 55 56"
-        stroke="#E2483D"
-        strokeWidth="3.2"
-        strokeLinecap="round"
-        fill="none"
-      />
-    </svg>
-  );
-}
 
 // ─── Page Component ────────────────────────────────────────────────
 export default function SpaceSettingsPage({ params }: PageProps<'/projects/[projectId]/settings'>) {
@@ -128,8 +97,31 @@ function SpaceSettingsContent({
   // State
   const [inviteOpen, setInviteOpen] = useState(false);
   const [iconModalOpen, setIconModalOpen] = useState(false);
-  const [selectedIcon, setSelectedIcon] = useState('cloud');
+  const [selectedIcon, setSelectedIcon] = useState(project?.avatarIcon || 'cloud');
+  const [selectedColor, setSelectedColor] = useState(project?.avatarColor || '#0C66E4');
   const [memberSearchQuery, setMemberSearchQuery] = useState('');
+
+  useEffect(() => {
+    if (project?.avatarIcon) setSelectedIcon(project.avatarIcon);
+    if (project?.avatarColor) setSelectedColor(project.avatarColor);
+  }, [project?.avatarIcon, project?.avatarColor]);
+
+  const saveIconMutation = useMutation({
+    mutationFn: (data: { avatarIcon: string; avatarColor: string }) =>
+      projectApi.update(projectId, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['project', projectId] });
+      qc.invalidateQueries({ queryKey: ['projects'] });
+      setIconModalOpen(false);
+      toast.success('Space icon and color updated successfully');
+    },
+    onError: (err: unknown) => {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Failed to save space icon';
+      toast.error('Cannot save icon', msg);
+    },
+  });
 
   // Check admin rights
   const currentMember = members.find(m => m.userId === currentUser?.id);
@@ -217,22 +209,12 @@ function SpaceSettingsContent({
             marginBottom: 8,
           }}
         >
-          {/* 36x36 Blue Rounded Icon */}
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 8,
-              backgroundColor: '#0C66E4',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-            }}
-          >
-            <JiraCloudSmileyIcon size={26} />
-          </div>
+          <ProjectIcon
+            icon={project?.avatarIcon}
+            color={project?.avatarColor}
+            name={spaceName}
+            size={36}
+          />
           <div style={{ minWidth: 0, flex: 1 }}>
             <div
               style={{
@@ -420,51 +402,54 @@ function SpaceSettingsContent({
         title="Change space icon"
       >
         <div style={{ padding: '8px 0' }}>
-          <p style={{ fontSize: '0.875rem', color: '#626F86', marginBottom: 16 }}>
-            Select an icon and theme for your software space
+          {/* Live Preview */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', backgroundColor: '#FAFBFC', borderRadius: 8, marginBottom: 18, border: '1px solid #DFE1E6' }}>
+            <ProjectIcon icon={selectedIcon} color={selectedColor} name={spaceName} size={48} borderRadius={10} />
+            <div>
+              <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#172B4D' }}>{spaceName}</div>
+              <div style={{ fontSize: '0.75rem', color: '#626F86' }}>Preview of your space badge</div>
+            </div>
+          </div>
+
+          <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#44546F', marginBottom: 8 }}>
+            1. Select Icon
           </p>
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: 12,
-              marginBottom: 20,
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: 10,
+              marginBottom: 18,
             }}
           >
-            {[
-              { id: 'cloud', label: 'Cloud', icon: JiraCloudSmileyIcon },
-              { id: 'rocket', label: 'Rocket', icon: Rocket },
-              { id: 'code', label: 'Code', icon: Code2 },
-              { id: 'kanban', label: 'Kanban', icon: LayoutGrid },
-              { id: 'bug', label: 'Bug', icon: Bug },
-              { id: 'sparkles', label: 'Features', icon: Sparkles },
-            ].map(item => {
+            {PROJECT_ICONS.map(item => {
               const isSelected = selectedIcon === item.id;
               const IconComp = item.icon;
               return (
                 <button
                   key={item.id}
+                  type="button"
                   onClick={() => setSelectedIcon(item.id)}
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: 8,
-                    padding: '16px 12px',
+                    gap: 6,
+                    padding: '12px 8px',
                     borderRadius: 8,
-                    border: isSelected ? '2px solid #0C66E4' : '1px solid #DFE1E6',
-                    backgroundColor: isSelected ? '#E9F2FF' : '#FFFFFF',
+                    border: isSelected ? `2px solid ${selectedColor}` : '1px solid #DFE1E6',
+                    backgroundColor: isSelected ? 'rgba(12, 102, 228, 0.08)' : '#FFFFFF',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease',
                   }}
                 >
                   <div
                     style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 8,
-                      backgroundColor: '#0C66E4',
+                      width: 36,
+                      height: 36,
+                      borderRadius: 6,
+                      backgroundColor: selectedColor,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -472,9 +457,9 @@ function SpaceSettingsContent({
                     }}
                   >
                     {item.id === 'cloud' ? (
-                      <JiraCloudSmileyIcon size={32} />
+                      <JiraCloudSmileyIcon size={26} />
                     ) : (
-                      <IconComp size={24} />
+                      <IconComp size={20} />
                     )}
                   </div>
                   <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#172B4D' }}>
@@ -484,18 +469,55 @@ function SpaceSettingsContent({
               );
             })}
           </div>
+
+          <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#44546F', marginBottom: 8 }}>
+            2. Select Color Theme
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
+            {PROJECT_COLORS.map(c => {
+              const isSelected = selectedColor.toUpperCase() === c.toUpperCase();
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setSelectedColor(c)}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    backgroundColor: c,
+                    border: isSelected ? '3px solid #172B4D' : '2px solid #FFFFFF',
+                    boxShadow: isSelected ? '0 0 0 2px #0C66E4' : '0 1px 3px rgba(0,0,0,0.15)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#FFFFFF',
+                    transition: 'transform 0.15s ease',
+                    transform: isSelected ? 'scale(1.1)' : 'scale(1)',
+                  }}
+                >
+                  {isSelected && <Check size={16} strokeWidth={3} />}
+                </button>
+              );
+            })}
+          </div>
+
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
             <Button variant="outlined" onClick={() => setIconModalOpen(false)}>
               Cancel
             </Button>
             <Button
               variant="primary"
+              loading={saveIconMutation.isPending}
               onClick={() => {
-                setIconModalOpen(false);
-                toast.success('Icon updated');
+                saveIconMutation.mutate({
+                  avatarIcon: selectedIcon,
+                  avatarColor: selectedColor,
+                });
               }}
             >
-              Save icon
+              Save icon & color
             </Button>
           </div>
         </div>
@@ -586,22 +608,13 @@ function DetailsTabContent({
           marginBottom: 28,
         }}
       >
-        {/* Blue Rounded Square with Cloud Icon */}
-        <div
-          style={{
-            width: 88,
-            height: 88,
-            borderRadius: 14,
-            backgroundColor: '#0C66E4',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(12, 102, 228, 0.2)',
-            transition: 'transform 0.15s ease',
-          }}
-        >
-          <JiraCloudSmileyIcon size={64} />
-        </div>
+        <ProjectIcon
+          icon={project?.avatarIcon}
+          color={project?.avatarColor}
+          name={project?.name}
+          size={88}
+          borderRadius={14}
+        />
 
         {/* "Change icon" button */}
         <button

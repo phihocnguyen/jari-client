@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import type { Project } from '@/types/project';
 import type { Workspace } from '@/types/workspace';
+import { ProjectIcon } from '@/components/project/ProjectIcon';
 
 interface ProjectSidebarViewProps {
   collapsed: boolean;
@@ -202,24 +203,13 @@ export function ProjectSidebarView({
           ) : (
             <>
               {/* Project Avatar Square */}
-              <div
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 8,
-                  backgroundColor: project?.avatarColor || '#00754A',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#fff',
-                  fontWeight: 800,
-                  fontSize: '0.9375rem',
-                  flexShrink: 0,
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
-                }}
-              >
-                {projectInitial}
-              </div>
+              <ProjectIcon
+                icon={project?.avatarIcon}
+                color={project?.avatarColor || '#00754A'}
+                name={projectName}
+                size={32}
+                borderRadius={8}
+              />
 
               {!collapsed && (
                 <div style={{ minWidth: 0, flex: 1 }}>

@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { ArrowRight, Users, Layers } from 'lucide-react';
 import type { Project } from '@/types/project';
 
+import { ProjectIcon } from './ProjectIcon';
+
 interface ProjectCardProps {
   project: Project;
 }
@@ -27,13 +29,13 @@ export function ProjectCard({ project }: ProjectCardProps) {
       >
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.875rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{
-              width: 46, height: 46, borderRadius: 10, background: color,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontWeight: 700, fontSize: '0.95rem', flexShrink: 0,
-            }}>
-              {pKey}
-            </div>
+            <ProjectIcon
+              icon={project.avatarIcon}
+              color={color}
+              name={project.name || pKey}
+              size={46}
+              borderRadius={10}
+            />
             <div>
               <div style={{ fontWeight: 700, fontSize: '1.0625rem', color: 'var(--color-text-primary)', lineHeight: 1.3 }}>{project.name}</div>
             </div>

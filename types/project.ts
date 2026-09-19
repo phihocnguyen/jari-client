@@ -17,6 +17,7 @@ export interface Project {
   defaultAssignee?: 'UNASSIGNED' | 'PROJECT_LEAD';
   projectType?: ProjectType;
   avatarUrl?: string;
+  avatarIcon?: string;
   avatarColor?: string;
   createdAt: string;
   updatedAt: string;
@@ -40,6 +41,8 @@ export interface CreateProjectRequest {
   description?: string;
   leadId?: string;
   projectType?: ProjectType;
+  avatarIcon?: string;
+  avatarColor?: string;
 }
 
 export interface UpdateProjectRequest {
@@ -48,6 +51,8 @@ export interface UpdateProjectRequest {
   leadId?: string;
   status?: ProjectStatus;
   defaultAssignee?: 'UNASSIGNED' | 'PROJECT_LEAD';
+  avatarIcon?: string;
+  avatarColor?: string;
 }
 
 export interface AddProjectMemberRequest {
