@@ -238,4 +238,29 @@ export const issueApi = {
 
   deleteComment: (issueId: string, commentId: string) =>
     apiClient.delete(`/issues/${issueId}/comments/${commentId}`),
+
+  // Watchers
+  getWatchers: (issueId: string) =>
+    apiClient.get<ApiResponse<WatchersResponse>>(`/issues/${issueId}/watchers`).then((r) => r.data.data),
+
+  watchIssue: (issueId: string) =>
+    apiClient.post<ApiResponse<void>>(`/issues/${issueId}/watchers`).then((r) => r.data),
+
+  unwatchIssue: (issueId: string) =>
+    apiClient.delete<ApiResponse<void>>(`/issues/${issueId}/watchers`).then((r) => r.data),
 };
+
+export interface WatcherUser {
+  id: string;
+  username: string;
+  displayName: string;
+  fullName?: string;
+  avatarUrl?: string;
+}
+
+export interface WatchersResponse {
+  count: number;
+  isWatching: boolean;
+  watchers: WatcherUser[];
+}
+
