@@ -89,8 +89,8 @@ export interface FullPageLoaderProps {
 }
 
 export const FullPageLoader: React.FC<FullPageLoaderProps> = ({
-  label = 'Đang tải dữ liệu Jari...',
-  sublabel = 'Vui lòng chờ trong giây lát',
+  label = 'Loading Jari data...',
+  sublabel = 'Please wait a moment',
 }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1E3932]/30 backdrop-blur-md transition-all duration-300">
@@ -126,7 +126,7 @@ export interface LoadingSectionProps {
 }
 
 export const LoadingSection: React.FC<LoadingSectionProps> = ({
-  label = 'Đang tải thông tin...',
+  label = 'Loading information...',
   height = 'h-64',
 }) => {
   return (

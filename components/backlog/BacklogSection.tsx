@@ -4,6 +4,7 @@ import React from 'react';
 import { ChevronDown, ChevronRight, Plus } from 'lucide-react';
 import { StatusPillGroup } from './StatusPillGroup';
 import { IssueRow } from '@/components/issue/IssueRow';
+import { SkeletonIssueRow } from '@/components/backlog/BacklogSkeleton';
 import { Button } from '@/components/ui/Button';
 import type { Issue } from '@/types/issue';
 

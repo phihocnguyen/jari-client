@@ -14,6 +14,7 @@ import { IssueDetailModal } from '@/components/issue/IssueDetailModal';
 import { EditSprintModal } from '@/components/sprint/EditSprintModal';
 import { StartSprintModal } from '@/components/sprint/StartSprintModal';
 import { MoveWorkItemsModal } from '@/components/sprint/MoveWorkItemsModal';
+import { BacklogSkeleton } from '@/components/backlog/BacklogSkeleton';
 import { toast } from '@/components/ui/Toast';
 import type { Issue, IssueFilter } from '@/types/issue';
 import type { Sprint } from '@/types/sprint';
@@ -129,7 +130,7 @@ export default function BacklogPage() {
     staleTime: 1000 * 60 * 5,
   });
 
-  const { data: sprints = [] } = useQuery({
+  const { data: sprints = [], isLoading: loadingSprints } = useQuery({
     queryKey: ['sprints', projectId],
     queryFn: () => (projectId ? sprintApi.list(projectId).then((r) => r.data) : []),
     enabled: Boolean(projectId),
@@ -374,6 +375,10 @@ export default function BacklogPage() {
   );
   const displaySprints = [...activeSprints, ...plannedSprints];
   const backlogIssues = allIssues.filter((i: Issue) => !i.sprintId);
+
+  if ((loadingSprints || loadingIssues) && allIssues.length === 0 && sprints.length === 0) {
+    return <BacklogSkeleton />;
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', userSelect: 'none' }}>
