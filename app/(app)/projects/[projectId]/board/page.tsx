@@ -9,7 +9,7 @@ import {
   ChevronsUp, ArrowUp, Target, Plus, Kanban, ArrowRight, Calendar,
 } from 'lucide-react';
 import { sprintApi } from '@/lib/api/sprint';
-import { issueApi } from '@/lib/api/issue';
+import { issueApi, normalizeIssue } from '@/lib/api/issue';
 import { projectApi } from '@/lib/api/project';
 import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
@@ -75,64 +75,62 @@ export default function BoardPage() {
 
   const activeSprint = sprints.find((s: Sprint) => s.status === 'ACTIVE');
 
-  const { data: boardData, isLoading: loadingBoard } = useQuery({
+  // Fires in parallel with /sprints — backend finds the active sprint itself,
+  // no need to wait. Returns issues pre-filtered & grouped by status column.
+  const {
+    data: boardColumns = [],
+    isLoading: loadingBoard,
+    error: boardError,
+  } = useQuery({
     queryKey: ['board', projectId],
-    queryFn: () => (projectId && activeSprint ? sprintApi.getBoard(projectId).then((r) => r.data) : null),
-    enabled: Boolean(projectId && activeSprint),
-    staleTime: 1000 * 60 * 5,
-  });
-
-  const { data: issuesPage, isLoading: loadingIssues } = useQuery({
-    queryKey: ['issues', projectId],
-    queryFn: () => (projectId ? issueApi.list(projectId) : null),
+    queryFn: async () => {
+      // sprintApi.getBoard returns ApiResponse<BoardResponse>, but backend actually
+      // sends List<BoardColumnResponse> as the `data` field — it's an array.
+      const apiResp = await sprintApi.getBoard(projectId);
+      const raw: unknown = apiResp.data;
+      const cols: any[] = Array.isArray(raw) ? raw : Array.isArray(apiResp) ? (apiResp as unknown as any[]) : [];
+      return cols.map((col: any) => ({
+        ...col,
+        issues: (col.issues ?? []).map(normalizeIssue),
+      }));
+    },
     enabled: Boolean(projectId),
     staleTime: 1000 * 60 * 5,
+    retry: false, // 404 when no active sprint → show empty state
   });
 
-  const allIssues: Issue[] = issuesPage?.data ?? [];
-
-  // Issues belonging to the active sprint
-  const boardIssues = Array.isArray(boardData)
-    ? boardData.flatMap((col: any) => col.issues || [])
-    : [];
-
-  const sprintIssues = allIssues.filter((i) => i.sprintId === activeSprint?.id);
-
-  const activeIssues = sprintIssues.length > 0
-    ? sprintIssues
-    : boardIssues.length > 0
-    ? boardIssues
-    : [];
+  // Flatten all issues for the board columns
+  const activeIssues: Issue[] = boardColumns.flatMap((col: any) => col.issues ?? []);
 
   const updateStatusMutation = useMutation({
     mutationFn: ({ issueId, status }: { issueId: string; status: IssueStatus }) =>
       issueApi.updateStatus(issueId, status),
     onMutate: async ({ issueId, status }) => {
-      await qc.cancelQueries({ queryKey: ['issues', projectId] });
       await qc.cancelQueries({ queryKey: ['board', projectId] });
 
-      const previousIssues = qc.getQueryData<any>(['issues', projectId]);
+      const previousBoard = qc.getQueryData<any[]>(['board', projectId]);
 
-      if (previousIssues && Array.isArray(previousIssues.data)) {
-        qc.setQueryData(['issues', projectId], {
-          ...previousIssues,
-          data: previousIssues.data.map((issue: Issue) =>
+      // Optimistically move the card to the new column in the board cache
+      if (previousBoard) {
+        qc.setQueryData(['board', projectId], previousBoard.map((col: any) => ({
+          ...col,
+          issues: col.issues.map((issue: Issue) =>
             issue.id === issueId ? { ...issue, status } : issue
           ),
-        });
+        })));
       }
 
-      return { previousIssues };
+      return { previousBoard };
     },
     onError: (_err, _variables, context) => {
-      if (context?.previousIssues) {
-        qc.setQueryData(['issues', projectId], context.previousIssues);
+      if (context?.previousBoard) {
+        qc.setQueryData(['board', projectId], context.previousBoard);
       }
       toast.error('Failed to update status');
     },
     onSettled: (_, _error, variables) => {
-      qc.invalidateQueries({ queryKey: ['issues', projectId], refetchType: 'none' });
       qc.invalidateQueries({ queryKey: ['board', projectId], refetchType: 'none' });
+      qc.invalidateQueries({ queryKey: ['issues', projectId], refetchType: 'none' });
       qc.invalidateQueries({ queryKey: ['issue', variables.issueId], refetchType: 'none' });
     },
   });
@@ -214,13 +212,16 @@ export default function BoardPage() {
     }
   };
 
-  // If sprints or board data are still loading on initial fetch
-  if ((loadingSprints && sprints.length === 0) || (loadingBoard && !boardData)) {
+  // Show skeleton on first load of sprints + board
+  if ((loadingSprints && sprints.length === 0) || (loadingBoard && boardColumns.length === 0 && !boardError)) {
     return <BoardSkeleton />;
   }
 
+  // If board returned 404 (no active sprint) or sprints list has no ACTIVE sprint
+  const hasNoActiveSprint = !activeSprint || (boardError != null);
+
   // If there is NO active sprint, render empty state with Backlog redirect button
-  if (!activeSprint) {
+  if (hasNoActiveSprint) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%' }}>
         {/* Top Header */}
@@ -480,12 +481,7 @@ export default function BoardPage() {
       </div>
 
       {/* Board Columns Grid */}
-      {(loadingBoard || loadingIssues) && activeIssues.length === 0 ? (
-        <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-secondary)' }}>
-          Loading Board...
-        </div>
-      ) : (
-        <div
+      <div
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(4, minmax(280px, 1fr))',
@@ -752,7 +748,6 @@ export default function BoardPage() {
             );
           })}
         </div>
-      )}
 
       {/* Modals */}
       <CreateIssueModal
