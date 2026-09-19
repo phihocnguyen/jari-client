@@ -330,8 +330,19 @@ export default function BacklogPage() {
         .filter((i) => i.sprintId === targetSprintId)
         .map((i) => i.id);
 
+      console.log('[Sprint] Persisting sprint issues order:', targetSprintId, sprintIssueIds);
       sprintApi.reorderIssues(targetSprintId, sprintIssueIds).catch((err) => {
         console.error('Failed to persist sprint issues order:', err);
+      });
+    } else {
+      // Reordered within the BACKLOG -> persist order to backend silently!
+      const backlogIssueIds = currentList
+        .filter((i) => !i.sprintId)
+        .map((i) => i.id);
+
+      console.log('[Backlog] Persisting backlog issues order:', projectId, backlogIssueIds);
+      issueApi.reorderIssues(projectId, backlogIssueIds).catch((err) => {
+        console.error('Failed to persist backlog issues order:', err);
       });
     }
   };

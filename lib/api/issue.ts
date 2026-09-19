@@ -258,6 +258,9 @@ export const issueApi = {
 
   unwatchIssue: (issueId: string) =>
     apiClient.delete<ApiResponse<void>>(`/issues/${issueId}/watchers`).then((r) => r.data),
+
+  reorderIssues: (projectId: string, issueIds: string[]) =>
+    apiClient.put<ApiResponse<void>>(`/projects/${projectId}/issues/reorder`, { issueIds }),
 };
 
 export interface WatcherUser {
