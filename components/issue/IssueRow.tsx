@@ -12,7 +12,7 @@ interface IssueRowProps {
   onDragStart?: (e: React.DragEvent) => void;
   onDragEnd?: (e: React.DragEvent) => void;
   isDragging?: boolean;
-  onDropOnIssue?: (targetIssue: Issue) => void;
+  onDropOnIssue?: (targetIssue: Issue, e: React.DragEvent) => void;
 }
 
 export function IssueRow({
@@ -71,7 +71,17 @@ export function IssueRow({
     <div
       onClick={onClick}
       draggable={draggable}
-      onDragStart={onDragStart}
+      onDragStart={(e) => {
+        try {
+          window.getSelection()?.removeAllRanges();
+        } catch {
+          // ignore
+        }
+        if (e.dataTransfer?.setDragImage && e.currentTarget) {
+          e.dataTransfer.setDragImage(e.currentTarget, 20, 20);
+        }
+        onDragStart?.(e);
+      }}
       onDragEnd={(e) => {
         setIsDragOver(false);
         onDragEnd?.(e);
@@ -95,7 +105,7 @@ export function IssueRow({
         e.preventDefault();
         e.stopPropagation();
         setIsDragOver(false);
-        onDropOnIssue(issue);
+        onDropOnIssue(issue, e);
       }}
       style={{
         display: 'flex',

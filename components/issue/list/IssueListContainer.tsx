@@ -215,7 +215,6 @@ export function IssueListContainer({ projectId, initialComponent }: IssueListCon
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ['issues', projectId] });
       qc.invalidateQueries({ queryKey: ['issue', variables.issueId] });
-      toast.success('Status updated');
     },
     onError: () => toast.error('Failed to update status'),
   });
@@ -226,7 +225,6 @@ export function IssueListContainer({ projectId, initialComponent }: IssueListCon
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ['issues', projectId] });
       qc.invalidateQueries({ queryKey: ['issue', variables.issueId] });
-      toast.success('Assignee updated');
     },
     onError: () => toast.error('Failed to update assignee'),
   });
@@ -237,7 +235,6 @@ export function IssueListContainer({ projectId, initialComponent }: IssueListCon
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ['issues', projectId] });
       qc.invalidateQueries({ queryKey: ['issue', variables.issueId] });
-      toast.success('Priority updated');
     },
     onError: () => toast.error('Failed to update priority'),
   });
@@ -248,7 +245,6 @@ export function IssueListContainer({ projectId, initialComponent }: IssueListCon
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ['issues', projectId] });
       qc.invalidateQueries({ queryKey: ['issue', variables.issueId] });
-      toast.success('Due date updated');
     },
     onError: () => toast.error('Failed to update due date'),
   });

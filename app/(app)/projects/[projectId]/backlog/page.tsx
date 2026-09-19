@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { issueApi } from '@/lib/api/issue';
@@ -40,6 +40,7 @@ export default function BacklogPage() {
   const [backlogCollapsed, setBacklogCollapsed] = useState(false);
 
   // Drag and Drop state
+  const draggedIssueRef = useRef<Issue | null>(null);
   const [draggedIssue, setDraggedIssue] = useState<Issue | null>(null);
   const [dragOverTarget, setDragOverTarget] = useState<string | null>(null);
   const [pendingMove, setPendingMove] = useState<{
@@ -108,23 +109,15 @@ export default function BacklogPage() {
 
     const handleDragEnd = () => {
       scrollSpeed = 0;
-      setDraggedIssue(null);
-      setDragOverTarget(null);
     };
 
-    window.addEventListener('dragend', handleDragEnd, { capture: true });
-    window.addEventListener('drop', handleDragEnd, { capture: true });
-    document.addEventListener('dragend', handleDragEnd, { capture: true });
-    document.addEventListener('drop', handleDragEnd, { capture: true });
+    window.addEventListener('dragend', handleDragEnd);
 
     return () => {
       if (animId) cancelAnimationFrame(animId);
       window.removeEventListener('dragover', handleDragOver, { capture: true });
       document.removeEventListener('dragover', handleDragOver, { capture: true });
-      window.removeEventListener('dragend', handleDragEnd, { capture: true });
-      window.removeEventListener('drop', handleDragEnd, { capture: true });
-      document.removeEventListener('dragend', handleDragEnd, { capture: true });
-      document.removeEventListener('drop', handleDragEnd, { capture: true });
+      window.removeEventListener('dragend', handleDragEnd);
     };
   }, [draggedIssue]);
 
@@ -211,6 +204,25 @@ export default function BacklogPage() {
     },
   });
 
+  // Helper to sync all issues caches (with or without active filters)
+  const syncIssuesCache = (updater: (list: Issue[]) => Issue[]) => {
+    qc.setQueryData(['issues', projectId], (old: any) => {
+      if (!old) return old;
+      const list: Issue[] = Array.isArray(old) ? old : old.data;
+      if (!Array.isArray(list)) return old;
+      const updated = updater(list);
+      return Array.isArray(old) ? updated : { ...old, data: updated };
+    });
+
+    qc.setQueryData(['issues', projectId, filters], (old: any) => {
+      if (!old) return old;
+      const list: Issue[] = Array.isArray(old) ? old : old.data;
+      if (!Array.isArray(list)) return old;
+      const updated = updater(list);
+      return Array.isArray(old) ? updated : { ...old, data: updated };
+    });
+  };
+
   const moveIssueMutation = useMutation({
     mutationFn: ({
       issueId,
@@ -224,34 +236,37 @@ export default function BacklogPage() {
     }) => issueApi.updateSprint(issueId, targetSprintId ?? null),
     onMutate: async ({ issueId, targetSprintId }) => {
       await qc.cancelQueries({ queryKey: ['issues', projectId] });
-      const previousIssues = qc.getQueryData<any>(['issues', projectId, filters]);
+      const prevBase = qc.getQueryData(['issues', projectId]);
+      const prevFiltered = qc.getQueryData(['issues', projectId, filters]);
 
-      if (previousIssues && Array.isArray(previousIssues.data)) {
-        qc.setQueryData(['issues', projectId, filters], {
-          ...previousIssues,
-          data: previousIssues.data.map((issue: Issue) =>
-            issue.id === issueId
-              ? { ...issue, sprintId: targetSprintId || undefined }
-              : issue
-          ),
-        });
-      }
+      // Instant optimistic UI update at 0ms!
+      syncIssuesCache((list) =>
+        list.map((issue: Issue) =>
+          issue.id === issueId
+            ? { ...issue, sprintId: targetSprintId || undefined }
+            : issue
+        )
+      );
 
-      return { previousIssues };
+      return { prevBase, prevFiltered };
     },
     onError: (err: any, _vars, context) => {
-      if (context?.previousIssues) {
-        qc.setQueryData(['issues', projectId, filters], context.previousIssues);
-      }
+      if (context?.prevBase) qc.setQueryData(['issues', projectId], context.prevBase);
+      if (context?.prevFiltered) qc.setQueryData(['issues', projectId, filters], context.prevFiltered);
       toast.error(err?.response?.data?.message || 'Failed to move work item');
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: (res) => {
+      const updated = res?.data;
+      if (updated) {
+        syncIssuesCache((list) =>
+          list.map((issue: Issue) => (issue.id === updated.id ? { ...issue, ...updated } : issue))
+        );
+      }
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ['issues', projectId] });
       qc.invalidateQueries({ queryKey: ['sprints', projectId] });
       qc.invalidateQueries({ queryKey: ['board', projectId] });
-      if (variables.issueKey && variables.targetSprintName) {
-        toast.success(`Moved ${variables.issueKey} to ${variables.targetSprintName}`);
-      }
     },
   });
 
@@ -261,8 +276,16 @@ export default function BacklogPage() {
     setCollapsedSprints((prev) => ({ ...prev, [sprintId]: !prev[sprintId] }));
   };
 
-  const handleDropOnIssue = (targetIssue: Issue) => {
-    const sourceIssue = draggedIssue;
+  const handleDropOnIssue = (targetIssue: Issue, e?: React.DragEvent) => {
+    let droppedId = e?.dataTransfer?.getData('text/plain');
+    if (droppedId && droppedId.includes('\n')) {
+      droppedId = droppedId.split('\n')[0].trim();
+    }
+    const sourceIssue =
+      draggedIssueRef.current ||
+      draggedIssue ||
+      (droppedId ? allIssues.find((i) => i.id === droppedId || i.key === droppedId) : null);
+
     if (!sourceIssue || sourceIssue.id === targetIssue.id) return;
 
     const sourceSprintId = sourceIssue.sprintId;
@@ -282,12 +305,10 @@ export default function BacklogPage() {
     currentList.splice(sourceIndex, 1);
     currentList.splice(targetIndex, 0, updatedSource);
 
-    qc.setQueryData(['issues', projectId, filters], (old: any) => {
-      if (!old) return old;
-      if (Array.isArray(old)) return currentList;
-      return { ...old, data: currentList };
-    });
+    // INSTANT OPTIMISTIC UPDATE: Sync across both query caches so UI re-renders at 0ms!
+    syncIssuesCache(() => currentList);
 
+    draggedIssueRef.current = null;
     setDraggedIssue(null);
     setDragOverTarget(null);
 
@@ -303,9 +324,37 @@ export default function BacklogPage() {
         targetSprintId,
         targetSprintName,
       });
-    } else {
-      toast.success(`Moved ${sourceIssue.key}`);
+    } else if (targetSprintId) {
+      // Reordered within the SAME sprint -> persist order to backend silently!
+      const sprintIssueIds = currentList
+        .filter((i) => i.sprintId === targetSprintId)
+        .map((i) => i.id);
+
+      sprintApi.reorderIssues(targetSprintId, sprintIssueIds).catch((err) => {
+        console.error('Failed to persist sprint issues order:', err);
+      });
     }
+  };
+
+  const handleIssueDragStart = (e: React.DragEvent, issue: Issue) => {
+    try {
+      window.getSelection()?.removeAllRanges();
+    } catch {
+      // ignore
+    }
+    draggedIssueRef.current = issue;
+    setDraggedIssue(issue);
+    e.dataTransfer.setData('text/plain', issue.id);
+    e.dataTransfer.effectAllowed = 'move';
+    if (e.dataTransfer.setDragImage && e.currentTarget) {
+      e.dataTransfer.setDragImage(e.currentTarget, 20, 20);
+    }
+  };
+
+  const handleIssueDragEnd = () => {
+    draggedIssueRef.current = null;
+    setDraggedIssue(null);
+    setDragOverTarget(null);
   };
 
   const activeSprints = sprints.filter((s: Sprint) => s.status === 'ACTIVE');
@@ -316,7 +365,7 @@ export default function BacklogPage() {
   const backlogIssues = allIssues.filter((i: Issue) => !i.sprintId);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', userSelect: 'none' }}>
       {/* Top Filter Bar (Jira Backlog Style) */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
         <IssueFilterBar filters={filters} onChange={setFilters} />
@@ -347,8 +396,11 @@ export default function BacklogPage() {
             onDrop={(e) => {
               e.preventDefault();
               setDragOverTarget(null);
-              const issueId = e.dataTransfer.getData('text/plain') || draggedIssue?.id;
-              const issue = draggedIssue || allIssues.find((i) => i.id === issueId);
+              let issueId = e.dataTransfer.getData('text/plain') || draggedIssueRef.current?.id || draggedIssue?.id;
+              if (issueId && issueId.includes('\n')) {
+                issueId = issueId.split('\n')[0].trim();
+              }
+              const issue = draggedIssueRef.current || draggedIssue || (issueId ? allIssues.find((i) => i.id === issueId || i.key === issueId) : null);
               if (!issue) return;
               if (issue.sprintId === sprint.id) return;
 
@@ -358,26 +410,30 @@ export default function BacklogPage() {
                 if (found) sourceSprintName = found.name;
               }
 
-              setPendingMove({
-                issue,
-                sourceSprintId: issue.sprintId,
-                sourceSprintName,
-                targetSprintId: sprint.id,
-                targetSprintName: sprint.name,
-                isTargetActive: sprint.status === 'ACTIVE',
-              });
+              if (sprint.status === 'ACTIVE') {
+                setPendingMove({
+                  issue,
+                  sourceSprintId: issue.sprintId,
+                  sourceSprintName,
+                  targetSprintId: sprint.id,
+                  targetSprintName: sprint.name,
+                  isTargetActive: true,
+                });
+              } else {
+                moveIssueMutation.mutate({
+                  issueId: issue.id,
+                  issueKey: issue.key,
+                  sourceSprintId: issue.sprintId,
+                  targetSprintId: sprint.id,
+                  targetSprintName: sprint.name,
+                });
+              }
+              draggedIssueRef.current = null;
               setDraggedIssue(null);
             }}
             draggedIssueId={draggedIssue?.id}
-            onIssueDragStart={(e, issue) => {
-              setDraggedIssue(issue);
-              e.dataTransfer.setData('text/plain', issue.id);
-              e.dataTransfer.effectAllowed = 'move';
-            }}
-            onIssueDragEnd={() => {
-              setDraggedIssue(null);
-              setDragOverTarget(null);
-            }}
+            onIssueDragStart={handleIssueDragStart}
+            onIssueDragEnd={handleIssueDragEnd}
             onSelectIssue={(id) => setSelectedIssueId(id)}
             onStartSprint={(s) => setStartingSprint(s)}
             onCompleteSprint={(id) => completeSprintMutation.mutate(id)}
@@ -416,35 +472,27 @@ export default function BacklogPage() {
         onDrop={(e) => {
           e.preventDefault();
           setDragOverTarget(null);
-          const issueId = e.dataTransfer.getData('text/plain') || draggedIssue?.id;
-          const issue = draggedIssue || allIssues.find((i) => i.id === issueId);
+          let issueId = e.dataTransfer.getData('text/plain') || draggedIssueRef.current?.id || draggedIssue?.id;
+          if (issueId && issueId.includes('\n')) {
+            issueId = issueId.split('\n')[0].trim();
+          }
+          const issue = draggedIssueRef.current || draggedIssue || (issueId ? allIssues.find((i) => i.id === issueId || i.key === issueId) : null);
           if (!issue) return;
           if (!issue.sprintId) return;
 
-          let sourceSprintName = 'Sprint';
-          const found = sprints.find((s: Sprint) => s.id === issue.sprintId);
-          if (found) sourceSprintName = found.name;
-
-          setPendingMove({
-            issue,
+          moveIssueMutation.mutate({
+            issueId: issue.id,
+            issueKey: issue.key,
             sourceSprintId: issue.sprintId,
-            sourceSprintName,
             targetSprintId: undefined,
             targetSprintName: 'Backlog',
-            isTargetActive: false,
           });
+          draggedIssueRef.current = null;
           setDraggedIssue(null);
         }}
         draggedIssueId={draggedIssue?.id}
-        onIssueDragStart={(e, issue) => {
-          setDraggedIssue(issue);
-          e.dataTransfer.setData('text/plain', issue.id);
-          e.dataTransfer.effectAllowed = 'move';
-        }}
-        onIssueDragEnd={() => {
-          setDraggedIssue(null);
-          setDragOverTarget(null);
-        }}
+        onIssueDragStart={handleIssueDragStart}
+        onIssueDragEnd={handleIssueDragEnd}
         onSelectIssue={(id) => setSelectedIssueId(id)}
         onCreateSprint={() => createSprintMutation.mutate()}
         isCreatingSprint={createSprintMutation.isPending}

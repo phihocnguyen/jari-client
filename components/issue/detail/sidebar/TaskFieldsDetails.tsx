@@ -155,39 +155,6 @@ export function TaskFieldsDetails({
             <ParentSelector issue={issue} issues={issues} onUpdateParent={onUpdateParent} />
           </div>
 
-          {/* Sprint */}
-          <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center' }}>
-            <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Sprint</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span
-                style={{
-                  color: '#0052cc',
-                  fontSize: '0.8125rem',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
-                onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
-              >
-                {(issue as any).sprint?.name || (issue.sprintId ? 'Active Sprint' : 'None (Backlog)')}
-              </span>
-              {(issue as any).sprint && (
-                <span
-                  style={{
-                    fontSize: '0.6875rem',
-                    fontWeight: 600,
-                    backgroundColor: '#f1f2f4',
-                    color: '#626f86',
-                    padding: '1px 5px',
-                    borderRadius: 3,
-                  }}
-                >
-                  +1
-                </span>
-              )}
-            </div>
-          </div>
-
           {/* Priority */}
           <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center' }}>
             <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Priority</span>
@@ -244,14 +211,13 @@ export function TaskFieldsDetails({
             />
           </div>
 
-          {/* Labels */}
+          {/* Components (thay thế vị trí của Labels để nổi bật và dễ nhìn hơn) */}
           <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'start' }}>
-            <span style={{ color: '#626f86', fontSize: '0.8125rem', paddingTop: 2 }}>Labels</span>
-            <LabelsSelector
-              labels={issue.labels}
-              projectLabels={projectLabels}
-              onSetLabels={onSetLabels}
-              onCreateLabel={onCreateLabel}
+            <span style={{ color: '#626f86', fontSize: '0.8125rem', paddingTop: 2 }}>Components</span>
+            <ComponentsSelector
+              selectedComponents={issue.components}
+              projectComponents={projectComponents}
+              onSetComponents={onSetComponents}
             />
           </div>
 
@@ -291,13 +257,14 @@ export function TaskFieldsDetails({
             />
           </div>
 
-          {/* Components */}
-          <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center' }}>
-            <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Components</span>
-            <ComponentsSelector
-              selectedComponents={issue.components}
-              projectComponents={projectComponents}
-              onSetComponents={onSetComponents}
+          {/* Labels (chuyển xuống mục phụ) */}
+          <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'start' }}>
+            <span style={{ color: '#626f86', fontSize: '0.8125rem', paddingTop: 2 }}>Labels</span>
+            <LabelsSelector
+              labels={issue.labels}
+              projectLabels={projectLabels}
+              onSetLabels={onSetLabels}
+              onCreateLabel={onCreateLabel}
             />
           </div>
 

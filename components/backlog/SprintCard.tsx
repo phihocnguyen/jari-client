@@ -44,7 +44,7 @@ interface SprintCardProps {
   onEditSprint: (sprint: Sprint) => void;
   onDeleteSprint: (sprint: Sprint) => void;
   onCreateIssueInSprint: (sprintId: string) => void;
-  onDropOnIssue?: (targetIssue: Issue) => void;
+  onDropOnIssue?: (targetIssue: Issue, e: React.DragEvent) => void;
 }
 
 export function SprintCard({

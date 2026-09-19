@@ -24,7 +24,7 @@ interface BacklogSectionProps {
   onCreateIssue: () => void;
   loadingIssues?: boolean;
   hasSprintsAbove?: boolean;
-  onDropOnIssue?: (targetIssue: Issue) => void;
+  onDropOnIssue?: (targetIssue: Issue, e: React.DragEvent) => void;
 }
 
 export function BacklogSection({

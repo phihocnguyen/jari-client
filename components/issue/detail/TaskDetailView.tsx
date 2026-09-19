@@ -123,56 +123,138 @@ export function TaskDetailView({
     staleTime: 1000 * 60 * 30,
   });
 
-  // Update Mutation (generic fields)
+  // Helper to sync query caches immediately across issue detail and list
+  const syncIssueCache = (updater: (old: any) => any) => {
+    qc.setQueryData(['issue', issueId], updater);
+    if (effectiveId !== issueId) {
+      qc.setQueryData(['issue', effectiveId], updater);
+    }
+    qc.setQueryData(['issues', projectId], (old: any) => {
+      if (!old) return old;
+      const list = Array.isArray(old) ? old : old.data;
+      if (!Array.isArray(list)) return old;
+      const newList = list.map((i: Issue) => (i.id === effectiveId ? updater(i) : i));
+      return Array.isArray(old) ? newList : { ...old, data: newList };
+    });
+  };
+
+  // Update Mutation (generic fields: priority, assignee, storyPoints)
   const updateMutation = useMutation({
     mutationFn: (data: Record<string, any>) => issueApi.update(effectiveId, data),
-    onSuccess: () => {
+    onMutate: async (newData) => {
+      await qc.cancelQueries({ queryKey: ['issue', issueId] });
+      if (effectiveId !== issueId) await qc.cancelQueries({ queryKey: ['issue', effectiveId] });
+      const previousIssue = qc.getQueryData(['issue', issueId]);
+
+      // Optimistic update for instant UI feedback
+      syncIssueCache((old) => {
+        if (!old) return old;
+        const patch: any = { ...newData };
+        if ('assigneeId' in newData) {
+          if (newData.assigneeId) {
+            const member = members.find((m) => m.userId === newData.assigneeId);
+            patch.assignee = member
+              ? { id: member.userId, fullName: member.fullName, email: member.email, avatarUrl: member.avatarUrl }
+              : old.assignee;
+            patch.assigneeId = newData.assigneeId;
+            patch.assigneeName = member?.fullName || old.assigneeName;
+          } else {
+            patch.assignee = null;
+            patch.assigneeId = null;
+            patch.assigneeName = null;
+          }
+        }
+        return { ...old, ...patch };
+      });
+
+      return { previousIssue };
+    },
+    onSuccess: (res) => {
+      const updated = res?.data;
+      if (updated) {
+        syncIssueCache((old) => (old ? { ...old, ...updated } : old));
+      }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousIssue) {
+        syncIssueCache(() => context.previousIssue);
+      }
+      toast.error('Failed to update issue');
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ['issue', issueId] });
       if (effectiveId !== issueId) qc.invalidateQueries({ queryKey: ['issue', effectiveId] });
       qc.invalidateQueries({ queryKey: ['issues', projectId] });
-      toast.success('Updated');
     },
-    onError: () => toast.error('Failed to update issue'),
   });
 
   // Update Dates Mutation (null clears a date)
   const updateDatesMutation = useMutation({
     mutationFn: (dates: { startDate?: string | null; dueDate?: string | null }) =>
       issueApi.updateDates(effectiveId, dates),
-    onSuccess: () => {
+    onMutate: async (dates) => {
+      await qc.cancelQueries({ queryKey: ['issue', issueId] });
+      if (effectiveId !== issueId) await qc.cancelQueries({ queryKey: ['issue', effectiveId] });
+      const previousIssue = qc.getQueryData(['issue', issueId]);
+
+      syncIssueCache((old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          ...(dates.startDate !== undefined ? { startDate: dates.startDate } : {}),
+          ...(dates.dueDate !== undefined ? { dueDate: dates.dueDate } : {}),
+        };
+      });
+
+      return { previousIssue };
+    },
+    onSuccess: (res) => {
+      const updated = res?.data;
+      if (updated) {
+        syncIssueCache((old) => (old ? { ...old, ...updated } : old));
+      }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousIssue) {
+        syncIssueCache(() => context.previousIssue);
+      }
+      toast.error('Failed to update dates');
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ['issue', issueId] });
       if (effectiveId !== issueId) qc.invalidateQueries({ queryKey: ['issue', effectiveId] });
       qc.invalidateQueries({ queryKey: ['issues', projectId] });
-      toast.success('Updated');
     },
-    onError: () => toast.error('Failed to update dates'),
   });
 
   // Update Parent Mutation
   const updateParentMutation = useMutation({
     mutationFn: (parentId: string | null) => issueApi.updateParent(effectiveId, parentId),
+    onMutate: async (parentId) => {
+      await qc.cancelQueries({ queryKey: ['issue', issueId] });
+      if (effectiveId !== issueId) await qc.cancelQueries({ queryKey: ['issue', effectiveId] });
+      const previousIssue = qc.getQueryData(['issue', issueId]);
+
+      syncIssueCache((old) => (old ? { ...old, parentId: parentId ?? null } : old));
+      return { previousIssue };
+    },
     onSuccess: (res) => {
       const updated = res?.data;
       if (updated) {
-        qc.setQueryData(['issue', issueId], (old: any) =>
-          old ? { ...old, parentId: updated.parentId ?? null } : old
-        );
-        qc.setQueryData(['issues', projectId], (old: any) => {
-          if (!old) return old;
-          const list = Array.isArray(old) ? old : old.data;
-          if (!Array.isArray(list)) return old;
-          const newList = list.map((i: Issue) =>
-            i.id === effectiveId ? { ...i, parentId: updated.parentId ?? null } : i
-          );
-          return Array.isArray(old) ? newList : { ...old, data: newList };
-        });
+        syncIssueCache((old) => (old ? { ...old, ...updated } : old));
       }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousIssue) {
+        syncIssueCache(() => context.previousIssue);
+      }
+      toast.error('Failed to update parent');
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ['issue', issueId] });
       if (effectiveId !== issueId) qc.invalidateQueries({ queryKey: ['issue', effectiveId] });
       qc.invalidateQueries({ queryKey: ['issues', projectId] });
-      toast.success('Parent updated');
     },
-    onError: () => toast.error('Failed to update parent'),
   });
 
   // Labels Mutations
@@ -186,12 +268,32 @@ export function TaskDetailView({
 
   const setLabelsMutation = useMutation({
     mutationFn: (labelIds: string[]) => issueApi.setLabels(effectiveId, labelIds),
-    onSuccess: () => {
+    onMutate: async (labelIds) => {
+      await qc.cancelQueries({ queryKey: ['issue', issueId] });
+      if (effectiveId !== issueId) await qc.cancelQueries({ queryKey: ['issue', effectiveId] });
+      const previousIssue = qc.getQueryData(['issue', issueId]);
+
+      const selectedLabels = projectLabels.filter((l) => labelIds.includes(l.id));
+      syncIssueCache((old) => (old ? { ...old, labels: selectedLabels } : old));
+      return { previousIssue };
+    },
+    onSuccess: (res) => {
+      const updated = res?.data;
+      if (updated) {
+        syncIssueCache((old) => (old ? { ...old, ...updated } : old));
+      }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousIssue) {
+        syncIssueCache(() => context.previousIssue);
+      }
+      toast.error('Failed to update labels');
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ['issue', issueId] });
       if (effectiveId !== issueId) qc.invalidateQueries({ queryKey: ['issue', effectiveId] });
       qc.invalidateQueries({ queryKey: ['issues', projectId] });
     },
-    onError: () => toast.error('Failed to update labels'),
   });
 
   // Release (Fix Version) Mutations
@@ -206,38 +308,102 @@ export function TaskDetailView({
 
   const setReleaseMutation = useMutation({
     mutationFn: (releaseId: string | null) => issueApi.setRelease(effectiveId, releaseId),
-    onSuccess: () => {
+    onMutate: async (releaseId) => {
+      await qc.cancelQueries({ queryKey: ['issue', issueId] });
+      if (effectiveId !== issueId) await qc.cancelQueries({ queryKey: ['issue', effectiveId] });
+      const previousIssue = qc.getQueryData(['issue', issueId]);
+
+      const rel = projectReleases.find((r) => r.id === releaseId);
+      syncIssueCache((old) =>
+        old
+          ? {
+              ...old,
+              releaseId: releaseId ?? undefined,
+              releaseName: rel?.name ?? undefined,
+            }
+          : old
+      );
+      return { previousIssue };
+    },
+    onSuccess: (res) => {
+      const updated = res?.data;
+      if (updated) {
+        syncIssueCache((old) => (old ? { ...old, ...updated } : old));
+      }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousIssue) {
+        syncIssueCache(() => context.previousIssue);
+      }
+      toast.error('Failed to update release');
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ['issue', issueId] });
       if (effectiveId !== issueId) qc.invalidateQueries({ queryKey: ['issue', effectiveId] });
       qc.invalidateQueries({ queryKey: ['issues', projectId] });
-      toast.success('Release updated');
     },
-    onError: () => toast.error('Failed to update release'),
   });
 
   // Set Components Mutation
   const setComponentsMutation = useMutation({
     mutationFn: (componentIds: string[]) => issueApi.setComponents(effectiveId, componentIds),
-    onSuccess: () => {
+    onMutate: async (componentIds) => {
+      await qc.cancelQueries({ queryKey: ['issue', issueId] });
+      if (effectiveId !== issueId) await qc.cancelQueries({ queryKey: ['issue', effectiveId] });
+      const previousIssue = qc.getQueryData(['issue', issueId]);
+
+      const selectedComponents = projectComponents.filter((c) => componentIds.includes(c.id));
+      syncIssueCache((old) => (old ? { ...old, components: selectedComponents } : old));
+      return { previousIssue };
+    },
+    onSuccess: (res) => {
+      const updated = res?.data;
+      if (updated) {
+        syncIssueCache((old) => (old ? { ...old, ...updated } : old));
+      }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousIssue) {
+        syncIssueCache(() => context.previousIssue);
+      }
+      toast.error('Failed to update components');
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ['issue', issueId] });
       if (effectiveId !== issueId) qc.invalidateQueries({ queryKey: ['issue', effectiveId] });
       qc.invalidateQueries({ queryKey: ['issues', projectId] });
       qc.invalidateQueries({ queryKey: ['project-components', projectId] });
-      toast.success('Components updated');
     },
-    onError: () => toast.error('Failed to update components'),
   });
 
   // Status Update Mutation
   const updateStatusMutation = useMutation({
     mutationFn: (status: IssueStatus) => issueApi.updateStatus(effectiveId, status),
-    onSuccess: () => {
+    onMutate: async (status) => {
+      await qc.cancelQueries({ queryKey: ['issue', issueId] });
+      if (effectiveId !== issueId) await qc.cancelQueries({ queryKey: ['issue', effectiveId] });
+      const previousIssue = qc.getQueryData(['issue', issueId]);
+
+      syncIssueCache((old) => (old ? { ...old, status } : old));
+      return { previousIssue };
+    },
+    onSuccess: (res) => {
+      const updated = res?.data;
+      if (updated) {
+        syncIssueCache((old) => (old ? { ...old, ...updated } : old));
+      }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousIssue) {
+        syncIssueCache(() => context.previousIssue);
+      }
+      toast.error('Failed to update status');
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ['issue', issueId] });
       if (effectiveId !== issueId) qc.invalidateQueries({ queryKey: ['issue', effectiveId] });
       qc.invalidateQueries({ queryKey: ['issues', projectId] });
-      toast.success('Status updated');
     },
-    onError: () => toast.error('Failed to update status'),
   });
 
   // Delete Mutation

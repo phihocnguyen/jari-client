@@ -31,6 +31,9 @@ export const sprintApi = {
   reorderIssue: (sprintId: string, issueId: string, position: string) =>
     apiClient.patch(`/sprints/${sprintId}/issues/${issueId}/position`, { position }),
 
+  reorderIssues: (sprintId: string, issueIds: string[]) =>
+    apiClient.put(`/sprints/${sprintId}/issues/reorder`, { issueIds }),
+
   // Board
   getBoard: (projectId: string) =>
     apiClient.get<ApiResponse<BoardResponse>>(`/projects/${projectId}/board`).then(r => r.data),
