@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import type { Issue } from '@/types/issue';
 import { TaskDetailView } from './detail/TaskDetailView';
 
@@ -21,14 +22,17 @@ export function IssueDetailModal({
   onNavigateIssue,
   initialViewMode,
 }: IssueDetailModalProps) {
-  // Read initial view mode from localStorage or prop
+  const [mounted, setMounted] = useState(false);
   const [viewMode, setViewMode] = useState<'modal' | 'right-bar'>('right-bar');
   const [rightBarWidth, setRightBarWidth] = useState(580);
   const isDraggingRef = useRef(false);
   const startXRef = useRef(0);
   const startWidthRef = useRef(580);
 
-  // Initialize view mode from localStorage
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('jari-task-detail-view-mode') as 'modal' | 'right-bar' | null;
@@ -40,7 +44,6 @@ export function IssueDetailModal({
     }
   }, [initialViewMode]);
 
-  // Handle ESC key to close
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && issueId) {
@@ -51,7 +54,15 @@ export function IssueDetailModal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [issueId, onClose]);
 
-  // Mouse drag handler for sliding / resizing right bar width
+  useEffect(() => {
+    if (!issueId) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [issueId]);
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDraggingRef.current) return;
@@ -93,69 +104,77 @@ export function IssueDetailModal({
     document.body.style.userSelect = 'none';
   };
 
-  if (!issueId) return null;
+  if (!issueId || !mounted) return null;
 
-  // ═══════════════════════════════════════════════════════════════
-  // MODE 1: Full-size Modal Option (Image 1)
-  // ═══════════════════════════════════════════════════════════════
+  const backdrop = (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: 'rgba(9, 30, 66, 0.49)',
+        backdropFilter: 'blur(2px)',
+        zIndex: 150,
+      }}
+      onClick={onClose}
+      aria-hidden="true"
+    />
+  );
+
   if (viewMode === 'modal') {
-    return (
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          backgroundColor: 'rgba(9, 30, 66, 0.49)',
-          backdropFilter: 'blur(2px)',
-          zIndex: 60,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 24,
-        }}
-        onClick={onClose}
-      >
+    return createPortal(
+      <>
+        {backdrop}
         <div
           style={{
-            width: '92vw',
-            maxWidth: 1060,
-            height: '88vh',
-            maxHeight: 880,
-            backgroundColor: '#ffffff',
-            borderRadius: 12,
-            boxShadow: '0 20px 48px rgba(0, 0, 0, 0.22)',
-            overflow: 'hidden',
+            position: 'fixed',
+            inset: 0,
+            zIndex: 151,
             display: 'flex',
-            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 24,
+            pointerEvents: 'none',
           }}
-          onClick={(e) => e.stopPropagation()}
         >
-          <TaskDetailView
-            issueId={issueId}
-            projectId={projectId}
-            viewMode="modal"
-            onToggleViewMode={toggleViewMode}
-            onClose={onClose}
-            issues={issues}
-            onNavigateIssue={onNavigateIssue}
-          />
+          <div
+            style={{
+              width: '92vw',
+              maxWidth: 1060,
+              height: '88vh',
+              maxHeight: 880,
+              backgroundColor: '#ffffff',
+              borderRadius: 12,
+              boxShadow: '0 20px 48px rgba(0, 0, 0, 0.22)',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              pointerEvents: 'auto',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <TaskDetailView
+              issueId={issueId}
+              projectId={projectId}
+              viewMode="modal"
+              onToggleViewMode={toggleViewMode}
+              onClose={onClose}
+              issues={issues}
+              onNavigateIssue={onNavigateIssue}
+            />
+          </div>
         </div>
-      </div>
+      </>,
+      document.body,
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // MODE 2: Sliding Right Bar Option (Image 2)
-  // ═══════════════════════════════════════════════════════════════
-  return (
+  return createPortal(
     <>
+      {backdrop}
       <style>{`
         @keyframes slideInRightBar {
-          from {
-            transform: translateX(100%);
-          }
-          to {
-            transform: translateX(0);
-          }
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
         }
       `}</style>
       <div
@@ -169,13 +188,12 @@ export function IssueDetailModal({
           backgroundColor: '#ffffff',
           borderLeft: '1px solid rgba(0, 0, 0, 0.12)',
           boxShadow: '-4px 0 24px rgba(0, 0, 0, 0.08)',
-          zIndex: 50,
+          zIndex: 151,
           display: 'flex',
           flexDirection: 'column',
           animation: 'slideInRightBar 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards',
         }}
       >
-        {/* Draggable resize handle to slide / resize right bar */}
         <div
           onMouseDown={handleStartResize}
           title="Drag to resize / slide right bar"
@@ -204,6 +222,7 @@ export function IssueDetailModal({
           onNavigateIssue={onNavigateIssue}
         />
       </div>
-    </>
+    </>,
+    document.body,
   );
 }

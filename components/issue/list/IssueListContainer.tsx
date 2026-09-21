@@ -364,8 +364,8 @@ export function IssueListContainer({ projectId, initialComponent }: IssueListCon
     >
       <style>{`
         @keyframes listFadeIn {
-          from { opacity: 0; transform: translateY(4px); }
-          to { opacity: 1; transform: translateY(0); }
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
       `}</style>
       {/* 1. Header Toolbar (Search + Filters + Full Create Trigger) */}
