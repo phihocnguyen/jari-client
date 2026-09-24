@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,6 +15,7 @@ import {
   Check,
   Search,
   AlertCircle,
+  Github,
 } from 'lucide-react';
 import { workspaceApi } from '@/lib/api/workspace';
 import { userApi } from '@/lib/api/user';
@@ -24,6 +25,7 @@ import { Input } from '@/components/ui/Input';
 import { Avatar } from '@/components/ui/Avatar';
 import { Modal } from '@/components/ui/Modal';
 import { toast } from '@/components/ui/Toast';
+import { IntegrationsTab } from '@/components/workspace/IntegrationsTab';
 import type { WorkspaceRole, WorkspaceMember, Workspace } from '@/types/workspace';
 import type { Project } from '@/types/project';
 import type { User } from '@/types/auth';
@@ -34,9 +36,11 @@ import {
   type InviteMemberFormData,
 } from '@/lib/validations/workspace';
 
+type SettingsTab = 'general' | 'members' | 'integrations';
+
 // ─── Workspace Settings Page ──────────────────────────────────────
 export default function WorkspaceSettingsPage({ params }: PageProps<'/workspaces/[workspaceId]/settings'>) {
-  const [tab, setTab]           = useState<'general' | 'members'>('general');
+  const [tab, setTab]           = useState<SettingsTab>('general');
   const [inviteOpen, setInviteOpen] = useState(false);
   const [projectModalMember, setProjectModalMember] = useState<WorkspaceMember | null>(null);
   const [resolvedParams, setResolvedParams] = useState<{ workspaceId: string } | null>(null);
@@ -73,8 +77,8 @@ function WorkspaceSettingsContent({
   setProjectModalMember,
 }: {
   workspaceId: string;
-  tab: 'general' | 'members';
-  setTab: (t: 'general' | 'members') => void;
+  tab: SettingsTab;
+  setTab: (t: SettingsTab) => void;
   inviteOpen: boolean;
   setInviteOpen: (v: boolean) => void;
   projectModalMember: WorkspaceMember | null;
@@ -82,6 +86,15 @@ function WorkspaceSettingsContent({
 }) {
   const qc = useQueryClient();
   const currentUser = useAuthStore(s => s.user);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get('tab');
+    if (t === 'integrations' || t === 'members' || t === 'general') {
+      setTab(t);
+    }
+  }, [setTab]);
 
   const { data: workspace } = useQuery({
     queryKey: ['workspace', workspaceId],
@@ -91,7 +104,7 @@ function WorkspaceSettingsContent({
   const { data: members = [], isLoading: membersLoading } = useQuery({
     queryKey: ['workspace-members', workspaceId],
     queryFn:  () => workspaceApi.listMembers(workspaceId).then(r => r.data),
-    enabled:  tab === 'members',
+    enabled:  Boolean(workspaceId),
   });
 
   const { data: projects = [] } = useQuery({
@@ -141,13 +154,14 @@ function WorkspaceSettingsContent({
   });
 
   const TABS: Array<{
-    key: 'general' | 'members';
+    key: SettingsTab;
     label: string;
     icon: typeof Settings;
     badge?: number;
   }> = [
     { key: 'general', label: 'General', icon: Settings },
     { key: 'members', label: 'Members', icon: Users, badge: members.length || undefined },
+    { key: 'integrations', label: 'Integrations', icon: Github },
   ];
 
   return (
@@ -451,6 +465,10 @@ function WorkspaceSettingsContent({
             />
           )}
         </div>
+      )}
+
+      {tab === 'integrations' && (
+        <IntegrationsTab workspaceId={workspaceId} projects={projects} isAdmin={isAdmin} />
       )}
     </div>
   );
