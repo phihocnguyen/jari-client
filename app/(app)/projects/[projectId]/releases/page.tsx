@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
@@ -222,9 +223,23 @@ export default function ReleasesPage({ params }: PageProps) {
                     </div>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                          {rel.name}
-                        </h2>
+                        <Link
+                          href={`/projects/${projectId}/releases/${rel.id}`}
+                          style={{ textDecoration: 'none' }}
+                        >
+                          <h2
+                            style={{
+                              fontSize: '1.15rem',
+                              fontWeight: 700,
+                              color: 'var(--color-text-primary)',
+                              cursor: 'pointer',
+                            }}
+                            onMouseEnter={(e) => (e.currentTarget.style.color = '#0C66E4')}
+                            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text-primary)')}
+                          >
+                            {rel.name}
+                          </h2>
+                        </Link>
                         <span
                           className={`badge ${
                             isReleased ? 'badge-green' : isArchived ? 'badge-gray' : 'badge-gold'
