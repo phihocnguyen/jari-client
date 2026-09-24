@@ -1,8 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
 import { ChevronsUp, ChevronUp, ChevronDown, ChevronsDown } from 'lucide-react';
 import type { PriorityCount } from '@/types/summary';
 
@@ -60,9 +58,7 @@ function getTicksAndMax(maxCount: number) {
   };
 }
 
-export function PriorityBreakdownWidget({ projectId, priorityBreakdown, isLoading }: PriorityBreakdownWidgetProps) {
-  const params = useParams();
-  const pId = projectId || (params?.projectId as string) || '';
+export function PriorityBreakdownWidget({ priorityBreakdown, isLoading }: PriorityBreakdownWidgetProps) {
   const [hoveredPriority, setHoveredPriority] = useState<string | null>(null);
 
   // Map incoming data
@@ -89,13 +85,7 @@ export function PriorityBreakdownWidget({ projectId, priorityBreakdown, isLoadin
           <h2 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Priority breakdown</h2>
         </div>
         <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
-          Get a holistic view of how work is being prioritized.{' '}
-          <Link
-            href={`/projects/${pId}/settings`}
-            style={{ color: 'var(--color-green-accent)', fontWeight: 500 }}
-          >
-            How to manage priorities for spaces
-          </Link>
+          Get a holistic view of how work is being prioritized.
         </p>
       </div>
 

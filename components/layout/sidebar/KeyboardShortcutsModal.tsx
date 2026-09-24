@@ -22,7 +22,6 @@ export function KeyboardShortcutsModal({ open, onClose }: KeyboardShortcutsModal
       items: [
         { key: 'B', description: 'Go to Active Board' },
         { key: 'L', description: 'Go to Backlog' },
-        { key: 'S', description: 'Go to Project settings' },
       ],
     },
   ];

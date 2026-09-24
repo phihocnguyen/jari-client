@@ -12,7 +12,6 @@ import {
   BarChart3,
   Rocket,
   Boxes,
-  Settings,
 } from 'lucide-react';
 import type { Project } from '@/types/project';
 import type { Workspace } from '@/types/workspace';
@@ -91,13 +90,6 @@ export function ProjectSidebarView({
       href: `/projects/${projectId}/components`,
       icon: Boxes,
       isActive: pathname.includes('/components'),
-    },
-    {
-      id: 'settings',
-      label: 'Project settings',
-      href: `/projects/${projectId}/settings`,
-      icon: Settings,
-      isActive: pathname.includes('/settings'),
     },
   ];
 

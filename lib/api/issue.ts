@@ -85,7 +85,17 @@ export function normalizeComment(item: any): Comment {
 // ─── Issue API ────────────────────────────────────────────────────
 export const issueApi = {
   list: async (projectId: string, filters?: IssueFilter): Promise<PageResponse<Issue>> => {
-    const res = await apiClient.get<any>(`/projects/${projectId}/issues`, { params: filters });
+    // Backend IssueFilterRequest uses `keyword` (Elasticsearch / JPA). Map client `query` → `keyword`.
+    let params: Record<string, unknown> | undefined;
+    if (filters) {
+      const { query, keyword, ...rest } = filters;
+      const kw = keyword ?? query;
+      params = { ...rest };
+      if (kw != null && String(kw).length > 0) {
+        params.keyword = kw;
+      }
+    }
+    const res = await apiClient.get<any>(`/projects/${projectId}/issues`, { params });
     const payload = res.data;
 
     // Handle both ApiResponse<PageResponse<Issue>> from Spring Boot and mock PageResponse

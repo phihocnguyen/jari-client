@@ -11,7 +11,6 @@ import {
   Edit2,
   Trash2,
   ExternalLink,
-  X,
   AlertCircle,
   LayoutList,
   LayoutGrid,
@@ -21,6 +20,7 @@ import { componentApi } from '@/lib/api/component';
 import type { ProjectComponent, CreateComponentInput, UpdateComponentInput } from '@/types/component';
 import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
+import { Modal } from '@/components/ui/Modal';
 import { toast } from '@/components/ui/Toast';
 
 interface PageProps {
@@ -43,7 +43,6 @@ export default function ProjectComponentsPage({ params }: PageProps) {
   const [editingComponent, setEditingComponent] = useState<ProjectComponent | null>(null);
   const [deletingComponent, setDeletingComponent] = useState<ProjectComponent | null>(null);
 
-  // Form states
   const [formName, setFormName] = useState('');
   const [formDesc, setFormDesc] = useState('');
   const [formLeadId, setFormLeadId] = useState('');
@@ -176,7 +175,7 @@ export default function ProjectComponentsPage({ params }: PageProps) {
         </Button>
       </div>
 
-      {/* Sub-nav Tabs (All Components on the left) */}
+      {/* Sub-nav Tabs */}
       <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid rgba(0,0,0,0.08)', gap: 16 }}>
         <button
           type="button"
@@ -212,7 +211,7 @@ export default function ProjectComponentsPage({ params }: PageProps) {
                 border: '1px solid rgba(0,0,0,0.15)',
                 fontSize: '0.875rem',
                 outline: 'none',
-                backgroundColor: '#fff',
+                backgroundColor: 'var(--color-surface-white)',
               }}
             />
           </div>
@@ -222,7 +221,6 @@ export default function ProjectComponentsPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* View switcher: Table / Cards */}
         <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f1f2f4', borderRadius: 6, padding: 2 }}>
           <button
             type="button"
@@ -235,7 +233,7 @@ export default function ProjectComponentsPage({ params }: PageProps) {
               padding: '6px 10px',
               borderRadius: 4,
               border: 'none',
-              backgroundColor: viewMode === 'table' ? '#ffffff' : 'transparent',
+              backgroundColor: viewMode === 'table' ? 'var(--color-surface-white)' : 'transparent',
               color: viewMode === 'table' ? '#0c66e4' : '#626f86',
               boxShadow: viewMode === 'table' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
               cursor: 'pointer',
@@ -258,7 +256,7 @@ export default function ProjectComponentsPage({ params }: PageProps) {
               padding: '6px 10px',
               borderRadius: 4,
               border: 'none',
-              backgroundColor: viewMode === 'cards' ? '#ffffff' : 'transparent',
+              backgroundColor: viewMode === 'cards' ? 'var(--color-surface-white)' : 'transparent',
               color: viewMode === 'cards' ? '#0c66e4' : '#626f86',
               boxShadow: viewMode === 'cards' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
               cursor: 'pointer',
@@ -283,7 +281,7 @@ export default function ProjectComponentsPage({ params }: PageProps) {
           style={{
             padding: '3.5rem 1.5rem',
             textAlign: 'center',
-            backgroundColor: 'rgba(9, 30, 66, 0.02)',
+            backgroundColor: 'var(--color-surface-white)',
             borderRadius: 12,
             border: '1px dashed rgba(0,0,0,0.12)',
             display: 'flex',
@@ -308,29 +306,49 @@ export default function ProjectComponentsPage({ params }: PageProps) {
           )}
         </div>
       ) : viewMode === 'table' ? (
-        /* Jira-Style Table View */
-        <div style={{ width: '100%', backgroundColor: '#ffffff', borderRadius: 8, border: '1px solid rgba(0,0,0,0.08)', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
+        <div
+          style={{
+            width: '100%',
+            backgroundColor: 'var(--color-surface-white)',
+            borderRadius: 8,
+            border: '1px solid rgba(0,0,0,0.08)',
+            overflow: 'hidden',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+          }}
+        >
+          <table
+            style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              textAlign: 'left',
+              fontSize: '0.84rem',
+              backgroundColor: 'var(--color-surface-white)',
+            }}
+          >
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(0,0,0,0.08)', backgroundColor: '#fafbfc' }}>
-                <th style={{ padding: '12px 16px', fontWeight: 600, color: '#44546f' }}>Name</th>
-                <th style={{ padding: '12px 16px', fontWeight: 600, color: '#44546f' }}>Description</th>
-                <th style={{ padding: '12px 16px', fontWeight: 600, color: '#44546f' }}>Component lead</th>
-                <th style={{ padding: '12px 16px', fontWeight: 600, color: '#44546f' }}>Issues linked</th>
-                <th style={{ padding: '12px 16px', fontWeight: 600, color: '#44546f', textAlign: 'right' }}>Actions</th>
+              <tr style={{ borderBottom: '1px solid rgba(0,0,0,0.08)', backgroundColor: 'var(--color-surface-white)' }}>
+                <th style={{ padding: '12px 16px', fontWeight: 600, color: '#44546f', backgroundColor: 'var(--color-surface-white)' }}>Name</th>
+                <th style={{ padding: '12px 16px', fontWeight: 600, color: '#44546f', backgroundColor: 'var(--color-surface-white)' }}>Description</th>
+                <th style={{ padding: '12px 16px', fontWeight: 600, color: '#44546f', backgroundColor: 'var(--color-surface-white)' }}>Component lead</th>
+                <th style={{ padding: '12px 16px', fontWeight: 600, color: '#44546f', backgroundColor: 'var(--color-surface-white)' }}>Issues linked</th>
+                <th style={{ padding: '12px 16px', fontWeight: 600, color: '#44546f', textAlign: 'right', backgroundColor: 'var(--color-surface-white)' }}>Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody style={{ backgroundColor: 'var(--color-surface-white)' }}>
               {filteredComponents.map((comp) => {
                 const leadName = comp.lead?.displayName || comp.lead?.fullName || comp.lead?.username || 'Unassigned';
                 return (
                   <tr
                     key={comp.id}
-                    style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', transition: 'background-color 0.12s ease' }}
+                    style={{
+                      borderBottom: '1px solid rgba(0,0,0,0.06)',
+                      transition: 'background-color 0.12s ease',
+                      backgroundColor: 'var(--color-surface-white)',
+                    }}
                     onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8f9fa')}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-surface-white)')}
                   >
-                    <td style={{ padding: '12px 16px', verticalAlign: 'middle' }}>
+                    <td style={{ padding: '12px 16px', verticalAlign: 'middle', backgroundColor: 'inherit' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <div
                           style={{
@@ -362,11 +380,11 @@ export default function ProjectComponentsPage({ params }: PageProps) {
                       </div>
                     </td>
 
-                    <td style={{ padding: '12px 16px', verticalAlign: 'middle', color: comp.description ? '#44546f' : '#a5adba', maxWidth: 320 }}>
+                    <td style={{ padding: '12px 16px', verticalAlign: 'middle', color: comp.description ? '#44546f' : '#a5adba', maxWidth: 320, backgroundColor: 'inherit' }}>
                       {comp.description || '—'}
                     </td>
 
-                    <td style={{ padding: '12px 16px', verticalAlign: 'middle' }}>
+                    <td style={{ padding: '12px 16px', verticalAlign: 'middle', backgroundColor: 'inherit' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         {comp.lead ? (
                           <Avatar name={leadName} size={22} />
@@ -392,7 +410,7 @@ export default function ProjectComponentsPage({ params }: PageProps) {
                       </div>
                     </td>
 
-                    <td style={{ padding: '12px 16px', verticalAlign: 'middle' }}>
+                    <td style={{ padding: '12px 16px', verticalAlign: 'middle', backgroundColor: 'inherit' }}>
                       <Link
                         href={`/projects/${projectId}/list?component=${comp.id}`}
                         style={{
@@ -415,7 +433,7 @@ export default function ProjectComponentsPage({ params }: PageProps) {
                       </Link>
                     </td>
 
-                    <td style={{ padding: '12px 16px', verticalAlign: 'middle', textAlign: 'right' }}>
+                    <td style={{ padding: '12px 16px', verticalAlign: 'middle', textAlign: 'right', backgroundColor: 'inherit' }}>
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                         <button
                           type="button"
@@ -460,21 +478,19 @@ export default function ProjectComponentsPage({ params }: PageProps) {
           </table>
         </div>
       ) : (
-        /* Cards Grid View */
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.25rem', width: '100%' }}>
           {filteredComponents.map((comp) => {
             const leadName = comp.lead?.displayName || comp.lead?.fullName || comp.lead?.username || 'Unassigned';
             return (
               <div
                 key={comp.id}
-                className="card"
                 style={{
                   padding: '1.25rem',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
                   borderRadius: 10,
-                  backgroundColor: '#ffffff',
+                  backgroundColor: 'var(--color-surface-white)',
                   border: '1px solid rgba(0,0,0,0.08)',
                   boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                   transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
@@ -501,10 +517,7 @@ export default function ProjectComponentsPage({ params }: PageProps) {
                       <div>
                         <Link
                           href={`/projects/${projectId}/list?component=${comp.id}`}
-                          style={{
-                            textDecoration: 'none',
-                            color: 'inherit',
-                          }}
+                          style={{ textDecoration: 'none', color: 'inherit' }}
                           onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
                           onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
                         >
@@ -636,170 +649,112 @@ export default function ProjectComponentsPage({ params }: PageProps) {
         </div>
       )}
 
-      {/* Create / Edit Modal */}
-      {isCreateModalOpen && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(9, 30, 66, 0.54)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 100,
-            padding: 16,
-          }}
-          onClick={(e) => e.target === e.currentTarget && closeModal()}
-        >
-          <div
-            style={{
-              backgroundColor: '#ffffff',
-              borderRadius: 10,
-              width: '100%',
-              maxWidth: 480,
-              boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-              overflow: 'hidden',
-            }}
-          >
-            <div
+      {/* Create / Edit Modal — portal via shared Modal (z-index 200) */}
+      <Modal
+        open={isCreateModalOpen}
+        onClose={closeModal}
+        title={editingComponent ? 'Edit component' : 'Create component'}
+        size="sm"
+      >
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#44546f', marginBottom: 6 }}>
+              Name <span style={{ color: '#de350b' }}>*</span>
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. UI Engine, Authentication, API"
+              value={formName}
+              onChange={(e) => setFormName(e.target.value)}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '16px 20px',
-                borderBottom: '1px solid rgba(0,0,0,0.08)',
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: 6,
+                border: '1px solid rgba(0,0,0,0.15)',
+                fontSize: '0.875rem',
+                outline: 'none',
+                backgroundColor: 'var(--color-surface-white)',
+              }}
+              autoFocus
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#44546f', marginBottom: 6 }}>
+              Description
+            </label>
+            <textarea
+              rows={3}
+              placeholder="Describe the scope or purpose of this component..."
+              value={formDesc}
+              onChange={(e) => setFormDesc(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: 6,
+                border: '1px solid rgba(0,0,0,0.15)',
+                fontSize: '0.875rem',
+                outline: 'none',
+                resize: 'vertical',
+                backgroundColor: 'var(--color-surface-white)',
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#44546f', marginBottom: 6 }}>
+              Component Lead
+            </label>
+            <select
+              value={formLeadId}
+              onChange={(e) => setFormLeadId(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: 6,
+                border: '1px solid rgba(0,0,0,0.15)',
+                fontSize: '0.875rem',
+                outline: 'none',
+                backgroundColor: 'var(--color-surface-white)',
               }}
             >
-              <h3 style={{ fontSize: '1.125rem', fontWeight: 700, margin: 0, color: '#172b4d' }}>
-                {editingComponent ? 'Edit component' : 'Create component'}
-              </h3>
-              <button
-                type="button"
-                onClick={closeModal}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#626f86', padding: 4 }}
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#44546f', marginBottom: 6 }}>
-                  Name <span style={{ color: '#de350b' }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. UI Engine, Authentication, API"
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: 6,
-                    border: '1px solid rgba(0,0,0,0.15)',
-                    fontSize: '0.875rem',
-                    outline: 'none',
-                  }}
-                  autoFocus
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#44546f', marginBottom: 6 }}>
-                  Description
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="Describe the scope or purpose of this component..."
-                  value={formDesc}
-                  onChange={(e) => setFormDesc(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: 6,
-                    border: '1px solid rgba(0,0,0,0.15)',
-                    fontSize: '0.875rem',
-                    outline: 'none',
-                    resize: 'vertical',
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#44546f', marginBottom: 6 }}>
-                  Component Lead
-                </label>
-                <select
-                  value={formLeadId}
-                  onChange={(e) => setFormLeadId(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: 6,
-                    border: '1px solid rgba(0,0,0,0.15)',
-                    fontSize: '0.875rem',
-                    outline: 'none',
-                    backgroundColor: '#ffffff',
-                  }}
-                >
-                  <option value="">No component lead</option>
-                  {members.map((m) => (
-                    <option key={m.userId} value={m.userId}>
-                      {m.displayName || m.fullName || m.email || m.userId}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
-                <Button type="button" variant="ghost" onClick={closeModal}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                  {editingComponent ? 'Save changes' : 'Create'}
-                </Button>
-              </div>
-            </form>
+              <option value="">No component lead</option>
+              {members.map((m) => (
+                <option key={m.userId} value={m.userId}>
+                  {m.displayName || m.fullName || m.email || m.userId}
+                </option>
+              ))}
+            </select>
           </div>
-        </div>
-      )}
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
+            <Button type="button" variant="ghost" onClick={closeModal}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+              {editingComponent ? 'Save changes' : 'Create'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Delete Confirmation Modal */}
-      {deletingComponent && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(9, 30, 66, 0.54)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 100,
-            padding: 16,
-          }}
-          onClick={(e) => e.target === e.currentTarget && setDeletingComponent(null)}
-        >
-          <div
-            style={{
-              backgroundColor: '#ffffff',
-              borderRadius: 10,
-              width: '100%',
-              maxWidth: 420,
-              padding: 24,
-              boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-            }}
-          >
+      <Modal
+        open={Boolean(deletingComponent)}
+        onClose={() => setDeletingComponent(null)}
+        title="Delete component?"
+        size="sm"
+      >
+        {deletingComponent && (
+          <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, color: '#de350b' }}>
               <AlertCircle size={28} />
-              <h3 style={{ fontSize: '1.125rem', fontWeight: 700, margin: 0, color: '#172b4d' }}>
-                Delete component?
-              </h3>
+              <p style={{ margin: 0, fontSize: '0.875rem', color: '#44546f', lineHeight: 1.5 }}>
+                Are you sure you want to delete component <strong>{deletingComponent.name}</strong>?
+                This will remove the component from all linked issues, but will not delete the issues themselves.
+              </p>
             </div>
-            <p style={{ margin: '0 0 20px 0', fontSize: '0.875rem', color: '#44546f', lineHeight: 1.5 }}>
-              Are you sure you want to delete component <strong>{deletingComponent.name}</strong>?
-              This will remove the component from all linked issues, but will not delete the issues themselves.
-            </p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
               <Button type="button" variant="ghost" onClick={() => setDeletingComponent(null)}>
                 Cancel
@@ -814,8 +769,8 @@ export default function ProjectComponentsPage({ params }: PageProps) {
               </Button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
     </div>
   );
 }

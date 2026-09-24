@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Star, Settings, Loader2 } from 'lucide-react';
+import { Star, Loader2 } from 'lucide-react';
 import { useNavigationLoading } from '@/components/loading';
 import type { Project } from '@/types/project';
 
@@ -167,27 +167,6 @@ export function ProjectSidebarItem({
             >
               <Star size={12} fill={isStarred ? '#FBBF24' : 'none'} />
             </button>
-          )}
-
-          {hovered && (
-            <Link
-              href={`/projects/${project.id}/settings`}
-              title="Space settings"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'rgba(255, 255, 255, 0.5)',
-                padding: 2,
-                borderRadius: 4,
-                textDecoration: 'none',
-                transition: 'color 0.15s ease',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255, 255, 255, 0.5)')}
-            >
-              <Settings size={12} />
-            </Link>
           )}
         </div>
       )}

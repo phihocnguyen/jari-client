@@ -64,8 +64,9 @@ export function Modal({ open, onClose, title, children, footer, size = 'md' }: M
       style={{
         position: 'fixed', inset: 0, zIndex: 200,
         background: 'rgba(0,0,0,0.45)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '1rem',
+        display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+        padding: '1.5rem 1rem',
+        overflowY: 'auto',
       }}
       className="animate-fade-in-overlay"
     >
@@ -76,10 +77,11 @@ export function Modal({ open, onClose, title, children, footer, size = 'md' }: M
           boxShadow: 'var(--shadow-modal)',
           width: '100%',
           maxWidth: sizeWidth[size],
-          maxHeight: '90vh',
+          maxHeight: 'calc(100vh - 3rem)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
+          margin: 'auto 0',
         }}
         className="animate-scale-in"
         role="dialog"

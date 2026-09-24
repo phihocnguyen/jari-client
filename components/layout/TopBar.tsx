@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Search, Bell, LogOut, User, Settings, ChevronDown } from 'lucide-react';
+import { Search, Bell, LogOut, User, ChevronDown } from 'lucide-react';
 import { ProjectPresenceAvatars } from '@/components/project/ProjectPresenceAvatars';
 import { Avatar } from '@/components/ui/Avatar';
 import { useAuthStore } from '@/store/auth.store';
@@ -188,7 +188,6 @@ export function TopBar({ breadcrumbs }: TopBarProps) {
 
                 {/* Menu Items */}
                 <UserMenuItem icon={<User size={15} />} label="Profile" href="/profile" />
-                <UserMenuItem icon={<Settings size={15} />} label="Settings" href="/settings" />
                 <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', marginTop: 4 }} />
                 <button
                   id="topbar-logout"

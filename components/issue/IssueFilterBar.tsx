@@ -10,15 +10,18 @@ interface IssueFilterBarProps {
 
 export function IssueFilterBar({ filters, onChange }: IssueFilterBarProps) {
   const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange({ ...filters, query: e.target.value });
+    const value = e.target.value;
+    onChange({ ...filters, keyword: value, query: value });
   };
 
   const clearFilters = () => {
     onChange({});
   };
 
+  const searchText = filters.keyword ?? filters.query ?? '';
+
   const hasFilters = Boolean(
-    filters.query || filters.assigneeId || filters.status || filters.type || filters.priority
+    searchText || filters.assigneeId || filters.status || filters.type || filters.priority
   );
 
   return (
@@ -31,7 +34,7 @@ export function IssueFilterBar({ filters, onChange }: IssueFilterBarProps) {
           type="text"
           placeholder="Search issues..."
           className="input"
-          value={filters.query ?? ''}
+          value={searchText}
           onChange={handleQueryChange}
           style={{ paddingLeft: '2.25rem', height: 34, fontSize: '0.875rem' }}
         />

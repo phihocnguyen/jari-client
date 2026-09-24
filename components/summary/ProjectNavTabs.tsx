@@ -148,7 +148,6 @@ export function ProjectNavTabs() {
     { id: 'reports',    label: 'Reports',    href: `/projects/${pId}/reports` },
     { id: 'releases',   label: 'Releases',   href: `/projects/${pId}/releases` },
     { id: 'components', label: 'Components', href: `/projects/${pId}/components` },
-    { id: 'settings',   label: 'Settings',   href: `/projects/${pId}/settings` },
   ];
 
   const [tabs, setTabs] = useState<TabItem[]>(defaultTabs);
@@ -165,7 +164,7 @@ export function ProjectNavTabs() {
         const orderIds: string[] = JSON.parse(savedOrder);
         const reordered: TabItem[] = [];
         orderIds.forEach((id) => {
-          if (id === 'issues' || id === 'sprints') return;
+          if (id === 'issues' || id === 'sprints' || id === 'settings') return;
           const found = defaultTabs.find((t) => t.id === id);
           if (found) reordered.push(found);
         });

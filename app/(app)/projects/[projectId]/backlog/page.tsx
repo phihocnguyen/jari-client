@@ -139,7 +139,7 @@ export default function BacklogPage() {
 
   const hasActiveFilters = Boolean(
     filters &&
-    (filters.query || filters.assigneeId || filters.status || filters.type || filters.priority)
+    (filters.keyword || filters.query || filters.assigneeId || filters.status || filters.type || filters.priority)
   );
 
   const { data: issuesPage, isLoading: loadingIssues } = useQuery({

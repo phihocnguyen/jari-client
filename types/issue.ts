@@ -22,6 +22,8 @@ export interface Issue {
   statusCategory?: string;
   priority: IssuePriority;
   projectId: string;
+  projectName?: string;
+  projectKey?: string;
   sprintId?: string;
   parentId?: string;
   assignee?: Assignee;

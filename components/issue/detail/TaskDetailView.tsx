@@ -1,17 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, FileText, Link2 } from 'lucide-react';
-import { issueApi } from '@/lib/api/issue';
+import { Plus } from 'lucide-react';
+import { issueApi, normalizeComment } from '@/lib/api/issue';
 import { projectApi } from '@/lib/api/project';
 import { refApi } from '@/lib/api/ref';
 import { labelApi } from '@/lib/api/label';
 import { releaseApi } from '@/lib/api/release';
 import { componentApi } from '@/lib/api/component';
+import { wsClient } from '@/lib/websocket/client';
 import { toast } from '@/components/ui/Toast';
-import type { Issue, IssuePriority, IssueStatus } from '@/types/issue';
+import type { Comment, Issue, IssuePriority, IssueStatus } from '@/types/issue';
 
 import { TaskDetailHeader } from './TaskDetailHeader';
 import { TaskTitleAndActions } from './TaskTitleAndActions';
@@ -82,6 +83,43 @@ export function TaskDetailView({
     queryFn: () => issueApi.listComments(effectiveId),
     enabled: Boolean(effectiveId),
   });
+
+  // Live comment updates via STOMP /topic/issues/{issueId}/comments
+  useEffect(() => {
+    if (!effectiveId) return;
+
+    const unsubscribe = wsClient.subscribeTopic(
+      `/topic/issues/${effectiveId}/comments`,
+      (event: {
+        type?: string;
+        commentId?: string;
+        comment?: any;
+      }) => {
+        const type = (event?.type || '').toUpperCase();
+        qc.setQueryData<Comment[]>(['issue-comments', effectiveId], (prev = []) => {
+          if (type === 'DELETED' && event.commentId) {
+            return prev.filter((c) => c.id !== event.commentId);
+          }
+          if (!event.comment) return prev;
+          const next = normalizeComment(event.comment);
+          if (type === 'UPDATED') {
+            const idx = prev.findIndex((c) => c.id === next.id);
+            if (idx >= 0) {
+              const copy = [...prev];
+              copy[idx] = next;
+              return copy;
+            }
+            return [...prev, next];
+          }
+          // CREATED: append if not already present (author may already have it from mutation)
+          if (prev.some((c) => c.id === next.id)) return prev;
+          return [...prev, next];
+        });
+      },
+    );
+
+    return unsubscribe;
+  }, [effectiveId, qc]);
 
   // 4. Fetch Reference Data for Subtask Creation
   const { data: issueTypesRes } = useQuery({
@@ -614,77 +652,6 @@ export function TaskDetailView({
               isCreatingSubtask={createSubtaskMutation.isPending}
               onToggleSubtask={(subId, done) => toggleSubtaskMutation.mutate({ subId, done })}
             />
-
-            {/* Linked work items */}
-            <div style={{ marginBottom: 24 }}>
-              <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#44546f', marginBottom: 8 }}>
-                Linked work items
-              </h3>
-              <button
-                type="button"
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  padding: '6px 8px',
-                  borderRadius: 4,
-                  color: '#44546f',
-                  cursor: 'pointer',
-                  fontSize: '0.8125rem',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-              >
-                <Plus size={14} />
-                <span>Add linked work item</span>
-              </button>
-            </div>
-
-            {/* Confluence content */}
-            <div style={{ marginBottom: 24 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.875rem', fontWeight: 600, color: '#44546f' }}>
-                  <span>Confluence content</span>
-                  <span style={{ fontSize: '0.75rem', color: '#626f86', cursor: 'help' }}>ⓘ</span>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '10px 14px',
-                  border: '1px solid rgba(0,0,0,0.1)',
-                  borderRadius: 6,
-                  backgroundColor: '#ffffff',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <FileText size={16} color="#0c66e4" />
-                  <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#172b4d' }}>Product requirements</span>
-                </div>
-                <button
-                  type="button"
-                  style={{
-                    padding: '4px 10px',
-                    borderRadius: 4,
-                    border: 'none',
-                    backgroundColor: '#f3e8ff',
-                    color: '#6b21a8',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e9d5ff')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f3e8ff')}
-                >
-                  Try template
-                </button>
-              </div>
-            </div>
 
             <TaskActivity
               comments={commentsQuery.data ?? issue.comments ?? []}
