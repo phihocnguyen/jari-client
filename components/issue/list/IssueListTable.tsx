@@ -1,18 +1,29 @@
-'use client';
+"use client";
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { createPortal } from 'react-dom';
-import { SlidersHorizontal, MoreHorizontal, ArrowUp, ArrowDown, ChevronRight } from 'lucide-react';
-import type { Issue, IssueStatus, IssuePriority, IssueType } from '@/types/issue';
-import { IssueListRow } from './IssueListRow';
-import { IssueListQuickCreate } from './IssueListQuickCreate';
-import { IssueListFooter } from './IssueListFooter';
-import type { ColumnId } from './column-types';
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
+import {
+  SlidersHorizontal,
+  MoreHorizontal,
+  ArrowUp,
+  ArrowDown,
+  ChevronRight,
+} from "lucide-react";
+import type {
+  Issue,
+  IssueStatus,
+  IssuePriority,
+  IssueType,
+} from "@/types/issue";
+import { IssueListRow } from "./IssueListRow";
+import { IssueListQuickCreate } from "./IssueListQuickCreate";
+import { IssueListFooter } from "./IssueListFooter";
+import type { ColumnId } from "./column-types";
 import {
   DEFAULT_COLUMN_DEFINITIONS,
   DEFAULT_COLUMN_ORDER,
   DEFAULT_COLUMN_WIDTHS,
-} from './column-types';
+} from "./column-types";
 
 interface ProjectMember {
   userId: string;
@@ -35,7 +46,7 @@ interface IssueListTableProps {
   onUpdatePriority: (id: string, priority: IssuePriority) => void;
   onUpdateDueDate?: (id: string, dueDate: string | null) => void;
   inlineCreateOpen: boolean;
-  inlineCreateParentId?: string | 'ROOT' | null;
+  inlineCreateParentId?: string | "ROOT" | null;
   onCloseInlineCreate: () => void;
   onOpenInlineCreate: () => void;
   onSubmitInlineCreate: (data: {
@@ -83,28 +94,40 @@ export function IssueListTable(props: IssueListTableProps) {
   } = props;
 
   // Local state for column customization
-  const [columnOrder, setColumnOrder] = useState<ColumnId[]>(DEFAULT_COLUMN_ORDER);
+  const [columnOrder, setColumnOrder] =
+    useState<ColumnId[]>(DEFAULT_COLUMN_ORDER);
   const [hiddenColumns, setHiddenColumns] = useState<Set<ColumnId>>(new Set());
-  const [columnWidths, setColumnWidths] = useState<Record<ColumnId, number>>(DEFAULT_COLUMN_WIDTHS);
+  const [columnWidths, setColumnWidths] = useState<Record<ColumnId, number>>(
+    DEFAULT_COLUMN_WIDTHS,
+  );
   const [resizingCol, setResizingCol] = useState<ColumnId | null>(null);
   const [hoveredCol, setHoveredCol] = useState<ColumnId | null>(null);
 
   // Sorting state
-  const [sortConfig, setSortConfig] = useState<{ column: ColumnId; direction: 'asc' | 'desc' } | null>(null);
+  const [sortConfig, setSortConfig] = useState<{
+    column: ColumnId;
+    direction: "asc" | "desc";
+  } | null>(null);
 
   // Column options dropdown menu state
   const [activeMenuCol, setActiveMenuCol] = useState<ColumnId | null>(null);
-  const [menuPos, setMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number }>({
+    top: 0,
+    left: 0,
+  });
 
   // Column configure popover state (SlidersHorizontal)
   const [configOpen, setConfigOpen] = useState(false);
   const configBtnRef = useRef<HTMLButtonElement>(null);
-  const [configPos, setConfigPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [configPos, setConfigPos] = useState<{ top: number; left: number }>({
+    top: 0,
+    left: 0,
+  });
 
   // Visible columns in user-configured order
   const visibleColumns = useMemo(
     () => columnOrder.filter((id) => !hiddenColumns.has(id)),
-    [columnOrder, hiddenColumns]
+    [columnOrder, hiddenColumns],
   );
 
   // Close menus on outside click
@@ -113,18 +136,18 @@ export function IssueListTable(props: IssueListTableProps) {
 
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
-      const colMenu = document.getElementById('column-options-portal-menu');
+      const colMenu = document.getElementById("column-options-portal-menu");
       if (colMenu && colMenu.contains(target)) return;
 
-      const configMenu = document.getElementById('column-config-portal-menu');
+      const configMenu = document.getElementById("column-config-portal-menu");
       if (configMenu && configMenu.contains(target)) return;
 
       setActiveMenuCol(null);
       setConfigOpen(false);
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [activeMenuCol, configOpen]);
 
   // Column Resizing logic
@@ -132,9 +155,20 @@ export function IssueListTable(props: IssueListTableProps) {
     e.preventDefault();
     e.stopPropagation();
     const startX = e.clientX;
-    const thElement = (e.currentTarget.closest('th') as HTMLElement);
-    const startWidth = thElement ? thElement.offsetWidth : (columnWidths[colId] || DEFAULT_COLUMN_WIDTHS[colId] || 120);
+    const thElement = e.currentTarget.closest("th") as HTMLElement;
+    const startWidth = thElement
+      ? thElement.offsetWidth
+      : columnWidths[colId] || DEFAULT_COLUMN_WIDTHS[colId] || 120;
     setResizingCol(colId);
+
+    // find next visible column to resize inversely so table doesn't jump
+    const visible = visibleColumns;
+    const idx = visible.indexOf(colId);
+    const nextColId =
+      idx >= 0 && idx < visible.length - 1 ? visible[idx + 1] : null;
+    const startWidthNext = nextColId
+      ? columnWidths[nextColId] || DEFAULT_COLUMN_WIDTHS[nextColId] || 120
+      : null;
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       moveEvent.preventDefault();
@@ -142,6 +176,23 @@ export function IssueListTable(props: IssueListTableProps) {
       const colDef = DEFAULT_COLUMN_DEFINITIONS.find((c) => c.id === colId);
       const minW = colDef?.minWidth || 60;
       const newWidth = Math.max(minW, Math.round(startWidth + delta));
+
+      // If there's a next column, shrink/expand it inversely to keep layout steady
+      if (nextColId && startWidthNext != null) {
+        const nextColDef = DEFAULT_COLUMN_DEFINITIONS.find(
+          (c) => c.id === nextColId,
+        );
+        const minNext = nextColDef?.minWidth || 60;
+        const nextNew = Math.max(minNext, Math.round(startWidthNext - delta));
+        setColumnWidths((prev) => {
+          const cur = prev[colId] || startWidth;
+          const nxt = prev[nextColId] || startWidthNext;
+          if (cur === newWidth && nxt === nextNew) return prev;
+          return { ...prev, [colId]: newWidth, [nextColId]: nextNew };
+        });
+        return;
+      }
+
       setColumnWidths((prev) => {
         if (prev[colId] === newWidth) return prev;
         return { ...prev, [colId]: newWidth };
@@ -150,16 +201,16 @@ export function IssueListTable(props: IssueListTableProps) {
 
     const handleMouseUp = () => {
       setResizingCol(null);
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
     };
 
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
   };
 
   // Total table width calculated from column widths
@@ -171,7 +222,10 @@ export function IssueListTable(props: IssueListTableProps) {
   }, [visibleColumns, columnWidths]);
 
   // Toggle column options menu
-  const handleOpenColMenu = (colId: ColumnId, e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleOpenColMenu = (
+    colId: ColumnId,
+    e: React.MouseEvent<HTMLButtonElement>,
+  ) => {
     e.stopPropagation();
     if (activeMenuCol === colId) {
       setActiveMenuCol(null);
@@ -201,7 +255,7 @@ export function IssueListTable(props: IssueListTableProps) {
   };
 
   // Column Menu Actions
-  const handleSort = (colId: ColumnId, direction: 'asc' | 'desc') => {
+  const handleSort = (colId: ColumnId, direction: "asc" | "desc") => {
     setSortConfig({ column: colId, direction });
     setActiveMenuCol(null);
   };
@@ -256,26 +310,26 @@ export function IssueListTable(props: IssueListTableProps) {
   const sortedIssues = useMemo(() => {
     if (!sortConfig) return issues;
     const { column, direction } = sortConfig;
-    const mult = direction === 'asc' ? 1 : -1;
+    const mult = direction === "asc" ? 1 : -1;
 
     return [...issues].sort((a, b) => {
-      let aVal: any = '';
-      let bVal: any = '';
+      let aVal: any = "";
+      let bVal: any = "";
 
       switch (column) {
-        case 'work':
+        case "work":
           aVal = a.title || a.key;
           bVal = b.title || b.key;
           break;
-        case 'assignee':
-          aVal = a.assignee?.fullName || '';
-          bVal = b.assignee?.fullName || '';
+        case "assignee":
+          aVal = a.assignee?.fullName || "";
+          bVal = b.assignee?.fullName || "";
           break;
-        case 'reporter':
-          aVal = a.reporter?.fullName || '';
-          bVal = b.reporter?.fullName || '';
+        case "reporter":
+          aVal = a.reporter?.fullName || "";
+          bVal = b.reporter?.fullName || "";
           break;
-        case 'priority': {
+        case "priority": {
           const priorityWeights: Record<string, number> = {
             HIGHEST: 5,
             HIGH: 4,
@@ -287,23 +341,23 @@ export function IssueListTable(props: IssueListTableProps) {
           bVal = priorityWeights[b.priority] || 0;
           return (aVal - bVal) * mult;
         }
-        case 'status':
+        case "status":
           aVal = a.status;
           bVal = b.status;
           break;
-        case 'resolution':
-          aVal = a.status === 'DONE' ? 'Done' : 'Unresolved';
-          bVal = b.status === 'DONE' ? 'Done' : 'Unresolved';
+        case "resolution":
+          aVal = a.status === "DONE" ? "Done" : "Unresolved";
+          bVal = b.status === "DONE" ? "Done" : "Unresolved";
           break;
-        case 'created':
+        case "created":
           aVal = new Date(a.createdAt).getTime() || 0;
           bVal = new Date(b.createdAt).getTime() || 0;
           return (aVal - bVal) * mult;
-        case 'updated':
+        case "updated":
           aVal = new Date(a.updatedAt || a.createdAt).getTime() || 0;
           bVal = new Date(b.updatedAt || b.createdAt).getTime() || 0;
           return (aVal - bVal) * mult;
-        case 'dueDate':
+        case "dueDate":
           aVal = a.dueDate ? new Date(a.dueDate).getTime() : 0;
           bVal = b.dueDate ? new Date(b.dueDate).getTime() : 0;
           return (aVal - bVal) * mult;
@@ -311,7 +365,7 @@ export function IssueListTable(props: IssueListTableProps) {
           return 0;
       }
 
-      if (typeof aVal === 'string' && typeof bVal === 'string') {
+      if (typeof aVal === "string" && typeof bVal === "string") {
         return aVal.localeCompare(bVal) * mult;
       }
       return (aVal > bVal ? 1 : aVal < bVal ? -1 : 0) * mult;
@@ -332,7 +386,10 @@ export function IssueListTable(props: IssueListTableProps) {
     });
 
   // Set of all issue IDs present in current list
-  const issueIdSet = useMemo(() => new Set(sortedIssues.map((i) => i.id)), [sortedIssues]);
+  const issueIdSet = useMemo(
+    () => new Set(sortedIssues.map((i) => i.id)),
+    [sortedIssues],
+  );
 
   // Group issues into roots and children map (by parentId)
   const { rootIssues, childrenMap } = useMemo(() => {
@@ -352,18 +409,20 @@ export function IssueListTable(props: IssueListTableProps) {
     return { rootIssues: roots, childrenMap: children };
   }, [sortedIssues, issueIdSet]);
 
-  const isAllSelected = sortedIssues.length > 0 && selectedIds.size === sortedIssues.length;
-  const isIndeterminate = selectedIds.size > 0 && selectedIds.size < sortedIssues.length;
+  const isAllSelected =
+    sortedIssues.length > 0 && selectedIds.size === sortedIssues.length;
+  const isIndeterminate =
+    selectedIds.size > 0 && selectedIds.size < sortedIssues.length;
 
   return (
     <div
       style={{
-        position: 'relative',
-        border: '1px solid #dcdfe4',
-        borderRadius: '6px',
-        backgroundColor: '#ffffff',
-        overflow: 'hidden',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
+        position: "relative",
+        border: "1px solid #dcdfe4",
+        borderRadius: "6px",
+        backgroundColor: "#ffffff",
+        overflow: "hidden",
+        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.04)",
       }}
     >
       {/* Absolute Top-Right Configure Columns Button */}
@@ -373,34 +432,34 @@ export function IssueListTable(props: IssueListTableProps) {
         onClick={handleOpenConfig}
         title="Configure columns"
         style={{
-          position: 'absolute',
+          position: "absolute",
           top: 6,
           right: 8,
           zIndex: 40,
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
           width: 26,
           height: 26,
           borderRadius: 4,
-          border: configOpen ? '1px solid #0c66e4' : '1px solid #dcdfe4',
-          backgroundColor: configOpen ? '#e9f2ff' : '#f4f5f7',
-          color: configOpen ? '#0c66e4' : '#44546f',
-          cursor: 'pointer',
+          border: configOpen ? "1px solid #0c66e4" : "1px solid #dcdfe4",
+          backgroundColor: configOpen ? "#e9f2ff" : "#f4f5f7",
+          color: configOpen ? "#0c66e4" : "#44546f",
+          cursor: "pointer",
           padding: 0,
-          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-          transition: 'all 0.15s ease',
+          boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+          transition: "all 0.15s ease",
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = '#e9f2ff';
-          e.currentTarget.style.color = '#0c66e4';
-          e.currentTarget.style.borderColor = '#0c66e4';
+          e.currentTarget.style.backgroundColor = "#e9f2ff";
+          e.currentTarget.style.color = "#0c66e4";
+          e.currentTarget.style.borderColor = "#0c66e4";
         }}
         onMouseLeave={(e) => {
           if (!configOpen) {
-            e.currentTarget.style.backgroundColor = '#f4f5f7';
-            e.currentTarget.style.color = '#44546f';
-            e.currentTarget.style.borderColor = '#dcdfe4';
+            e.currentTarget.style.backgroundColor = "#f4f5f7";
+            e.currentTarget.style.color = "#44546f";
+            e.currentTarget.style.borderColor = "#dcdfe4";
           }
         }}
       >
@@ -410,19 +469,19 @@ export function IssueListTable(props: IssueListTableProps) {
       {/* Scrollable Table Area */}
       <div
         style={{
-          width: '100%',
-          overflowX: 'auto',
-          scrollbarWidth: 'thin',
-          scrollbarColor: '#94a3b8 #f1f5f9',
+          width: "100%",
+          overflowX: "auto",
+          scrollbarWidth: "thin",
+          scrollbarColor: "#94a3b8 #f1f5f9",
         }}
       >
         <table
           style={{
-            width: '100%',
+            width: "100%",
             minWidth: totalTableWidth,
-            tableLayout: 'fixed',
-            borderCollapse: 'collapse',
-            textAlign: 'left',
+            tableLayout: "fixed",
+            borderCollapse: "collapse",
+            textAlign: "left",
           }}
         >
           {/* Explicit col widths for smooth, unconstrained resizing */}
@@ -431,7 +490,10 @@ export function IssueListTable(props: IssueListTableProps) {
             {visibleColumns.map((colId) => (
               <col
                 key={colId}
-                style={{ width: columnWidths[colId] || DEFAULT_COLUMN_WIDTHS[colId] || 120 }}
+                style={{
+                  width:
+                    columnWidths[colId] || DEFAULT_COLUMN_WIDTHS[colId] || 120,
+                }}
               />
             ))}
           </colgroup>
@@ -440,26 +502,26 @@ export function IssueListTable(props: IssueListTableProps) {
           <thead>
             <tr
               style={{
-                backgroundColor: '#f4f5f7',
-                borderBottom: '1px solid #dcdfe4',
-                color: '#44546f',
-                fontSize: '0.75rem',
+                backgroundColor: "#f4f5f7",
+                borderBottom: "1px solid #dcdfe4",
+                color: "#44546f",
+                fontSize: "0.75rem",
                 fontWeight: 600,
-                letterSpacing: '0.02em',
-                userSelect: 'none',
+                letterSpacing: "0.02em",
+                userSelect: "none",
               }}
             >
               {/* Checkbox */}
               <th
                 style={{
                   width: 40,
-                  textAlign: 'center',
-                  padding: '10px 10px',
-                  verticalAlign: 'middle',
-                  borderRight: '1px solid #dcdfe4',
-                  borderBottom: '1px solid #dcdfe4',
-                  boxSizing: 'border-box',
-                  backgroundColor: '#f4f5f7',
+                  textAlign: "center",
+                  padding: "10px 10px",
+                  verticalAlign: "middle",
+                  borderRight: "1px solid #dcdfe4",
+                  borderBottom: "1px solid #dcdfe4",
+                  boxSizing: "border-box",
+                  backgroundColor: "#f4f5f7",
                 }}
               >
                 <input
@@ -470,11 +532,11 @@ export function IssueListTable(props: IssueListTableProps) {
                   }}
                   onChange={onToggleSelectAll}
                   style={{
-                    cursor: 'pointer',
+                    cursor: "pointer",
                     width: 16,
                     height: 16,
                     borderRadius: 3,
-                    accentColor: 'var(--color-green-brand)',
+                    accentColor: "var(--color-green-brand)",
                   }}
                 />
               </th>
@@ -482,9 +544,12 @@ export function IssueListTable(props: IssueListTableProps) {
               {/* Dynamic Sizable Columns */}
               {visibleColumns.map((colId, index) => {
                 const isLast = index === visibleColumns.length - 1;
-                const colDef = DEFAULT_COLUMN_DEFINITIONS.find((c) => c.id === colId);
+                const colDef = DEFAULT_COLUMN_DEFINITIONS.find(
+                  (c) => c.id === colId,
+                );
                 const label = colDef?.label || colId;
-                const width = columnWidths[colId] || colDef?.defaultWidth || 120;
+                const width =
+                  columnWidths[colId] || colDef?.defaultWidth || 120;
                 const isSorted = sortConfig?.column === colId;
 
                 return (
@@ -493,62 +558,79 @@ export function IssueListTable(props: IssueListTableProps) {
                     onMouseEnter={() => setHoveredCol(colId)}
                     onMouseLeave={() => setHoveredCol(null)}
                     style={{
-                      padding: isLast ? '8px 38px 8px 10px' : '8px 10px',
+                      padding: isLast ? "8px 38px 8px 10px" : "8px 10px",
                       width,
-                      position: 'relative',
-                      verticalAlign: 'middle',
-                      borderRight: isLast ? 'none' : '1px solid #dcdfe4',
-                      borderBottom: '1px solid #dcdfe4',
-                      boxSizing: 'border-box',
-                      backgroundColor: '#f4f5f7',
+                      position: "relative",
+                      verticalAlign: "middle",
+                      borderRight: isLast ? "none" : "1px solid #dcdfe4",
+                      borderBottom: "1px solid #dcdfe4",
+                      boxSizing: "border-box",
+                      backgroundColor: "#f4f5f7",
                     }}
                   >
                     <div
                       style={{
-                        display: 'flex',
-                        alignItems: 'center',
+                        display: "flex",
+                        alignItems: "center",
                         gap: 4,
                         minWidth: 0,
-                        width: '100%',
+                        width: "100%",
                       }}
                     >
                       {/* Column Title + Sort click */}
                       <div
                         onClick={() => {
-                          if (isSorted && sortConfig?.direction === 'asc') {
-                            handleSort(colId, 'desc');
+                          if (isSorted && sortConfig?.direction === "asc") {
+                            handleSort(colId, "desc");
                           } else {
-                            handleSort(colId, 'asc');
+                            handleSort(colId, "asc");
                           }
                         }}
                         style={{
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
                           gap: 4,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
                           flex: 1,
                           minWidth: 0,
                         }}
                         title={`Click to sort by ${label}`}
                       >
-                        {colId === 'work' && (
-                          <ChevronRight size={14} style={{ color: 'var(--color-text-secondary)', flexShrink: 0 }} />
+                        {colId === "work" && (
+                          <ChevronRight
+                            size={14}
+                            style={{
+                              color: "var(--color-text-secondary)",
+                              flexShrink: 0,
+                            }}
+                          />
                         )}
                         <span
                           style={{
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
                           }}
                         >
                           {label}
                         </span>
                         {isSorted && (
-                          <span style={{ color: '#0c66e4', display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>
-                            {sortConfig.direction === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />}
+                          <span
+                            style={{
+                              color: "#0c66e4",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              flexShrink: 0,
+                            }}
+                          >
+                            {sortConfig.direction === "asc" ? (
+                              <ArrowUp size={13} />
+                            ) : (
+                              <ArrowDown size={13} />
+                            )}
                           </span>
                         )}
                       </div>
@@ -561,33 +643,41 @@ export function IssueListTable(props: IssueListTableProps) {
                         onClick={(e) => handleOpenColMenu(colId, e)}
                         title={`Options for ${label}`}
                         style={{
-                          position: 'absolute',
+                          position: "absolute",
                           right: isLast ? 36 : 6,
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
                           width: 20,
                           height: 20,
                           borderRadius: 4,
-                          border: activeMenuCol === colId ? '1px solid #0c66e4' : '1px solid #dcdfe4',
-                          backgroundColor: activeMenuCol === colId ? '#e9f2ff' : '#f4f5f7',
-                          color: activeMenuCol === colId ? '#0c66e4' : 'var(--color-text-secondary)',
-                          cursor: 'pointer',
+                          border:
+                            activeMenuCol === colId
+                              ? "1px solid #0c66e4"
+                              : "1px solid #dcdfe4",
+                          backgroundColor:
+                            activeMenuCol === colId ? "#e9f2ff" : "#f4f5f7",
+                          color:
+                            activeMenuCol === colId
+                              ? "#0c66e4"
+                              : "var(--color-text-secondary)",
+                          cursor: "pointer",
                           padding: 0,
                           zIndex: 10,
-                          boxShadow: '-4px 0 6px rgba(244, 245, 247, 0.95)',
-                          transition: 'all 0.15s ease',
+                          boxShadow: "-4px 0 6px rgba(244, 245, 247, 0.95)",
+                          transition: "all 0.15s ease",
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.borderColor = '#0c66e4';
-                          e.currentTarget.style.color = '#0c66e4';
+                          e.currentTarget.style.borderColor = "#0c66e4";
+                          e.currentTarget.style.color = "#0c66e4";
                         }}
                         onMouseLeave={(e) => {
                           if (activeMenuCol !== colId) {
-                            e.currentTarget.style.borderColor = '#dcdfe4';
-                            e.currentTarget.style.color = 'var(--color-text-secondary)';
+                            e.currentTarget.style.borderColor = "#dcdfe4";
+                            e.currentTarget.style.color =
+                              "var(--color-text-secondary)";
                           }
                         }}
                       >
@@ -601,32 +691,39 @@ export function IssueListTable(props: IssueListTableProps) {
                         onMouseDown={(e) => handleResizeStart(colId, e)}
                         onClick={(e) => e.stopPropagation()}
                         style={{
-                          position: 'absolute',
+                          position: "absolute",
                           right: -4,
                           top: 0,
                           bottom: 0,
                           width: 9,
-                          cursor: 'col-resize',
-                          userSelect: 'none',
+                          cursor: "col-resize",
+                          userSelect: "none",
                           zIndex: 30,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
                         }}
                         title="Drag to resize column"
                       >
                         <div
                           style={{
                             width: 2,
-                            height: '100%',
-                            backgroundColor: resizingCol === colId ? '#0c66e4' : 'transparent',
-                            transition: 'background-color 0.15s ease',
+                            height: "100%",
+                            backgroundColor:
+                              resizingCol === colId ? "#0c66e4" : "transparent",
+                            transition: "background-color 0.15s ease",
                           }}
                           onMouseEnter={(e) => {
-                            if (resizingCol !== colId) (e.currentTarget as HTMLElement).style.backgroundColor = '#0c66e4';
+                            if (resizingCol !== colId)
+                              (
+                                e.currentTarget as HTMLElement
+                              ).style.backgroundColor = "#0c66e4";
                           }}
                           onMouseLeave={(e) => {
-                            if (resizingCol !== colId) (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+                            if (resizingCol !== colId)
+                              (
+                                e.currentTarget as HTMLElement
+                              ).style.backgroundColor = "transparent";
                           }}
                         />
                       </div>
@@ -714,19 +811,20 @@ export function IssueListTable(props: IssueListTableProps) {
                 <td
                   colSpan={visibleColumns.length + 1}
                   style={{
-                    padding: '3rem 1rem',
-                    textAlign: 'center',
-                    color: 'var(--color-text-secondary)',
-                    fontSize: '0.875rem',
+                    padding: "3rem 1rem",
+                    textAlign: "center",
+                    color: "var(--color-text-secondary)",
+                    fontSize: "0.875rem",
                   }}
                 >
-                  No issues found in this project. Click <strong>+ Create</strong> below to add one!
+                  No issues found in this project. Click{" "}
+                  <strong>+ Create</strong> below to add one!
                 </td>
               </tr>
             )}
 
             {/* Inline Quick Create Row at the bottom for ROOT */}
-            {inlineCreateParentId === 'ROOT' && (
+            {inlineCreateParentId === "ROOT" && (
               <IssueListQuickCreate
                 isOpen={true}
                 onClose={onCloseInlineCreate}
@@ -758,122 +856,169 @@ export function IssueListTable(props: IssueListTableProps) {
 
       {/* ─── Column Options Portal Menu (As shown in screenshot) ─── */}
       {activeMenuCol &&
-        typeof document !== 'undefined' &&
+        typeof document !== "undefined" &&
         createPortal(
           <div
             id="column-options-portal-menu"
             onClick={(e) => e.stopPropagation()}
             style={{
-              position: 'absolute',
+              position: "absolute",
               top: menuPos.top,
               left: menuPos.left,
               zIndex: 99999,
-              backgroundColor: '#ffffff',
-              border: '1px solid rgba(0, 0, 0, 0.12)',
+              backgroundColor: "#ffffff",
+              border: "1px solid rgba(0, 0, 0, 0.12)",
               borderRadius: 8,
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.08)',
+              boxShadow:
+                "0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.08)",
               minWidth: 200,
-              padding: '6px 0',
-              fontSize: '0.8125rem',
-              color: '#172b4d',
+              padding: "6px 0",
+              fontSize: "0.8125rem",
+              color: "#172b4d",
             }}
           >
             {/* Sort options */}
             <div
-              onClick={() => handleSort(activeMenuCol, 'asc')}
+              onClick={() => handleSort(activeMenuCol, "asc")}
               style={{
-                padding: '8px 16px',
-                cursor: 'pointer',
-                transition: 'background-color 0.12s ease',
+                padding: "8px 16px",
+                cursor: "pointer",
+                transition: "background-color 0.12s ease",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = "#f1f2f4")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.backgroundColor = "transparent")
+              }
             >
               Sort in ascending order
             </div>
             <div
-              onClick={() => handleSort(activeMenuCol, 'desc')}
+              onClick={() => handleSort(activeMenuCol, "desc")}
               style={{
-                padding: '8px 16px',
-                cursor: 'pointer',
-                transition: 'background-color 0.12s ease',
+                padding: "8px 16px",
+                cursor: "pointer",
+                transition: "background-color 0.12s ease",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = "#f1f2f4")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.backgroundColor = "transparent")
+              }
             >
               Sort in descending order
             </div>
 
-            <div style={{ height: 1, backgroundColor: 'rgba(0, 0, 0, 0.08)', margin: '4px 0' }} />
+            <div
+              style={{
+                height: 1,
+                backgroundColor: "rgba(0, 0, 0, 0.08)",
+                margin: "4px 0",
+              }}
+            />
 
             {/* Move options */}
             <div
               onClick={() => handleMoveToFirst(activeMenuCol)}
               style={{
-                padding: '8px 16px',
-                cursor: 'pointer',
-                transition: 'background-color 0.12s ease',
+                padding: "8px 16px",
+                cursor: "pointer",
+                transition: "background-color 0.12s ease",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = "#f1f2f4")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.backgroundColor = "transparent")
+              }
             >
               Move column to first position
             </div>
             <div
               onClick={() => handleMoveLeft(activeMenuCol)}
               style={{
-                padding: '8px 16px',
-                cursor: 'pointer',
-                transition: 'background-color 0.12s ease',
+                padding: "8px 16px",
+                cursor: "pointer",
+                transition: "background-color 0.12s ease",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = "#f1f2f4")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.backgroundColor = "transparent")
+              }
             >
               Move column to left
             </div>
             <div
               onClick={() => handleMoveRight(activeMenuCol)}
               style={{
-                padding: '8px 16px',
-                cursor: 'pointer',
-                transition: 'background-color 0.12s ease',
+                padding: "8px 16px",
+                cursor: "pointer",
+                transition: "background-color 0.12s ease",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = "#f1f2f4")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.backgroundColor = "transparent")
+              }
             >
               Move column to right
             </div>
             <div
               onClick={() => handleMoveToLast(activeMenuCol)}
               style={{
-                padding: '8px 16px',
-                cursor: 'pointer',
-                transition: 'background-color 0.12s ease',
+                padding: "8px 16px",
+                cursor: "pointer",
+                transition: "background-color 0.12s ease",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = "#f1f2f4")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.backgroundColor = "transparent")
+              }
             >
               Move column to last position
             </div>
 
-            <div style={{ height: 1, backgroundColor: 'rgba(0, 0, 0, 0.08)', margin: '4px 0' }} />
+            <div
+              style={{
+                height: 1,
+                backgroundColor: "rgba(0, 0, 0, 0.08)",
+                margin: "4px 0",
+              }}
+            />
 
             {/* Remove column */}
             <div
               onClick={() => handleRemoveColumn(activeMenuCol)}
               style={{
-                padding: '8px 16px',
-                cursor: 'pointer',
-                color: '#dc2626',
-                transition: 'background-color 0.12s ease',
+                padding: "8px 16px",
+                cursor: "pointer",
+                color: "#dc2626",
+                transition: "background-color 0.12s ease",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#fee2e2')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = "#fee2e2")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.backgroundColor = "transparent")
+              }
             >
               Remove column
             </div>
 
-            <div style={{ height: 1, backgroundColor: 'rgba(0, 0, 0, 0.08)', margin: '4px 0' }} />
+            <div
+              style={{
+                height: 1,
+                backgroundColor: "rgba(0, 0, 0, 0.08)",
+                margin: "4px 0",
+              }}
+            />
 
             {/* Configure visible columns */}
             <div
@@ -887,53 +1032,58 @@ export function IssueListTable(props: IssueListTableProps) {
                 setConfigOpen(true);
               }}
               style={{
-                padding: '8px 16px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
+                padding: "8px 16px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
                 gap: 8,
-                color: 'var(--color-text-primary)',
-                transition: 'background-color 0.12s ease',
+                color: "var(--color-text-primary)",
+                transition: "background-color 0.12s ease",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = "#f1f2f4")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.backgroundColor = "transparent")
+              }
             >
               <SlidersHorizontal size={13} />
               <span>Configure columns...</span>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* ─── Column Configure Popover Menu (SlidersHorizontal) ─── */}
       {configOpen &&
-        typeof document !== 'undefined' &&
+        typeof document !== "undefined" &&
         createPortal(
           <div
             id="column-config-portal-menu"
             onClick={(e) => e.stopPropagation()}
             style={{
-              position: 'absolute',
+              position: "absolute",
               top: configPos.top,
               left: configPos.left,
               zIndex: 99999,
-              backgroundColor: '#ffffff',
-              border: '1px solid rgba(0, 0, 0, 0.12)',
+              backgroundColor: "#ffffff",
+              border: "1px solid rgba(0, 0, 0, 0.12)",
               borderRadius: 8,
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.08)',
+              boxShadow:
+                "0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.08)",
               minWidth: 190,
-              padding: '8px 12px',
-              fontSize: '0.8125rem',
+              padding: "8px 12px",
+              fontSize: "0.8125rem",
             }}
           >
             <div
               style={{
-                fontSize: '0.72rem',
+                fontSize: "0.72rem",
                 fontWeight: 700,
-                color: 'var(--color-text-secondary)',
-                letterSpacing: '0.04em',
+                color: "var(--color-text-secondary)",
+                letterSpacing: "0.04em",
                 marginBottom: 8,
-                textTransform: 'uppercase',
+                textTransform: "uppercase",
               }}
             >
               Configure Columns
@@ -945,23 +1095,23 @@ export function IssueListTable(props: IssueListTableProps) {
                 <label
                   key={col.id}
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
+                    display: "flex",
+                    alignItems: "center",
                     gap: 8,
-                    padding: '4px 0',
-                    cursor: col.id === 'work' ? 'not-allowed' : 'pointer',
-                    userSelect: 'none',
-                    fontSize: '0.8125rem',
+                    padding: "4px 0",
+                    cursor: col.id === "work" ? "not-allowed" : "pointer",
+                    userSelect: "none",
+                    fontSize: "0.8125rem",
                   }}
                 >
                   <input
                     type="checkbox"
                     checked={isChecked}
-                    disabled={col.id === 'work'}
+                    disabled={col.id === "work"}
                     onChange={() => toggleColumnVisibility(col.id)}
                     style={{
-                      cursor: col.id === 'work' ? 'not-allowed' : 'pointer',
-                      accentColor: 'var(--color-green-brand)',
+                      cursor: col.id === "work" ? "not-allowed" : "pointer",
+                      accentColor: "var(--color-green-brand)",
                     }}
                   />
                   <span>{col.label}</span>
@@ -969,7 +1119,7 @@ export function IssueListTable(props: IssueListTableProps) {
               );
             })}
           </div>,
-          document.body
+          document.body,
         )}
     </div>
   );

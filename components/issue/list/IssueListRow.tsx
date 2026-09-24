@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   PanelRight,
   Plus,
@@ -9,17 +9,22 @@ import {
   ChevronRight,
   User as UserIcon,
   Calendar,
-} from 'lucide-react';
-import type { Issue, IssueType, IssuePriority, IssueStatus } from '@/types/issue';
-import { getStatusBadgeStyle } from '@/utils/issue-status';
-import { renderTypeIcon } from '@/utils/issue-type';
-import { renderPriorityIcon } from '@/utils/issue-priority';
-import { formatDate } from '@/utils/date';
-import { getUserDisplayName } from '@/utils/user';
-import { Select } from '@/components/ui/Select';
-import { Avatar } from '@/components/ui/Avatar';
-import type { ColumnId } from './column-types';
-import { DEFAULT_COLUMN_ORDER } from './column-types';
+} from "lucide-react";
+import type {
+  Issue,
+  IssueType,
+  IssuePriority,
+  IssueStatus,
+} from "@/types/issue";
+import { getStatusBadgeStyle } from "@/utils/issue-status";
+import { renderTypeIcon } from "@/utils/issue-type";
+import { renderPriorityIcon } from "@/utils/issue-priority";
+import { formatDate } from "@/utils/date";
+import { getUserDisplayName } from "@/utils/user";
+import { Select } from "@/components/ui/Select";
+import { Avatar } from "@/components/ui/Avatar";
+import type { ColumnId } from "./column-types";
+import { DEFAULT_COLUMN_ORDER } from "./column-types";
 
 interface ProjectMember {
   userId: string;
@@ -75,33 +80,36 @@ export function IssueListRow({
   const isRowHighlighted = isSelected || isHovered;
 
   const currentAssigneeId = issue.assignee
-    ? issue.assignee.id || (issue.assignee as any).userId || issue.assigneeId || ''
-    : '';
+    ? issue.assignee.id ||
+      (issue.assignee as any).userId ||
+      issue.assigneeId ||
+      ""
+    : "";
 
   const renderCell = (colId: ColumnId, isLast = false) => {
     const width = columnWidths ? columnWidths[colId] : undefined;
 
     switch (colId) {
-      case 'work':
+      case "work":
         return (
           <td
             key="work"
             style={{
-              padding: '8px 10px',
-              verticalAlign: 'middle',
-              borderRight: isLast ? 'none' : '1px solid #dcdfe4',
-              overflow: 'hidden',
-              boxSizing: 'border-box',
-              position: 'relative',
+              padding: "8px 10px",
+              verticalAlign: "middle",
+              borderRight: isLast ? "none" : "1px solid #dcdfe4",
+              overflow: "hidden",
+              boxSizing: "border-box",
+              position: "relative",
             }}
           >
             <div
               style={{
-                display: 'flex',
-                alignItems: 'center',
+                display: "flex",
+                alignItems: "center",
                 gap: 8,
                 minWidth: 0,
-                width: '100%',
+                width: "100%",
               }}
             >
               {/* Indentation for subtask or Chevron toggle for parent */}
@@ -114,52 +122,68 @@ export function IssueListRow({
                     e.stopPropagation();
                     onToggleExpand?.();
                   }}
-                  title={isExpanded ? 'Collapse subtasks' : 'Expand subtasks'}
+                  title={isExpanded ? "Collapse subtasks" : "Expand subtasks"}
                   style={{
-                    background: 'none',
-                    border: 'none',
-                    padding: '2px',
+                    background: "none",
+                    border: "none",
+                    padding: "2px",
                     borderRadius: 3,
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#626f86',
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#626f86",
                     flexShrink: 0,
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.06)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor = "transparent")
+                  }
                 >
-                  {isExpanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+                  {isExpanded ? (
+                    <ChevronDown size={15} />
+                  ) : (
+                    <ChevronRight size={15} />
+                  )}
                 </button>
               ) : (
                 <span style={{ width: 19, flexShrink: 0 }} />
               )}
 
               <span
-                title={`Type: ${isSubtask ? 'SUBTASK' : issue.type}`}
-                style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}
+                title={`Type: ${isSubtask ? "SUBTASK" : issue.type}`}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  flexShrink: 0,
+                }}
               >
-                {renderTypeIcon(isSubtask ? 'SUBTASK' : issue.type)}
+                {renderTypeIcon(isSubtask ? "SUBTASK" : issue.type)}
               </span>
 
               <button
                 type="button"
                 onClick={() => onOpenDetail(issue.id)}
                 style={{
-                  fontSize: '0.8125rem',
+                  fontSize: "0.8125rem",
                   fontWeight: 600,
-                  color: '#0c66e4',
-                  textDecoration: 'none',
-                  background: 'none',
-                  border: 'none',
+                  color: "#0c66e4",
+                  textDecoration: "none",
+                  background: "none",
+                  border: "none",
                   padding: 0,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
                   flexShrink: 0,
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
-                onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.textDecoration = "underline")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.textDecoration = "none")
+                }
               >
                 {issue.key}
               </button>
@@ -168,12 +192,12 @@ export function IssueListRow({
                 title={issue.title}
                 onClick={() => onOpenDetail(issue.id)}
                 style={{
-                  color: 'var(--color-text-primary)',
+                  color: "var(--color-text-primary)",
                   fontWeight: 500,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  cursor: 'pointer',
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  cursor: "pointer",
                   flex: 1,
                   minWidth: 0,
                 }}
@@ -183,18 +207,26 @@ export function IssueListRow({
 
               {/* Components Chips */}
               {issue.components && issue.components.length > 0 && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, marginLeft: 6 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                    flexShrink: 0,
+                    marginLeft: 6,
+                  }}
+                >
                   {issue.components.map((c) => (
                     <span
                       key={c.id}
                       style={{
-                        fontSize: '0.6875rem',
+                        fontSize: "0.6875rem",
                         fontWeight: 600,
-                        backgroundColor: '#e9f2ff',
-                        color: '#0c66e4',
-                        padding: '1px 6px',
+                        backgroundColor: "#e9f2ff",
+                        color: "#0c66e4",
+                        padding: "1px 6px",
                         borderRadius: 3,
-                        whiteSpace: 'nowrap',
+                        whiteSpace: "nowrap",
                       }}
                     >
                       {c.name}
@@ -208,21 +240,22 @@ export function IssueListRow({
             {isHovered && (
               <div
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   right: 4,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  display: 'flex',
-                  alignItems: 'center',
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  display: "flex",
+                  alignItems: "center",
                   gap: 3,
                   backgroundColor: isActiveIssue
-                    ? '#e9f2ff'
+                    ? "#e9f2ff"
                     : isRowHighlighted
-                      ? '#f4f8fe'
-                      : '#ffffff',
-                  padding: '2px 4px',
+                      ? "#f4f8fe"
+                      : "#ffffff",
+                  padding: "2px 4px",
                   borderRadius: 4,
-                  boxShadow: '-6px 0 8px rgba(255, 255, 255, 0.95), 0 1px 3px rgba(0, 0, 0, 0.08)',
+                  boxShadow:
+                    "-6px 0 8px rgba(255, 255, 255, 0.95), 0 1px 3px rgba(0, 0, 0, 0.08)",
                   zIndex: 5,
                 }}
               >
@@ -231,22 +264,22 @@ export function IssueListRow({
                   onClick={() => onOpenDetail(issue.id)}
                   title="Open detail panel"
                   style={{
-                    background: 'transparent',
-                    border: 'none',
-                    padding: '4px',
+                    background: "transparent",
+                    border: "none",
+                    padding: "4px",
                     borderRadius: 4,
-                    cursor: 'pointer',
-                    color: 'var(--color-text-secondary)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
+                    cursor: "pointer",
+                    color: "var(--color-text-secondary)",
+                    display: "inline-flex",
+                    alignItems: "center",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)';
-                    e.currentTarget.style.color = '#0c66e4';
+                    e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.06)";
+                    e.currentTarget.style.color = "#0c66e4";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.color = 'var(--color-text-secondary)';
+                    e.currentTarget.style.backgroundColor = "transparent";
+                    e.currentTarget.style.color = "var(--color-text-secondary)";
                   }}
                 >
                   <PanelRight size={14} />
@@ -261,22 +294,24 @@ export function IssueListRow({
                     }}
                     title="Add child issue"
                     style={{
-                      background: 'transparent',
-                      border: 'none',
-                      padding: '4px',
+                      background: "transparent",
+                      border: "none",
+                      padding: "4px",
                       borderRadius: 4,
-                      cursor: 'pointer',
-                      color: 'var(--color-text-secondary)',
-                      display: 'inline-flex',
-                      alignItems: 'center',
+                      cursor: "pointer",
+                      color: "var(--color-text-secondary)",
+                      display: "inline-flex",
+                      alignItems: "center",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)';
-                      e.currentTarget.style.color = '#0c66e4';
+                      e.currentTarget.style.backgroundColor =
+                        "rgba(0,0,0,0.06)";
+                      e.currentTarget.style.color = "#0c66e4";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                      e.currentTarget.style.color = 'var(--color-text-secondary)';
+                      e.currentTarget.style.backgroundColor = "transparent";
+                      e.currentTarget.style.color =
+                        "var(--color-text-secondary)";
                     }}
                   >
                     <Plus size={14} />
@@ -287,23 +322,31 @@ export function IssueListRow({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (window.confirm(`Delete issue ${issue.key}: "${issue.title}"?`)) {
+                    if (
+                      window.confirm(
+                        `Delete issue ${issue.key}: "${issue.title}"?`,
+                      )
+                    ) {
                       onDelete(issue.id);
                     }
                   }}
                   title="Delete issue"
                   style={{
-                    background: 'transparent',
-                    border: 'none',
-                    padding: '4px',
+                    background: "transparent",
+                    border: "none",
+                    padding: "4px",
                     borderRadius: 4,
-                    cursor: 'pointer',
-                    color: 'var(--color-red)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
+                    cursor: "pointer",
+                    color: "var(--color-red)",
+                    display: "inline-flex",
+                    alignItems: "center",
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#fee2e2')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#fee2e2")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor = "transparent")
+                  }
                 >
                   <Trash2 size={14} />
                 </button>
@@ -312,17 +355,17 @@ export function IssueListRow({
           </td>
         );
 
-      case 'assignee':
+      case "assignee":
         return (
           <td
             key="assignee"
             onClick={(e) => e.stopPropagation()}
             style={{
-              padding: '6px 10px',
-              verticalAlign: 'middle',
-              borderRight: isLast ? 'none' : '1px solid #dcdfe4',
-              boxSizing: 'border-box',
-              overflow: 'hidden',
+              padding: "6px 10px",
+              verticalAlign: "middle",
+              borderRight: isLast ? "none" : "1px solid #dcdfe4",
+              boxSizing: "border-box",
+              overflow: "hidden",
             }}
           >
             <Select
@@ -331,19 +374,19 @@ export function IssueListRow({
               minWidth={170}
               options={[
                 {
-                  value: '',
-                  label: 'Unassigned',
+                  value: "",
+                  label: "Unassigned",
                   icon: (
                     <div
                       style={{
                         width: 22,
                         height: 22,
-                        borderRadius: '50%',
-                        backgroundColor: '#f1f2f4',
-                        color: '#626f86',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                        borderRadius: "50%",
+                        backgroundColor: "#f1f2f4",
+                        color: "#626f86",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                         flexShrink: 0,
                       }}
                     >
@@ -353,7 +396,7 @@ export function IssueListRow({
                 },
                 ...members.map((m) => {
                   const memberId = m.userId || (m as any).id;
-                  const displayName = getUserDisplayName(m, 'Học Nguyễn');
+                  const displayName = getUserDisplayName(m, "Học Nguyễn");
                   return {
                     value: memberId,
                     label: displayName,
@@ -362,22 +405,29 @@ export function IssueListRow({
                 }),
               ]}
               renderTrigger={(selected) => {
-                const assigneeName = issue.assignee ? getUserDisplayName(issue.assignee, 'Học Nguyễn') : 'Unassigned';
+                const assigneeName = issue.assignee
+                  ? getUserDisplayName(issue.assignee, "Học Nguyễn")
+                  : "Unassigned";
                 return (
                   <div
                     style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
+                      display: "inline-flex",
+                      alignItems: "center",
                       gap: 6,
-                      padding: '4px 6px',
+                      padding: "4px 6px",
                       borderRadius: 4,
-                      cursor: 'pointer',
-                      maxWidth: '100%',
-                      overflow: 'hidden',
-                      transition: 'background-color 0.12s ease',
+                      cursor: "pointer",
+                      maxWidth: "100%",
+                      overflow: "hidden",
+                      transition: "background-color 0.12s ease",
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor =
+                        "rgba(0,0,0,0.06)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = "transparent")
+                    }
                   >
                     {issue.assignee ? (
                       <Avatar name={assigneeName} size={24} />
@@ -386,12 +436,12 @@ export function IssueListRow({
                         style={{
                           width: 24,
                           height: 24,
-                          borderRadius: '50%',
-                          backgroundColor: '#f1f2f4',
-                          color: '#626f86',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
+                          borderRadius: "50%",
+                          backgroundColor: "#f1f2f4",
+                          color: "#626f86",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
                           flexShrink: 0,
                         }}
                       >
@@ -401,19 +451,28 @@ export function IssueListRow({
 
                     <span
                       style={{
-                        fontSize: '0.8125rem',
-                        color: issue.assignee ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+                        fontSize: "0.8125rem",
+                        color: issue.assignee
+                          ? "var(--color-text-primary)"
+                          : "var(--color-text-secondary)",
                         fontWeight: 400,
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                         minWidth: 0,
                         flex: 1,
                       }}
                     >
                       {selected?.label || assigneeName}
                     </span>
-                    <ChevronDown size={12} style={{ color: 'var(--color-text-secondary)', opacity: 0.7, flexShrink: 0 }} />
+                    <ChevronDown
+                      size={12}
+                      style={{
+                        color: "var(--color-text-secondary)",
+                        opacity: 0.7,
+                        flexShrink: 0,
+                      }}
+                    />
                   </div>
                 );
               }}
@@ -421,55 +480,74 @@ export function IssueListRow({
           </td>
         );
 
-      case 'reporter':
+      case "reporter":
         return (
           <td
             key="reporter"
             style={{
-              padding: '6px 10px',
-              verticalAlign: 'middle',
-              borderRight: isLast ? 'none' : '1px solid #dcdfe4',
-              boxSizing: 'border-box',
-              overflow: 'hidden',
+              padding: "6px 10px",
+              verticalAlign: "middle",
+              borderRight: isLast ? "none" : "1px solid #dcdfe4",
+              boxSizing: "border-box",
+              overflow: "hidden",
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, overflow: 'hidden' }}>
-              <Avatar name={getUserDisplayName(issue.reporter, 'Học Nguyễn')} size={24} />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                minWidth: 0,
+                overflow: "hidden",
+              }}
+            >
+              <Avatar
+                name={getUserDisplayName(issue.reporter, "Học Nguyễn")}
+                size={24}
+              />
               <span
                 style={{
-                  fontSize: '0.8125rem',
-                  color: 'var(--color-text-primary)',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
+                  fontSize: "0.8125rem",
+                  color: "var(--color-text-primary)",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
                   minWidth: 0,
                   flex: 1,
                 }}
               >
-                {getUserDisplayName(issue.reporter, 'Học Nguyễn')}
+                {getUserDisplayName(issue.reporter, "Học Nguyễn")}
               </span>
             </div>
           </td>
         );
 
-      case 'priority':
+      case "priority":
         return (
           <td
             key="priority"
             onClick={(e) => e.stopPropagation()}
             style={{
-              padding: '6px 10px',
-              verticalAlign: 'middle',
-              borderRight: isLast ? 'none' : '1px solid #dcdfe4',
-              boxSizing: 'border-box',
-              overflow: 'hidden',
+              padding: "6px 10px",
+              verticalAlign: "middle",
+              borderRight: isLast ? "none" : "1px solid #dcdfe4",
+              boxSizing: "border-box",
+              overflow: "hidden",
             }}
           >
             <Select<IssuePriority>
               value={issue.priority}
               onChange={(pr) => onUpdatePriority(issue.id, pr)}
               minWidth={140}
-              options={(['HIGHEST', 'HIGH', 'MEDIUM', 'LOW', 'LOWEST'] as IssuePriority[]).map((pr) => ({
+              options={(
+                [
+                  "HIGHEST",
+                  "HIGH",
+                  "MEDIUM",
+                  "LOW",
+                  "LOWEST",
+                ] as IssuePriority[]
+              ).map((pr) => ({
                 value: pr,
                 label: pr.charAt(0) + pr.slice(1).toLowerCase(),
                 icon: renderPriorityIcon(pr),
@@ -477,62 +555,81 @@ export function IssueListRow({
               renderTrigger={() => (
                 <div
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
+                    display: "inline-flex",
+                    alignItems: "center",
                     gap: 6,
-                    padding: '4px 6px',
+                    padding: "4px 6px",
                     borderRadius: 4,
-                    cursor: 'pointer',
-                    maxWidth: '100%',
-                    overflow: 'hidden',
-                    transition: 'background-color 0.12s ease',
+                    cursor: "pointer",
+                    maxWidth: "100%",
+                    overflow: "hidden",
+                    transition: "background-color 0.12s ease",
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.06)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor = "transparent")
+                  }
                 >
                   {renderPriorityIcon(issue.priority)}
                   <span
                     style={{
-                      fontSize: '0.8125rem',
-                      fontWeight: issue.priority === 'HIGH' || issue.priority === 'HIGHEST' ? 600 : 400,
+                      fontSize: "0.8125rem",
+                      fontWeight:
+                        issue.priority === "HIGH" ||
+                        issue.priority === "HIGHEST"
+                          ? 600
+                          : 400,
                       color:
-                        issue.priority === 'HIGH' || issue.priority === 'HIGHEST'
-                          ? '#dc2626'
-                          : 'var(--color-text-primary)',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
+                        issue.priority === "HIGH" ||
+                        issue.priority === "HIGHEST"
+                          ? "#dc2626"
+                          : "var(--color-text-primary)",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
                       minWidth: 0,
                       flex: 1,
                     }}
                   >
-                    {issue.priority.charAt(0) + issue.priority.slice(1).toLowerCase()}
+                    {issue.priority.charAt(0) +
+                      issue.priority.slice(1).toLowerCase()}
                   </span>
-                  <ChevronDown size={12} style={{ color: 'var(--color-text-secondary)', opacity: 0.7, flexShrink: 0 }} />
+                  <ChevronDown
+                    size={12}
+                    style={{
+                      color: "var(--color-text-secondary)",
+                      opacity: 0.7,
+                      flexShrink: 0,
+                    }}
+                  />
                 </div>
               )}
             />
           </td>
         );
 
-      case 'status':
+      case "status":
         return (
           <td
             key="status"
             onClick={(e) => e.stopPropagation()}
             style={{
-              padding: '6px 10px',
-              verticalAlign: 'middle',
-              borderRight: isLast ? 'none' : '1px solid #dcdfe4',
-              boxSizing: 'border-box',
-              overflow: 'hidden',
+              padding: "6px 10px",
+              verticalAlign: "middle",
+              borderRight: isLast ? "none" : "1px solid #dcdfe4",
+              boxSizing: "border-box",
+              overflow: "hidden",
             }}
           >
             <Select<IssueStatus>
               value={issue.status}
               onChange={(st) => onUpdateStatus(issue.id, st)}
               minWidth={150}
-              options={(['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'] as IssueStatus[]).map((st) => ({
+              options={(
+                ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as IssueStatus[]
+              ).map((st) => ({
                 value: st,
                 label: getStatusBadgeStyle(st).label,
                 badgeStyle: getStatusBadgeStyle(st),
@@ -540,27 +637,33 @@ export function IssueListRow({
               renderTrigger={() => (
                 <div
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
+                    display: "inline-flex",
+                    alignItems: "center",
                     gap: 6,
-                    padding: '3px 8px',
+                    padding: "3px 8px",
                     backgroundColor: statusStyle.bg,
                     color: statusStyle.color,
-                    border: 'none',
+                    border: "none",
                     borderRadius: 4,
-                    fontSize: '0.75rem',
+                    fontSize: "0.75rem",
                     fontWeight: 700,
-                    cursor: 'pointer',
-                    maxWidth: '100%',
-                    overflow: 'hidden',
-                    whiteSpace: 'nowrap',
-                    textOverflow: 'ellipsis',
-                    transition: 'opacity 0.15s ease',
+                    cursor: "pointer",
+                    maxWidth: "100%",
+                    overflow: "hidden",
+                    whiteSpace: "nowrap",
+                    textOverflow: "ellipsis",
+                    transition: "opacity 0.15s ease",
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.85')}
-                  onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+                  onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
+                  onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
                 >
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <span
+                    style={{
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     {statusStyle.label}
                   </span>
                   <ChevronDown size={12} style={{ flexShrink: 0 }} />
@@ -570,145 +673,165 @@ export function IssueListRow({
           </td>
         );
 
-      case 'resolution':
+      case "resolution":
         return (
           <td
             key="resolution"
             style={{
-              padding: '6px 10px',
-              verticalAlign: 'middle',
-              color: issue.status === 'DONE' ? '#006644' : 'var(--color-text-secondary)',
-              fontSize: '0.8125rem',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              borderRight: isLast ? 'none' : '1px solid #dcdfe4',
-              boxSizing: 'border-box',
+              padding: "6px 10px",
+              verticalAlign: "middle",
+              color:
+                issue.status === "DONE"
+                  ? "#006644"
+                  : "var(--color-text-secondary)",
+              fontSize: "0.8125rem",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              borderRight: isLast ? "none" : "1px solid #dcdfe4",
+              boxSizing: "border-box",
             }}
           >
-            {issue.status === 'DONE' ? 'Done' : 'Unresolved'}
+            {issue.status === "DONE" ? "Done" : "Unresolved"}
           </td>
         );
 
-      case 'created':
+      case "created":
         return (
           <td
             key="created"
             style={{
-              padding: '6px 10px',
-              verticalAlign: 'middle',
-              color: 'var(--color-text-secondary)',
-              fontSize: '0.8125rem',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              borderRight: isLast ? 'none' : '1px solid #dcdfe4',
-              boxSizing: 'border-box',
+              padding: "6px 10px",
+              verticalAlign: "middle",
+              color: "var(--color-text-secondary)",
+              fontSize: "0.8125rem",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              borderRight: isLast ? "none" : "1px solid #dcdfe4",
+              boxSizing: "border-box",
             }}
             title={formatDate(issue.createdAt)}
           >
-            {new Date(issue.createdAt).toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
+            {new Date(issue.createdAt).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
             })}
           </td>
         );
 
-      case 'updated': {
+      case "updated": {
         const updatedDate = issue.updatedAt || issue.createdAt;
         return (
           <td
             key="updated"
             style={{
-              padding: '6px 10px',
-              verticalAlign: 'middle',
-              color: 'var(--color-text-secondary)',
-              fontSize: '0.8125rem',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              borderRight: isLast ? 'none' : '1px solid #dcdfe4',
-              boxSizing: 'border-box',
+              padding: "6px 10px",
+              verticalAlign: "middle",
+              color: "var(--color-text-secondary)",
+              fontSize: "0.8125rem",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              borderRight: isLast ? "none" : "1px solid #dcdfe4",
+              boxSizing: "border-box",
             }}
             title={formatDate(updatedDate)}
           >
-            {new Date(updatedDate).toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
+            {new Date(updatedDate).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
             })}
           </td>
         );
       }
 
-      case 'dueDate': {
+      case "dueDate": {
         const formattedDueDate = issue.dueDate
-          ? new Date(issue.dueDate).toLocaleDateString('en-GB', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
+          ? new Date(issue.dueDate).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
             })
-          : '';
+          : "";
 
         return (
           <td
             key="dueDate"
             onClick={(e) => e.stopPropagation()}
             style={{
-              padding: '6px 10px',
-              verticalAlign: 'middle',
-              borderRight: isLast ? 'none' : '1px solid #dcdfe4',
-              boxSizing: 'border-box',
-              overflow: 'hidden',
-              position: 'relative',
+              padding: "6px 10px",
+              verticalAlign: "middle",
+              borderRight: isLast ? "none" : "1px solid #dcdfe4",
+              boxSizing: "border-box",
+              overflow: "hidden",
+              position: "relative",
             }}
           >
             <div
               style={{
-                position: 'relative',
-                display: 'inline-flex',
-                alignItems: 'center',
+                position: "relative",
+                display: "inline-flex",
+                alignItems: "center",
                 gap: 6,
-                padding: '3px 6px',
+                padding: "3px 6px",
                 borderRadius: 4,
-                cursor: 'pointer',
-                transition: 'background-color 0.12s ease',
+                cursor: "pointer",
+                transition: "background-color 0.12s ease",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.05)')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.05)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.backgroundColor = "transparent")
+              }
             >
               <Calendar
                 size={13}
                 style={{
-                  color: issue.dueDate ? '#0c66e4' : 'var(--color-text-secondary)',
+                  color: issue.dueDate
+                    ? "#0c66e4"
+                    : "var(--color-text-secondary)",
                   flexShrink: 0,
                 }}
               />
               <span
                 style={{
-                  fontSize: '0.8125rem',
-                  color: issue.dueDate ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-                  whiteSpace: 'nowrap',
+                  fontSize: "0.8125rem",
+                  color: issue.dueDate
+                    ? "var(--color-text-primary)"
+                    : "var(--color-text-secondary)",
+                  whiteSpace: "nowrap",
                 }}
               >
-                {formattedDueDate || '-'}
+                {formattedDueDate || "-"}
               </span>
 
               <input
                 type="date"
-                value={issue.dueDate ? issue.dueDate.split('T')[0] : ''}
-                onChange={(e) => onUpdateDueDate?.(issue.id, e.target.value || null)}
+                defaultValue={issue.dueDate ? issue.dueDate.split("T")[0] : ""}
+                onChange={(e) =>
+                  onUpdateDueDate?.(issue.id, e.target.value || null)
+                }
+                onBlur={(e) =>
+                  onUpdateDueDate?.(issue.id, e.target.value || null)
+                }
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   top: 0,
                   left: 0,
-                  width: '100%',
-                  height: '100%',
+                  width: "100%",
+                  height: "100%",
                   opacity: 0,
-                  cursor: 'pointer',
+                  cursor: "pointer",
                 }}
-                title={issue.dueDate ? `Due date: ${formattedDueDate}` : 'Click to set due date'}
+                title={
+                  issue.dueDate
+                    ? `Due date: ${formattedDueDate}`
+                    : "Click to set due date"
+                }
               />
             </div>
           </td>
@@ -726,24 +849,24 @@ export function IssueListRow({
       onMouseLeave={() => setIsHovered(false)}
       style={{
         backgroundColor: isActiveIssue
-          ? '#e9f2ff'
+          ? "#e9f2ff"
           : isRowHighlighted
-            ? 'rgba(12, 102, 228, 0.05)'
-            : 'var(--color-surface-white)',
-        borderBottom: '1px solid #dcdfe4',
-        transition: 'background-color 0.12s ease',
-        fontSize: '0.84rem',
+            ? "rgba(12, 102, 228, 0.05)"
+            : "var(--color-surface-white)",
+        borderBottom: "1px solid #dcdfe4",
+        transition: "background-color 0.12s ease",
+        fontSize: "0.84rem",
       }}
     >
       {/* 1. Checkbox Column */}
       <td
         style={{
           width: 40,
-          textAlign: 'center',
-          padding: '8px 10px',
-          verticalAlign: 'middle',
-          borderRight: '1px solid #dcdfe4',
-          boxSizing: 'border-box',
+          textAlign: "center",
+          padding: "8px 10px",
+          verticalAlign: "middle",
+          borderRight: "1px solid #dcdfe4",
+          boxSizing: "border-box",
         }}
       >
         <input
@@ -751,17 +874,19 @@ export function IssueListRow({
           checked={isSelected}
           onChange={() => onToggleSelect(issue.id)}
           style={{
-            cursor: 'pointer',
+            cursor: "pointer",
             width: 16,
             height: 16,
             borderRadius: 3,
-            accentColor: 'var(--color-green-brand)',
+            accentColor: "var(--color-green-brand)",
           }}
         />
       </td>
 
       {/* Dynamic visible columns in user-configured order */}
-      {visibleColumns.map((colId, index) => renderCell(colId, index === visibleColumns.length - 1))}
+      {visibleColumns.map((colId, index) =>
+        renderCell(colId, index === visibleColumns.length - 1),
+      )}
     </tr>
   );
 }

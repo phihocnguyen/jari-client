@@ -25,7 +25,7 @@ export const DEFAULT_COLUMN_DEFINITIONS: ColumnDef[] = [
   { id: 'resolution', label: 'Resolution', defaultWidth: 110, minWidth: 80 },
   { id: 'created', label: 'Created', defaultWidth: 140, minWidth: 90 },
   { id: 'updated', label: 'Update', defaultWidth: 140, minWidth: 90 },
-  { id: 'dueDate', label: 'Due Date', defaultWidth: 130, minWidth: 90 },
+  { id: 'dueDate', label: 'Due Date', defaultWidth: 140, minWidth: 110 },
 ];
 
 export const DEFAULT_COLUMN_ORDER: ColumnId[] = [
@@ -49,5 +49,5 @@ export const DEFAULT_COLUMN_WIDTHS: Record<ColumnId, number> = {
   resolution: 110,
   created: 140,
   updated: 140,
-  dueDate: 130,
+  dueDate: 140,
 };

@@ -51,6 +51,7 @@ export function IssueListQuickCreate({
   const [dueDate, setDueDate] = useState<string>('');
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const dueDateInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -264,41 +265,100 @@ export function IssueListQuickCreate({
           </td>
         );
 
-      case 'dueDate':
+      case 'dueDate': {
+        const formattedDueDate = dueDate
+          ? new Date(dueDate + 'T00:00:00').toLocaleDateString('en-GB', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+            })
+          : '';
+
+        const openDueDatePicker = () => {
+          if (isSubmitting) return;
+          const el = dueDateInputRef.current;
+          if (!el) return;
+          try {
+            el.showPicker?.();
+          } catch {
+            el.click();
+          }
+        };
+
         return (
           <td
             key="dueDate"
             style={{
-              padding: '8px 12px',
+              padding: '6px 10px',
               borderRight: isLast ? 'none' : '1px solid #dcdfe4',
               overflow: 'hidden',
               boxSizing: 'border-box',
+              verticalAlign: 'middle',
+              position: 'relative',
             }}
           >
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              <Calendar size={13} color="var(--color-text-secondary)" />
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                disabled={isSubmitting}
-                title="Select due date (optional)"
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={openDueDatePicker}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  openDueDatePicker();
+                }
+              }}
+              title="Select due date (optional)"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '3px 6px',
+                borderRadius: 4,
+                maxWidth: '100%',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              }}
+            >
+              <Calendar
+                size={13}
                 style={{
-                  height: 28,
-                  fontSize: '0.78rem',
-                  border: '1px solid rgba(0,0,0,0.15)',
-                  borderRadius: 4,
-                  padding: '0 6px',
-                  backgroundColor: '#fff',
-                  cursor: 'pointer',
-                  maxWidth: 125,
-                  fontFamily: 'inherit',
-                  color: dueDate ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+                  color: dueDate ? '#0c66e4' : 'var(--color-text-secondary)',
+                  flexShrink: 0,
                 }}
               />
+              <span
+                style={{
+                  fontSize: '0.8125rem',
+                  color: dueDate ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {formattedDueDate || '-'}
+              </span>
             </div>
+            <input
+              ref={dueDateInputRef}
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              disabled={isSubmitting}
+              tabIndex={-1}
+              aria-hidden
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                width: 1,
+                height: 1,
+                opacity: 0,
+                pointerEvents: 'none',
+                border: 0,
+                padding: 0,
+                margin: 0,
+              }}
+            />
           </td>
         );
+      }
 
       default:
         // Empty cells for unassigned columns like Assignee, Reporter, Status, Resolution, Created, Updated
