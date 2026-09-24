@@ -142,7 +142,8 @@ export function ProjectSidebarView({
           style={{
             display: 'inline-flex',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            alignSelf: collapsed ? 'center' : 'stretch',
             gap: collapsed ? 0 : 6,
             fontSize: '0.75rem',
             fontWeight: 600,
@@ -151,7 +152,7 @@ export function ProjectSidebarView({
             marginBottom: collapsed ? 8 : 8,
             padding: collapsed ? '4px' : '2px 4px',
             borderRadius: 6,
-            width: collapsed ? 28 : undefined,
+            width: collapsed ? 28 : '100%',
             height: collapsed ? 28 : undefined,
             transition: 'color 0.15s ease',
           }}

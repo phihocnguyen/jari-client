@@ -29,10 +29,10 @@ export default function DashboardPage() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const pageSize = 10;
 
-  // 1. Fetch user workspaces
+  // 1. Fetch workspaces the current user belongs to
   const { data: workspaces = [], isLoading: isWorkspacesLoading } = useQuery({
     queryKey: ['dashboard-workspaces', user?.id],
-    queryFn: () => workspaceApi.list().then((r) => r.data || []),
+    queryFn: () => workspaceApi.list(user?.id).then((r) => r.data || []),
     enabled: Boolean(user?.id),
     staleTime: 1000 * 60 * 5,
   });

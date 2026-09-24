@@ -31,7 +31,10 @@ export function CreateWorkspaceModal({ open, onClose }: Props) {
       });
     },
     onSuccess: () => {
+      // Sidebar uses ['workspaces', userId]; dashboard uses ['dashboard-workspaces', ...]
       qc.invalidateQueries({ queryKey: ['workspaces'] });
+      qc.invalidateQueries({ queryKey: ['dashboard-workspaces'] });
+      qc.invalidateQueries({ queryKey: ['dashboard-projects'] });
       toast.success('Workspace created!');
       reset();
       onClose();

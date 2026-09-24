@@ -51,11 +51,14 @@ export function CreateProjectModal({ open, onClose, workspaceId }: Props) {
       return projectApi.create(activeWorkspaceId, data);
     },
     onSuccess: () => {
+      // Sidebar: ['projects', workspaceId]; dashboard: ['dashboard-projects', ...]
       qc.invalidateQueries({ queryKey: ['projects'] });
       if (activeWorkspaceId) {
         qc.invalidateQueries({ queryKey: ['projects', activeWorkspaceId] });
       }
       qc.invalidateQueries({ queryKey: ['workspaces'] });
+      qc.invalidateQueries({ queryKey: ['dashboard-workspaces'] });
+      qc.invalidateQueries({ queryKey: ['dashboard-projects'] });
       toast.success('Project created!');
       reset();
       onClose();
