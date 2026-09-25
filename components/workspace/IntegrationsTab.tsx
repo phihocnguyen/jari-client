@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { GitBranch, Link2, Unlink, ExternalLink, AlertCircle } from 'lucide-react';
+import { CheckCircle2, GitBranch, Link2, Unlink, ExternalLink, AlertCircle } from 'lucide-react';
 import { githubApi } from '@/lib/api/github';
 import { Button } from '@/components/ui/Button';
 import { toast } from '@/components/ui/Toast';
@@ -16,6 +16,7 @@ interface IntegrationsTabProps {
 
 export function IntegrationsTab({ workspaceId, projects, isAdmin }: IntegrationsTabProps) {
   const qc = useQueryClient();
+  const [justConnected, setJustConnected] = useState(false);
 
   const { data: installations = [], isLoading, isError, error } = useQuery({
     queryKey: ['github-installations', workspaceId],
@@ -23,10 +24,17 @@ export function IntegrationsTab({ workspaceId, projects, isAdmin }: Integrations
     enabled: Boolean(workspaceId) && isAdmin,
   });
 
+  const isConnected = installations.length > 0;
+  const unmappedCount = installations.reduce(
+    (n, inst) => n + inst.repos.filter((r) => !r.projectId).length,
+    0
+  );
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     if (params.get('github') === 'connected') {
+      setJustConnected(true);
       toast.success('GitHub connected', 'Map each repository to a Jari project to enable linking.');
       qc.invalidateQueries({ queryKey: ['github-installations', workspaceId] });
       params.delete('github');
@@ -101,6 +109,34 @@ export function IntegrationsTab({ workspaceId, projects, isAdmin }: Integrations
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      {(justConnected || isConnected) && !isLoading && (
+        <div
+          style={{
+            display: 'flex',
+            gap: 10,
+            alignItems: 'flex-start',
+            padding: '12px 14px',
+            borderRadius: 8,
+            background: '#E3FCEF',
+            border: '1px solid #ABF5D1',
+            color: '#006644',
+            fontSize: '0.875rem',
+          }}
+        >
+          <CheckCircle2 size={18} style={{ flexShrink: 0, marginTop: 1 }} />
+          <div>
+            <div style={{ fontWeight: 700 }}>
+              {justConnected ? 'GitHub connected successfully' : 'GitHub is connected'}
+            </div>
+            <div style={{ marginTop: 2, color: '#216E4E', fontSize: '0.8125rem' }}>
+              {unmappedCount > 0
+                ? `${unmappedCount} repositor${unmappedCount === 1 ? 'y is' : 'ies are'} still unmapped — choose a project below to start linking branches, commits, and PRs.`
+                : 'Repositories are mapped. Issue keys in branch/commit/PR titles will appear on the Development panel.'}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div
         style={{
           padding: '1.25rem 1.5rem',
@@ -127,24 +163,57 @@ export function IntegrationsTab({ workspaceId, projects, isAdmin }: Integrations
               <GitBranch size={22} />
             </div>
             <div>
-              <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-text-primary)', margin: 0 }}>
-                GitHub
-              </h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-text-primary)', margin: 0 }}>
+                  GitHub
+                </h2>
+                {isConnected && (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      fontSize: '0.7rem',
+                      fontWeight: 700,
+                      padding: '2px 8px',
+                      borderRadius: 999,
+                      background: '#E3FCEF',
+                      color: '#006644',
+                    }}
+                  >
+                    <CheckCircle2 size={12} />
+                    Connected
+                  </span>
+                )}
+              </div>
               <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginTop: 4, maxWidth: 520 }}>
-                Install the Jari GitHub App, then map each repository to a project. Branches, commits, and
-                pull requests that mention an issue key (e.g. APP-1) will appear on that ticket&apos;s Development
-                panel.
+                {isConnected
+                  ? 'Map each repository to a project below. Branches, commits, and pull requests that mention an issue key (e.g. APP-1) appear on that ticket\'s Development panel.'
+                  : 'Install the Jari GitHub App, then map each repository to a project. Branches, commits, and pull requests that mention an issue key (e.g. APP-1) will appear on that ticket\'s Development panel.'}
               </p>
             </div>
           </div>
-          <Button
-            variant="primary"
-            onClick={() => connectMutation.mutate()}
-            loading={connectMutation.isPending}
-            leftIcon={<Link2 size={15} />}
-          >
-            {installations.length > 0 ? 'Add installation' : 'Connect GitHub'}
-          </Button>
+          {!isConnected ? (
+            <Button
+              variant="primary"
+              onClick={() => connectMutation.mutate()}
+              loading={connectMutation.isPending}
+              leftIcon={<Link2 size={15} />}
+            >
+              Connect GitHub
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => connectMutation.mutate()}
+              loading={connectMutation.isPending}
+              leftIcon={<Link2 size={14} />}
+              title="Install the app on another GitHub account or organization"
+            >
+              Add another
+            </Button>
+          )}
         </div>
       </div>
 
