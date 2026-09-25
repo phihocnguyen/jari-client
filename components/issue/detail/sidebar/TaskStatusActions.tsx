@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Check, Zap, Sparkles } from 'lucide-react';
+import { ChevronDown, Check } from 'lucide-react';
 import { getStatusBadgeStyle } from '@/utils/issue-status';
 import type { IssueStatus } from '@/types/issue';
 
@@ -9,14 +9,12 @@ interface TaskStatusActionsProps {
   status: IssueStatus;
   viewMode: 'modal' | 'right-bar' | 'full-page';
   onUpdateStatus: (status: IssueStatus) => void;
-  onOpenAiAssistant: () => void;
 }
 
 export function TaskStatusActions({
   status,
   viewMode,
   onUpdateStatus,
-  onOpenAiAssistant,
 }: TaskStatusActionsProps) {
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
   const statusRef = useRef<HTMLDivElement>(null);
@@ -41,7 +39,6 @@ export function TaskStatusActions({
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      {/* Status Dropdown Pill */}
       <div ref={statusRef} style={{ position: 'relative', flex: 1 }}>
         <button
           type="button"
@@ -119,53 +116,6 @@ export function TaskStatusActions({
           </div>
         )}
       </div>
-
-      {/* Lightning Bolt */}
-      <button
-        type="button"
-        title="Automations"
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: 32,
-          height: 32,
-          backgroundColor: '#f1f2f4',
-          border: 'none',
-          borderRadius: 4,
-          cursor: 'pointer',
-          color: '#44546f',
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#091e4224')}
-        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
-      >
-        <Zap size={14} />
-      </button>
-
-      {/* Improve Story */}
-      <button
-        type="button"
-        onClick={onOpenAiAssistant}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 6,
-          padding: '7px 12px',
-          backgroundColor: '#f1f2f4',
-          color: '#172b4d',
-          border: 'none',
-          borderRadius: 4,
-          fontWeight: 600,
-          fontSize: '0.8125rem',
-          cursor: 'pointer',
-          whiteSpace: 'nowrap',
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#091e4224')}
-        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
-      >
-        <Sparkles size={14} color="#0c66e4" />
-        <span>+ Improve Story</span>
-      </button>
     </div>
   );
 }

@@ -9,5 +9,4 @@ export * from './ReleaseSelector';
 export * from './TaskStatusActions';
 export * from './TaskFieldsDetails';
 export * from './TaskDevelopmentSection';
-export * from './TaskAutomationSection';
 export * from './TaskMetadataFooter';

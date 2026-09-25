@@ -13,7 +13,7 @@ import { sprintApi } from '@/lib/api/sprint';
 import { refApi } from '@/lib/api/ref';
 import { toast } from '@/components/ui/Toast';
 import { createIssueSchema, type CreateIssueFormData } from '@/lib/validations/issue';
-import type { IssueType } from '@/types/issue';
+import type { Issue, IssueType } from '@/types/issue';
 import { CreateIssueForm } from './create/CreateIssueForm';
 
 interface Props {
@@ -25,6 +25,8 @@ interface Props {
   initialParentKey?: string;
   initialType?: IssueType;
   initialSprintId?: string;
+  /** Called after a successful create (before modal closes). */
+  onCreated?: (issue: Issue) => void;
 }
 
 export function CreateIssueModal({
@@ -36,6 +38,7 @@ export function CreateIssueModal({
   initialParentKey,
   initialType,
   initialSprintId,
+  onCreated,
 }: Props) {
   const qc = useQueryClient();
   const [createAnother, setCreateAnother] = useState(false);
@@ -213,6 +216,10 @@ export function CreateIssueModal({
       qc.invalidateQueries({ queryKey: ['sprints', projectId], refetchType: 'none' });
       qc.invalidateQueries({ queryKey: ['project-components', projectId], refetchType: 'none' });
       toast.success('Issue created successfully!');
+
+      if (createdIssue && onCreated) {
+        onCreated(createdIssue);
+      }
 
       if (createAnother) {
         setValue('title', '');

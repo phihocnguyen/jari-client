@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
 import { issueApi, normalizeComment } from '@/lib/api/issue';
 import { projectApi } from '@/lib/api/project';
 import { refApi } from '@/lib/api/ref';
@@ -20,7 +19,7 @@ import { TaskDescription } from './TaskDescription';
 import { TaskSubtasks } from './TaskSubtasks';
 import { TaskActivity } from './TaskActivity';
 import { TaskDetailsSidebar } from './TaskDetailsSidebar';
-import { TaskAiModal } from './TaskAiModal';
+import { ParentSelector } from './sidebar/ParentSelector';
 
 export interface TaskDetailViewProps {
   issueId: string;
@@ -38,14 +37,13 @@ export function TaskDetailView({
   viewMode,
   onToggleViewMode,
   onClose,
-  issues = [],
+  issues: issuesProp = [],
   onNavigateIssue,
 }: TaskDetailViewProps) {
   const qc = useQueryClient();
 
   // Local UI state
   const [addingSubtask, setAddingSubtask] = useState(false);
-  const [aiModalOpen, setAiModalOpen] = useState(false);
 
   // 1. Fetch Issue Details (accepts UUID or issue key like MOBILE-13)
   const { data: issue, isLoading } = useQuery({
@@ -55,6 +53,16 @@ export function TaskDetailView({
   });
 
   const effectiveId = issue?.id || issueId;
+
+  // Parent picker needs project issues — load when parent did not pass a list (e.g. full-page)
+  const { data: issuesPage } = useQuery({
+    queryKey: ['issues', projectId, 'detail-parents'],
+    queryFn: () => issueApi.list(projectId, { size: 200 }),
+    enabled: Boolean(projectId) && issuesProp.length === 0,
+  });
+
+  const issues: Issue[] =
+    issuesProp.length > 0 ? issuesProp : (issuesPage?.data ?? []);
 
   // 1.1 Fetch Project Details for breadcrumb
   const { data: project } = useQuery({
@@ -567,6 +575,8 @@ export function TaskDetailView({
         onDeleteIssue={() => deleteMutation.mutate()}
         projectName={project?.name}
         parentKey={parentIssue?.key}
+        issues={issues}
+        onUpdateParent={(parentId) => updateParentMutation.mutate(parentId)}
       />
 
       {/* ─── Scrollable Body ─────────────────────────────────────────── */}
@@ -580,9 +590,14 @@ export function TaskDetailView({
         {/* Right-bar Breadcrumb */}
         {viewMode === 'right-bar' && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#626f86', fontSize: '0.8125rem', marginBottom: 12 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
-              <Plus size={13} /> Add epic
-            </span>
+            {issue.type !== 'EPIC' && issue.type !== 'SUBTASK' && (
+              <ParentSelector
+                issue={issue}
+                issues={issues}
+                onUpdateParent={(parentId) => updateParentMutation.mutate(parentId)}
+                variant="breadcrumb"
+              />
+            )}
             <span>/</span>
             <Link
               href={`/projects/${projectId}/issues/${issue.key}`}
@@ -632,7 +647,6 @@ export function TaskDetailView({
               onUpdateTitle={(title) => updateMutation.mutate({ title })}
               isUpdatingTitle={updateMutation.isPending}
               onOpenAddSubtask={() => setAddingSubtask(true)}
-              onOpenAiAssistant={() => setAiModalOpen(true)}
               onUpdateStatus={(status) => updateStatusMutation.mutate(status)}
             />
 
@@ -695,23 +709,9 @@ export function TaskDetailView({
                 createLabelMutation.mutate(name, { onSuccess: resolve, onError: reject });
               })
             }
-            onOpenAiAssistant={() => setAiModalOpen(true)}
           />
         </div>
       </div>
-
-      {/* ─── AI Modal (Improve Task) ───────────────────────────────── */}
-      <TaskAiModal
-        open={aiModalOpen}
-        issueTitle={issue.title}
-        onClose={() => setAiModalOpen(false)}
-        onApplyCriteria={() => {
-          setAiModalOpen(false);
-          const criteriaText = `\n\n### Acceptance Criteria\n- [ ] Criteria 1\n- [ ] Criteria 2`;
-          updateMutation.mutate({ description: (issue.description || '') + criteriaText });
-          toast.success('Added AI suggested criteria!');
-        }}
-      />
     </div>
   );
 }

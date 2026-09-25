@@ -4,10 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
   Plus,
-  MoreHorizontal,
-  SlidersHorizontal,
   ChevronDown,
-  Sparkles,
   Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -19,7 +16,6 @@ interface TaskTitleAndActionsProps {
   onUpdateTitle: (newTitle: string) => void;
   isUpdatingTitle: boolean;
   onOpenAddSubtask: () => void;
-  onOpenAiAssistant: () => void;
   onUpdateStatus: (status: IssueStatus) => void;
 }
 
@@ -29,7 +25,6 @@ export function TaskTitleAndActions({
   onUpdateTitle,
   isUpdatingTitle,
   onOpenAddSubtask,
-  onOpenAiAssistant,
   onUpdateStatus,
 }: TaskTitleAndActionsProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -155,49 +150,7 @@ export function TaskTitleAndActions({
           <Plus size={16} />
         </button>
 
-        <button
-          type="button"
-          title="More actions"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 32,
-            height: 32,
-            backgroundColor: '#f1f2f4',
-            border: 'none',
-            borderRadius: 4,
-            cursor: 'pointer',
-            color: '#44546f',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#091e4224')}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
-        >
-          <MoreHorizontal size={16} />
-        </button>
-
-        <button
-          type="button"
-          title="View settings"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 32,
-            height: 32,
-            backgroundColor: '#f1f2f4',
-            border: 'none',
-            borderRadius: 4,
-            cursor: 'pointer',
-            color: '#44546f',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#091e4224')}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
-        >
-          <SlidersHorizontal size={15} />
-        </button>
-
-        {/* Right-Bar Mode: status & improve task inline */}
+        {/* Right-Bar Mode: status inline */}
         {viewMode === 'right-bar' && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
             <div ref={statusRef} style={{ position: 'relative' }}>
@@ -276,29 +229,6 @@ export function TaskTitleAndActions({
                 </div>
               )}
             </div>
-
-            <button
-              type="button"
-              onClick={onOpenAiAssistant}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '6px 12px',
-                backgroundColor: '#f1f2f4',
-                color: '#172b4d',
-                border: 'none',
-                borderRadius: 4,
-                fontWeight: 600,
-                fontSize: '0.8125rem',
-                cursor: 'pointer',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#091e4224')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f1f2f4')}
-            >
-              <Sparkles size={14} color="#0c66e4" />
-              <span>Improve Task</span>
-            </button>
           </div>
         )}
       </div>

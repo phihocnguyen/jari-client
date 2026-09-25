@@ -593,7 +593,13 @@ export function IssueListContainer({ projectId, initialComponent }: IssueListCon
         initialParentId={parentForCreate?.id}
         initialParentKey={parentForCreate?.key}
         initialParentTitle={parentForCreate?.title}
-        initialType={parentForCreate ? 'SUBTASK' : undefined}
+        initialType={
+          parentForCreate
+            ? parentForCreate.type?.toUpperCase() === 'EPIC'
+              ? 'STORY'
+              : 'SUBTASK'
+            : undefined
+        }
       />
 
       {/* 5. Issue Detail Peek / Right Bar Modal */}

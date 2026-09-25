@@ -25,6 +25,7 @@ import {
 import { toast } from "@/components/ui/Toast";
 import type { Issue, IssueType } from "@/types/issue";
 import { issueApi, type WatcherUser } from "@/lib/api/issue";
+import { ParentSelector } from "./sidebar/ParentSelector";
 
 interface TaskDetailHeaderProps {
   issue: Issue;
@@ -38,6 +39,8 @@ interface TaskDetailHeaderProps {
   onDeleteIssue: () => void;
   projectName?: string;
   parentKey?: string;
+  issues?: Issue[];
+  onUpdateParent?: (parentId: string | null) => void;
 }
 
 export function TaskDetailHeader({
@@ -52,6 +55,8 @@ export function TaskDetailHeader({
   onDeleteIssue,
   projectName,
   parentKey,
+  issues = [],
+  onUpdateParent,
 }: TaskDetailHeaderProps) {
   const [isWatching, setIsWatching] = useState(false);
   const [watchersCount, setWatchersCount] = useState(0);
@@ -238,7 +243,7 @@ export function TaskDetailHeader({
               </div>
               <span>{projectName || "Project"}</span>
             </Link>
-            {parentKey && (
+            {parentKey ? (
               <>
                 <span>/</span>
                 <Link
@@ -262,6 +267,20 @@ export function TaskDetailHeader({
                   <span>{parentKey}</span>
                 </Link>
               </>
+            ) : (
+              issue.type !== "EPIC" &&
+              issue.type !== "SUBTASK" &&
+              onUpdateParent && (
+                <>
+                  <span>/</span>
+                  <ParentSelector
+                    issue={issue}
+                    issues={issues}
+                    onUpdateParent={onUpdateParent}
+                    variant="breadcrumb"
+                  />
+                </>
+              )
             )}
             <span>/</span>
             <div
@@ -299,30 +318,25 @@ export function TaskDetailHeader({
               fontSize: "0.8125rem",
             }}
           >
-            {/* Add epic link: opens new issue page prefilled with EPIC type and parent id when relevant.
-                Epics themselves have no parent, so hide this control for EPIC issues. */}
-            {issue.type !== "EPIC" && (
+            {/* Add epic: pick an existing epic as parent (Story/Task/Bug only) */}
+            {issue.type !== "EPIC" && issue.type !== "SUBTASK" && onUpdateParent && (
+              <ParentSelector
+                issue={issue}
+                issues={issues}
+                onUpdateParent={onUpdateParent}
+                variant="breadcrumb"
+              />
+            )}
+            {issue.type === "SUBTASK" && parentKey && (
               <Link
-                href={`/projects/${projectId}/issues/new?type=EPIC&parentId=${issue.id}`}
+                href={`/projects/${projectId}/issues/${parentKey}`}
                 style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 4,
                   color: "#626f86",
                   textDecoration: "none",
                   padding: "2px 6px",
-                  borderRadius: 4,
                 }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#f1f2f4")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.backgroundColor = "transparent")
-                }
-                title="Create epic linked to this issue"
               >
-                <Plus size={14} />
-                <span>Add epic</span>
+                {parentKey}
               </Link>
             )}
             <span>/</span>

@@ -153,14 +153,14 @@ export function IssueListRow({
               )}
 
               <span
-                title={`Type: ${isSubtask ? "SUBTASK" : issue.type}`}
+                title={`Type: ${issue.type}`}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
                   flexShrink: 0,
                 }}
               >
-                {renderTypeIcon(isSubtask ? "SUBTASK" : issue.type)}
+                {renderTypeIcon(issue.type)}
               </span>
 
               <button
@@ -285,7 +285,7 @@ export function IssueListRow({
                   <PanelRight size={14} />
                 </button>
 
-                {!isSubtask && onAddChild && (
+                {issue.type?.toUpperCase() !== 'SUBTASK' && onAddChild && (
                   <button
                     type="button"
                     onClick={(e) => {

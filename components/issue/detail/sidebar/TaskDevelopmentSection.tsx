@@ -20,6 +20,16 @@ interface TaskDevelopmentSectionProps {
   issueId: string;
 }
 
+const GROUPS: { type: DevelopmentType; label: string; icon: React.ReactNode }[] = [
+  { type: 'BRANCH', label: 'Branches', icon: <GitBranch size={14} color="#0c66e4" /> },
+  { type: 'COMMIT', label: 'Commits', icon: <GitCommit size={14} color="#36b37e" /> },
+  {
+    type: 'PULL_REQUEST',
+    label: 'Pull requests',
+    icon: <GitPullRequest size={14} color="#6554c0" />,
+  },
+];
+
 export function TaskDevelopmentSection({ issueId }: TaskDevelopmentSectionProps) {
   const [devExpanded, setDevExpanded] = useState(false);
   const [developments, setDevelopments] = useState<IssueDevelopment[]>([]);
@@ -37,6 +47,15 @@ export function TaskDevelopmentSection({ issueId }: TaskDevelopmentSectionProps)
       .finally(() => setIsDevLoading(false));
   }, [issueId, devExpanded]);
 
+  const grouped: Record<DevelopmentType, IssueDevelopment[]> = {
+    BRANCH: [],
+    COMMIT: [],
+    PULL_REQUEST: [],
+  };
+  for (const dev of developments) {
+    (grouped[dev.type] ?? grouped.COMMIT).push(dev);
+  }
+
   const handleCreateDev = async (data: {
     type: DevelopmentType;
     title: string;
@@ -49,7 +68,7 @@ export function TaskDevelopmentSection({ issueId }: TaskDevelopmentSectionProps)
       setDevelopments((prev) => [created, ...prev]);
       toast.success('Development item linked');
       setDevModalOpen(false);
-    } catch (err) {
+    } catch {
       toast.error('Failed to link development item');
     } finally {
       setIsSubmittingDev(false);
@@ -61,7 +80,7 @@ export function TaskDevelopmentSection({ issueId }: TaskDevelopmentSectionProps)
       await developmentApi.delete(id);
       setDevelopments((prev) => prev.filter((d) => d.id !== id));
       toast.success('Development link removed');
-    } catch (err) {
+    } catch {
       toast.error('Failed to remove link');
     }
   };
@@ -116,7 +135,7 @@ export function TaskDevelopmentSection({ issueId }: TaskDevelopmentSectionProps)
         </div>
 
         {devExpanded && (
-          <div style={{ padding: '8px 14px 12px', fontSize: '0.8125rem' }}>
+          <div style={{ padding: '4px 14px 12px', fontSize: '0.8125rem' }}>
             {isDevLoading ? (
               <div style={{ color: '#626f86', padding: '4px 0' }}>Loading developments...</div>
             ) : developments.length === 0 ? (
@@ -124,96 +143,34 @@ export function TaskDevelopmentSection({ issueId }: TaskDevelopmentSectionProps)
                 No branches, commits, or pull requests connected yet.
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {developments.map((dev) => {
-                  const isPr = dev.type === 'PULL_REQUEST';
-                  const isBranch = dev.type === 'BRANCH';
-                  const statusBg =
-                    dev.status === 'MERGED' ? '#e3fcef' : dev.status === 'OPEN' ? '#eae6ff' : '#f4f5f7';
-                  const statusColor =
-                    dev.status === 'MERGED' ? '#006644' : dev.status === 'OPEN' ? '#403294' : '#42526e';
-
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {GROUPS.map(({ type, label, icon }) => {
+                  const items = grouped[type];
+                  if (items.length === 0) return null;
                   return (
-                    <div
-                      key={dev.id}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '6px 8px',
-                        borderRadius: 6,
-                        backgroundColor: '#f8f9fa',
-                        border: '1px solid rgba(0,0,0,0.06)',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
-                        <div style={{ color: '#626f86', flexShrink: 0 }}>
-                          {isPr ? (
-                            <GitPullRequest size={15} color="#6554c0" />
-                          ) : isBranch ? (
-                            <GitBranch size={15} color="#0c66e4" />
-                          ) : (
-                            <GitCommit size={15} color="#36b37e" />
-                          )}
-                        </div>
-                        <a
-                          href={dev.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{
-                            color: '#0c66e4',
-                            textDecoration: 'none',
-                            fontWeight: 500,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
-                          onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
-                        >
-                          {dev.title}
-                        </a>
-                        {dev.status && (
-                          <span
-                            style={{
-                              fontSize: '0.6875rem',
-                              fontWeight: 700,
-                              padding: '1px 6px',
-                              borderRadius: 4,
-                              backgroundColor: statusBg,
-                              color: statusColor,
-                              flexShrink: 0,
-                            }}
-                          >
-                            {dev.status}
-                          </span>
-                        )}
+                    <div key={type}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          marginBottom: 6,
+                          color: '#44546f',
+                          fontSize: '0.72rem',
+                          fontWeight: 700,
+                          letterSpacing: '0.02em',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        {icon}
+                        <span>
+                          {label} ({items.length})
+                        </span>
                       </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 8 }}>
-                        <a
-                          href={dev.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          title="Open external link"
-                          style={{ color: '#626f86', display: 'flex', alignItems: 'center' }}
-                        >
-                          <ExternalLink size={13} />
-                        </a>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteDev(dev.id)}
-                          title="Remove link"
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            color: '#de350b',
-                            cursor: 'pointer',
-                            padding: 2,
-                          }}
-                        >
-                          <Trash2 size={13} />
-                        </button>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {items.map((dev) => (
+                          <DevRow key={dev.id} dev={dev} onDelete={handleDeleteDev} />
+                        ))}
                       </div>
                     </div>
                   );
@@ -231,5 +188,94 @@ export function TaskDevelopmentSection({ issueId }: TaskDevelopmentSectionProps)
         isSubmitting={isSubmittingDev}
       />
     </>
+  );
+}
+
+function DevRow({
+  dev,
+  onDelete,
+}: {
+  dev: IssueDevelopment;
+  onDelete: (id: string) => void;
+}) {
+  const isPr = dev.type === 'PULL_REQUEST';
+  const statusBg =
+    dev.status === 'MERGED' ? '#e3fcef' : dev.status === 'OPEN' ? '#eae6ff' : '#f4f5f7';
+  const statusColor =
+    dev.status === 'MERGED' ? '#006644' : dev.status === 'OPEN' ? '#403294' : '#42526e';
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '6px 8px',
+        borderRadius: 6,
+        backgroundColor: '#f8f9fa',
+        border: '1px solid rgba(0,0,0,0.06)',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
+        <a
+          href={dev.url}
+          target="_blank"
+          rel="noreferrer"
+          style={{
+            color: '#0c66e4',
+            textDecoration: 'none',
+            fontWeight: 500,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+          onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+        >
+          {dev.title}
+        </a>
+        {isPr && dev.status && (
+          <span
+            style={{
+              fontSize: '0.6875rem',
+              fontWeight: 700,
+              padding: '1px 6px',
+              borderRadius: 4,
+              backgroundColor: statusBg,
+              color: statusColor,
+              flexShrink: 0,
+            }}
+          >
+            {dev.status}
+          </span>
+        )}
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 8 }}>
+        <a
+          href={dev.url}
+          target="_blank"
+          rel="noreferrer"
+          title="Open external link"
+          style={{ color: '#626f86', display: 'flex', alignItems: 'center' }}
+        >
+          <ExternalLink size={13} />
+        </a>
+        <button
+          type="button"
+          onClick={() => onDelete(dev.id)}
+          title="Remove link"
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#de350b',
+            cursor: 'pointer',
+            padding: 2,
+          }}
+        >
+          <Trash2 size={13} />
+        </button>
+      </div>
+    </div>
   );
 }

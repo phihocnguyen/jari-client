@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,7 +16,7 @@ import {
   Check,
   Search,
   AlertCircle,
-  Github,
+  GitBranch,
 } from 'lucide-react';
 import { workspaceApi } from '@/lib/api/workspace';
 import { userApi } from '@/lib/api/user';
@@ -38,20 +39,27 @@ import {
 
 type SettingsTab = 'general' | 'members' | 'integrations';
 
+function tabFromSearch(value: string | null): SettingsTab {
+  if (value === 'members' || value === 'integrations' || value === 'general') return value;
+  return 'general';
+}
+
 // ─── Workspace Settings Page ──────────────────────────────────────
-export default function WorkspaceSettingsPage({ params }: PageProps<'/workspaces/[workspaceId]/settings'>) {
-  const [tab, setTab]           = useState<SettingsTab>('general');
+export default function WorkspaceSettingsPage() {
+  const routeParams = useParams<{ workspaceId: string }>();
+  const searchParams = useSearchParams();
+  const workspaceId = routeParams.workspaceId;
+
+  const [tab, setTab] = useState<SettingsTab>(() => tabFromSearch(searchParams.get('tab')));
   const [inviteOpen, setInviteOpen] = useState(false);
   const [projectModalMember, setProjectModalMember] = useState<WorkspaceMember | null>(null);
-  const [resolvedParams, setResolvedParams] = useState<{ workspaceId: string } | null>(null);
 
-  // Resolve async params (Next.js 16)
-  if (!resolvedParams) {
-    params.then(p => setResolvedParams(p));
-    return null;
-  }
+  useEffect(() => {
+    const next = tabFromSearch(searchParams.get('tab'));
+    setTab(next);
+  }, [searchParams]);
 
-  const { workspaceId } = resolvedParams;
+  if (!workspaceId) return null;
 
   return (
     <WorkspaceSettingsContent
@@ -86,15 +94,6 @@ function WorkspaceSettingsContent({
 }) {
   const qc = useQueryClient();
   const currentUser = useAuthStore(s => s.user);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
-    const t = params.get('tab');
-    if (t === 'integrations' || t === 'members' || t === 'general') {
-      setTab(t);
-    }
-  }, [setTab]);
 
   const { data: workspace } = useQuery({
     queryKey: ['workspace', workspaceId],
@@ -161,7 +160,7 @@ function WorkspaceSettingsContent({
   }> = [
     { key: 'general', label: 'General', icon: Settings },
     { key: 'members', label: 'Members', icon: Users, badge: members.length || undefined },
-    { key: 'integrations', label: 'Integrations', icon: Github },
+    { key: 'integrations', label: 'Integrations', icon: GitBranch },
   ];
 
   return (

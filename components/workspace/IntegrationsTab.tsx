@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Github, Link2, Unlink, ExternalLink, AlertCircle } from 'lucide-react';
+import { GitBranch, Link2, Unlink, ExternalLink, AlertCircle } from 'lucide-react';
 import { githubApi } from '@/lib/api/github';
 import { Button } from '@/components/ui/Button';
 import { toast } from '@/components/ui/Toast';
@@ -124,7 +124,7 @@ export function IntegrationsTab({ workspaceId, projects, isAdmin }: Integrations
                 flexShrink: 0,
               }}
             >
-              <Github size={22} />
+              <GitBranch size={22} />
             </div>
             <div>
               <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-text-primary)', margin: 0 }}>
@@ -211,7 +211,7 @@ export function IntegrationsTab({ workspaceId, projects, isAdmin }: Integrations
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Github size={16} />
+              <GitBranch size={16} />
               <span style={{ fontWeight: 700, fontSize: '0.875rem', color: '#172B4D' }}>
                 {inst.accountLogin}
               </span>
@@ -248,7 +248,7 @@ export function IntegrationsTab({ workspaceId, projects, isAdmin }: Integrations
                     Repository
                   </th>
                   <th style={{ textAlign: 'left', padding: '8px 16px', color: '#44546F', fontWeight: 600 }}>
-                    Jari project
+                    Projects
                   </th>
                 </tr>
               </thead>

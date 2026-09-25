@@ -798,7 +798,7 @@ export function IssueListTable(props: IssueListTableProps) {
                         onSubmit={onSubmitInlineCreate}
                         members={members}
                         isSubmitting={isSubmittingCreate}
-                        isSubtask={true}
+                        isSubtask={root.type?.toUpperCase() !== 'EPIC'}
                         visibleColumns={visibleColumns}
                         columnWidths={columnWidths}
                       />

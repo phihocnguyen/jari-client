@@ -149,7 +149,7 @@ export function TaskFieldsDetails({
             </div>
           </div>
 
-          {/* Parent */}
+          {/* Parent (Story/Task/Bug → epic list; label stays Parent / Add parent) */}
           <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center' }}>
             <span style={{ color: '#626f86', fontSize: '0.8125rem' }}>Parent</span>
             <ParentSelector issue={issue} issues={issues} onUpdateParent={onUpdateParent} />
